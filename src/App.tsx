@@ -1,5 +1,6 @@
+import { useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowRight, Cpu, Layers3, Sparkles, Zap } from "lucide-react"
+import { ArrowRight, Cpu, Layers3, Menu, Sparkles, X, Zap } from "lucide-react"
 
 const cards = [
   {
@@ -18,8 +19,15 @@ const cards = [
     text: "Subtelne przejścia i efekty, które dodają stronie życia bez przesady.",
   },
 ]
+const navItems = [
+  { label: "Start", href: "#start" },
+  { label: "Funkcje", href: "#features" },
+  { label: "Design", href: "#design" },
+]
 
 function App() {
+  const [menuOpen, setMenuOpen] = useState(false)
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#070812] text-white">
       <div className="fixed inset-0 -z-10">
@@ -27,29 +35,68 @@ function App() {
         <div className="absolute right-[-120px] top-40 h-96 w-96 rounded-full bg-violet-600/30 blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:72px_72px]" />
       </div>
+<header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+  <a href="#start" className="flex items-center gap-3">
+    <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur">
+      <Sparkles className="h-5 w-5 text-cyan-300" />
+    </div>
+    <span className="text-xl font-semibold">NovaPulse</span>
+  </a>
 
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur">
-            <Sparkles className="h-5 w-5 text-cyan-300" />
-          </div>
-          <span className="text-xl font-semibold">NovaPulse</span>
-        </div>
+  <nav className="hidden gap-8 text-sm text-white/60 md:flex">
+    {navItems.map((item) => (
+      <a key={item.href} href={item.href} className="transition hover:text-white">
+        {item.label}
+      </a>
+    ))}
+  </nav>
 
-        <nav className="hidden gap-8 text-sm text-white/60 md:flex">
-          <a href="#start" className="hover:text-white">Start</a>
-          <a href="#features" className="hover:text-white">Funkcje</a>
-          <a href="#design" className="hover:text-white">Design</a>
-        </nav>
+  <a
+    href="#features"
+    className="hidden rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15 md:block"
+  >
+    Zobacz projekt
+  </a>
+
+  <button
+    type="button"
+    onClick={() => setMenuOpen((value) => !value)}
+    className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur md:hidden"
+    aria-label="Otwórz menu"
+  >
+    {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+  </button>
+
+  {menuOpen && (
+    <motion.div
+      initial={{ opacity: 0, y: -12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.2 }}
+      className="absolute left-6 right-6 top-20 rounded-3xl border border-white/15 bg-[#10111d]/95 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl md:hidden"
+    >
+      <nav className="grid gap-2">
+        {navItems.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            onClick={() => setMenuOpen(false)}
+            className="rounded-2xl px-4 py-3 text-white/75 transition hover:bg-white/10 hover:text-white"
+          >
+            {item.label}
+          </a>
+        ))}
 
         <a
           href="#features"
-          className="hidden rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15 md:block"
+          onClick={() => setMenuOpen(false)}
+          className="mt-2 rounded-2xl bg-cyan-300 px-4 py-3 text-center font-semibold text-[#070812]"
         >
           Zobacz projekt
         </a>
-      </header>
-
+      </nav>
+    </motion.div>
+  )}
+</header>
       <section
         id="start"
         className="mx-auto grid min-h-[78vh] max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2"
