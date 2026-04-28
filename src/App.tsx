@@ -22,7 +22,26 @@ const cards = [
 const navItems = [
   { label: "Start", href: "#start" },
   { label: "Funkcje", href: "#features" },
+  { label: "Projekty", href: "#projects" },
   { label: "Design", href: "#design" },
+]
+
+const projects = [
+  {
+    title: "Aurora Dashboard",
+    type: "Panel analityczny",
+    text: "Fikcyjny panel z kartami statystyk, wykresami i ciemnym interfejsem premium.",
+  },
+  {
+    title: "Lumen Studio",
+    type: "Portfolio kreatywne",
+    text: "Minimalistyczna strona dla studia graficznego z dużą typografią i galerią prac.",
+  },
+  {
+    title: "Orbit App",
+    type: "Landing page aplikacji",
+    text: "Strona promująca aplikację mobilną z sekcjami funkcji, opiniami i CTA.",
+  },
 ]
 
 function App() {
@@ -227,6 +246,61 @@ function App() {
         </div>
       </section>
 
+      <section id="projects" className="mx-auto max-w-7xl px-6 py-20">
+        <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.3em] text-violet-300/70">
+              Projekty
+            </p>
+
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
+              Przykładowe kierunki, w które można rozwinąć stronę.
+            </h2>
+          </div>
+
+          <p className="max-w-md leading-7 text-white/55">
+            Na tym etapie strona nie musi mieć konkretnego przeznaczenia.
+            Budujemy uniwersalny szkielet, który później można zmienić w
+            portfolio, landing page, blog albo małą aplikację.
+          </p>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-3">
+          {projects.map((project, index) => (
+            <motion.article
+              key={project.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className="group relative overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.055] p-7 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085]"
+            >
+              <div className="absolute right-[-40px] top-[-40px] h-32 w-32 rounded-full bg-cyan-300/10 blur-2xl transition group-hover:bg-cyan-300/20" />
+
+              <p className="relative text-sm text-cyan-200/70">
+                {project.type}
+              </p>
+
+              <h3 className="relative mt-5 text-2xl font-semibold">
+                {project.title}
+              </h3>
+
+              <p className="relative mt-4 leading-7 text-white/58">
+                {project.text}
+              </p>
+
+              <div className="relative mt-8 h-36 rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.03] p-4">
+                <div className="h-3 w-24 rounded-full bg-white/20" />
+                <div className="mt-5 grid gap-3">
+                  <div className="h-3 rounded-full bg-white/10" />
+                  <div className="h-3 w-3/4 rounded-full bg-white/10" />
+                  <div className="h-3 w-1/2 rounded-full bg-white/10" />
+                </div>
+              </div>
+            </motion.article>
+          ))}
+        </div>
+      </section>
       <section id="design" className="mx-auto max-w-7xl px-6 py-20">
         <div className="rounded-[2.4rem] border border-white/12 bg-gradient-to-br from-white/[0.10] to-white/[0.04] p-8 shadow-2xl shadow-black/30 backdrop-blur md:p-12">
           <p className="text-sm uppercase tracking-[0.3em] text-violet-200/70">
