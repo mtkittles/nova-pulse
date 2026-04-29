@@ -135,95 +135,168 @@ function App() {
     </motion.div>
   )}
 </header>
-      <section
+            <section
         id="start"
-        className="mx-auto grid min-h-[78vh] max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2"
+        className="relative mx-auto grid min-h-[82vh] max-w-7xl items-center gap-14 px-6 py-16 md:grid-cols-[1.05fr_0.95fr] md:py-24"
       >
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 26 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
+          transition={{ duration: 0.75 }}
+          className="relative z-10"
         >
-          <div className="mb-6 inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100">
-            Experimental web concept 2026
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-6 inline-flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100 shadow-lg shadow-cyan-500/10 backdrop-blur"
+          >
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-300" />
+            </span>
+            Built with React · Vite · Tailwind
+          </motion.div>
 
-          <h1 className="text-5xl font-semibold tracking-[-0.06em] sm:text-6xl lg:text-7xl">
-            Strona, która wygląda jak nowoczesny produkt cyfrowy.
+          <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.065em] text-white sm:text-6xl lg:text-8xl">
+            Nowoczesna strona, która wygląda jak produkt premium.
           </h1>
 
-          <p className="mt-7 max-w-xl text-lg leading-8 text-white/65">
-            To pierwszy projekt strony internetowej: ciemny klimat, gradienty,
-            szkło, animacje, duża typografia i układ gotowy pod dalszą rozbudowę.
+          <p className="mt-7 max-w-2xl text-lg leading-8 text-white/64 md:text-xl">
+            Projekt edukacyjny tworzony od podstaw: layout, animacje,
+            responsywność, komponenty, GitHub i późniejsze wdrożenie online.
+            To baza pod portfolio, landing page albo aplikację.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <a
-              href="#features"
-              className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-[#070812] transition hover:scale-105"
+              href="#projects"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-[#070812] shadow-2xl shadow-white/10 transition hover:scale-105"
             >
-              Zaczynamy
+              Zobacz projekty
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
             </a>
 
             <a
-              href="#design"
+              href="#process"
               className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-6 py-3 font-semibold backdrop-blur transition hover:bg-white/15"
             >
-              Zobacz layout
+              Jak powstaje strona
             </a>
+          </div>
+
+          <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
+            {[
+              ["01", "Design"],
+              ["02", "Motion"],
+              ["03", "Mobile"],
+            ].map(([number, label]) => (
+              <div
+                key={label}
+                className="rounded-3xl border border-white/10 bg-white/[0.055] p-4 backdrop-blur"
+              >
+                <p className="text-2xl font-semibold text-white">{number}</p>
+                <p className="mt-1 text-sm text-white/48">{label}</p>
+              </div>
+            ))}
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 30 }}
+          initial={{ opacity: 0, scale: 0.94, y: 34 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          className="relative"
+          transition={{ duration: 0.85, delay: 0.1 }}
+          className="relative z-10"
         >
-          <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-cyan-400/25 via-violet-500/20 to-transparent blur-2xl" />
+          <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-cyan-400/25 via-violet-500/20 to-transparent blur-3xl" />
 
-          <div className="relative rounded-[2rem] border border-white/15 bg-white/[0.075] p-5 shadow-2xl backdrop-blur-xl">
-            <div className="rounded-[1.5rem] border border-white/10 bg-[#0b0c18]/90 p-6">
-              <p className="text-sm text-white/45">Live preview</p>
-              <h2 className="mt-2 text-3xl font-semibold">Control Panel</h2>
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -left-4 top-10 z-20 hidden rounded-3xl border border-white/15 bg-[#10111d]/85 p-4 shadow-2xl shadow-black/35 backdrop-blur-xl sm:block"
+          >
+            <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+              Status
+            </p>
+            <p className="mt-1 text-sm font-semibold text-emerald-200">
+              Online preview
+            </p>
+          </motion.div>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <motion.div
+            animate={{ y: [0, 12, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -right-3 bottom-16 z-20 hidden rounded-3xl border border-white/15 bg-[#10111d]/85 p-4 shadow-2xl shadow-black/35 backdrop-blur-xl sm:block"
+          >
+            <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+              Stack
+            </p>
+            <p className="mt-1 text-sm font-semibold text-cyan-200">
+              React + Tailwind
+            </p>
+          </motion.div>
+
+          <div className="relative overflow-hidden rounded-[2.4rem] border border-white/15 bg-white/[0.075] p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="absolute bottom-0 left-0 h-44 w-44 rounded-full bg-violet-500/10 blur-3xl" />
+
+            <div className="relative rounded-[1.9rem] border border-white/10 bg-[#090a15]/90 p-5">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-white/45">NovaPulse interface</p>
+                  <h2 className="mt-1 text-2xl font-semibold">
+                    Creative Panel
+                  </h2>
+                </div>
+
+                <div className="rounded-2xl bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">
+                  Live
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
-                  <p className="text-sm text-white/45">Design quality</p>
-                  <p className="mt-3 text-4xl font-semibold">92%</p>
+                  <p className="text-sm text-white/45">Visual quality</p>
+                  <p className="mt-3 text-4xl font-semibold">94%</p>
+
                   <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
                     <motion.div
                       className="h-full rounded-full bg-cyan-300"
                       initial={{ width: 0 }}
-                      animate={{ width: "92%" }}
-                      transition={{ duration: 1.2, delay: 0.4 }}
+                      animate={{ width: "94%" }}
+                      transition={{ duration: 1.2, delay: 0.5 }}
                     />
                   </div>
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-violet-400/20 to-white/[0.05] p-5">
-                  <p className="text-sm text-white/45">Layout</p>
+                  <p className="text-sm text-white/45">Responsive mode</p>
                   <p className="mt-3 text-3xl font-semibold">PC + Mobile</p>
                 </div>
               </div>
 
               <div className="mt-4 rounded-3xl border border-white/10 bg-white/[0.05] p-5">
-                <p className="mb-4 font-medium">Etapy projektu</p>
+                <div className="mb-5 flex items-center justify-between">
+                  <p className="font-medium">Project modules</p>
+                  <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-xs text-cyan-200">
+                    active
+                  </span>
+                </div>
 
-                {["Hero section", "Feature cards", "Mobile layout"].map(
-                  (item) => (
-                    <div
-                      key={item}
-                      className="mb-3 flex items-center justify-between rounded-2xl bg-white/[0.06] px-4 py-3 text-sm text-white/70 last:mb-0"
-                    >
-                      {item}
-                      <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-xs text-cyan-200">
-                        ready
-                      </span>
-                    </div>
-                  ),
-                )}
+                {[
+                  ["Hero section", "100%"],
+                  ["Mobile menu", "ready"],
+                  ["Projects grid", "ready"],
+                  ["Process section", "ready"],
+                ].map(([item, value]) => (
+                  <div
+                    key={item}
+                    className="mb-3 flex items-center justify-between rounded-2xl bg-white/[0.055] px-4 py-3 text-sm text-white/70 last:mb-0"
+                  >
+                    <span>{item}</span>
+                    <span className="text-white/40">{value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
