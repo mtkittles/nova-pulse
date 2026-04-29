@@ -23,6 +23,7 @@ const navItems = [
   { label: "Start", href: "#start" },
   { label: "Funkcje", href: "#features" },
   { label: "Projekty", href: "#projects" },
+  { label: "Proces", href: "#process" },
   { label: "Design", href: "#design" },
 ]
 
@@ -41,6 +42,24 @@ const projects = [
     title: "Orbit App",
     type: "Landing page aplikacji",
     text: "Strona promująca aplikację mobilną z sekcjami funkcji, opiniami i CTA.",
+  },
+]
+
+const processSteps = [
+  {
+    number: "01",
+    title: "Koncepcja",
+    text: "Najpierw powstaje kierunek wizualny: klimat strony, kolory, typografia, układ i przeznaczenie projektu.",
+  },
+  {
+    number: "02",
+    title: "Struktura",
+    text: "Następnie budowany jest szkielet strony: sekcje, nawigacja, responsywność i logiczny podział treści.",
+  },
+  {
+    number: "03",
+    title: "Efekt premium",
+    text: "Na końcu dochodzą animacje, gradienty, mikrointerakcje, dopracowane odstępy i wersja mobilna.",
   },
 ]
 
@@ -301,6 +320,48 @@ function App() {
           ))}
         </div>
       </section>
+      <section id="process" className="mx-auto max-w-7xl px-6 py-20">
+        <div className="mb-12 max-w-3xl">
+          <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
+            Proces
+          </p>
+
+          <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
+            Strona powstaje etapami, jak prawdziwy projekt produktowy.
+          </h2>
+
+          <p className="mt-5 leading-8 text-white/60">
+            Ten projekt traktujemy jako poligon do nauki: od prostego layoutu,
+            przez komponenty i animacje, aż po publikację na GitHubie oraz
+            późniejsze wdrożenie online.
+          </p>
+        </div>
+
+        <div className="relative grid gap-5 md:grid-cols-3">
+          <div className="absolute left-0 top-1/2 hidden h-px w-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent md:block" />
+
+          {processSteps.map((step, index) => (
+            <motion.article
+              key={step.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.12 }}
+              className="relative rounded-[2rem] border border-white/12 bg-[#0d0e1a]/80 p-7 shadow-2xl shadow-black/20 backdrop-blur"
+            >
+              <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-lg font-semibold text-cyan-200">
+                {step.number}
+              </div>
+
+              <h3 className="text-2xl font-semibold">{step.title}</h3>
+
+              <p className="mt-4 leading-7 text-white/58">
+                {step.text}
+              </p>
+            </motion.article>
+          ))}
+        </div>
+      </section>
       <section id="design" className="mx-auto max-w-7xl px-6 py-20">
         <div className="rounded-[2.4rem] border border-white/12 bg-gradient-to-br from-white/[0.10] to-white/[0.04] p-8 shadow-2xl shadow-black/30 backdrop-blur md:p-12">
           <p className="text-sm uppercase tracking-[0.3em] text-violet-200/70">
@@ -318,6 +379,25 @@ function App() {
           </p>
         </div>
       </section>
+      <footer className="mx-auto max-w-7xl px-6 py-10">
+        <div className="flex flex-col justify-between gap-5 border-t border-white/10 pt-8 text-sm text-white/45 md:flex-row md:items-center">
+          <p>
+            © 2026 NovaPulse. Projekt edukacyjny zbudowany w React, Vite i Tailwind CSS.
+          </p>
+
+          <div className="flex gap-5">
+            <a href="#start" className="transition hover:text-white">
+              Start
+            </a>
+            <a href="#features" className="transition hover:text-white">
+              Funkcje
+            </a>
+            <a href="#projects" className="transition hover:text-white">
+              Projekty
+            </a>
+          </div>
+        </div>
+      </footer>
     </main>
   )
 }
