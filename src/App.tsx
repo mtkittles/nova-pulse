@@ -1,6 +1,19 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowRight, Cpu, Layers3, Menu, Sparkles, X, Zap } from "lucide-react"
+import {
+  ArrowRight,
+  Code2,
+  Cpu,
+  GitBranch,
+  Layers3,
+  Menu,
+  Palette,
+  Rocket,
+  Smartphone,
+  Sparkles,
+  X,
+  Zap,
+} from "lucide-react"
 
 const cards = [
   {
@@ -23,10 +36,10 @@ const navItems = [
   { label: "Start", href: "#start" },
   { label: "Funkcje", href: "#features" },
   { label: "Projekty", href: "#projects" },
+  { label: "Stack", href: "#stack" },
   { label: "Proces", href: "#process" },
   { label: "Design", href: "#design" },
 ]
-
 const projects = [
   {
     title: "Aurora Dashboard",
@@ -60,6 +73,41 @@ const processSteps = [
     number: "03",
     title: "Efekt premium",
     text: "Na końcu dochodzą animacje, gradienty, mikrointerakcje, dopracowane odstępy i wersja mobilna.",
+  },
+]
+
+const techStack = [
+  {
+    icon: Code2,
+    name: "React",
+    text: "Biblioteka do budowania interfejsu z komponentów.",
+  },
+  {
+    icon: Rocket,
+    name: "Vite",
+    text: "Szybkie środowisko developerskie i build projektu.",
+  },
+  {
+    icon: Palette,
+    name: "Tailwind CSS",
+    text: "System klas do szybkiego projektowania nowoczesnego UI.",
+  },
+  {
+    icon: Zap,
+    name: "Framer Motion",
+    text: "Animacje wejścia, hover, scroll i mikrointerakcje.",
+  },
+
+  {
+  icon: GitBranch,
+  name: "GitHub",
+  text: "Repozytorium online, historia zmian i portfolio projektu.",
+  },
+
+  {
+    icon: Smartphone,
+    name: "Responsive Design",
+    text: "Układ przygotowany pod komputer, tablet i telefon.",
   },
 ]
 
@@ -393,6 +441,82 @@ function App() {
           ))}
         </div>
       </section>
+      <section id="stack" className="mx-auto max-w-7xl px-6 py-20">
+        <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
+              Tech stack
+            </p>
+
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
+              Narzędzia, na których budowany jest projekt.
+            </h2>
+          </div>
+
+          <p className="max-w-md leading-7 text-white/55">
+            Ta sekcja pokazuje technologie użyte w projekcie. Dzięki temu strona
+            zaczyna działać też jako pokaz umiejętności frontendowych.
+          </p>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {techStack.map((item, index) => {
+            const Icon = item.icon
+
+            return (
+              <motion.article
+                key={item.name}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08 }}
+                className="group rounded-[2rem] border border-white/12 bg-white/[0.055] p-7 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085]"
+              >
+                <div className="mb-7 flex h-13 w-13 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 transition group-hover:scale-110">
+                  <Icon className="h-6 w-6" />
+                </div>
+
+                <h3 className="text-2xl font-semibold">{item.name}</h3>
+
+                <p className="mt-4 leading-7 text-white/58">
+                  {item.text}
+                </p>
+              </motion.article>
+            )
+          })}
+        </div>
+
+        <div className="mt-8 rounded-[2rem] border border-white/12 bg-gradient-to-br from-cyan-300/10 via-white/[0.04] to-violet-500/10 p-6 backdrop-blur">
+          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-white/55">
+                <GitBranch className="h-3.5 w-3.5" />
+                GitHub workflow
+              </div>
+
+              <h3 className="text-2xl font-semibold">
+                Każdy etap projektu może być zapisany jako commit.
+              </h3>
+
+              <p className="mt-3 max-w-2xl leading-7 text-white/58">
+                Dzięki temu można śledzić historię zmian, wracać do poprzednich
+                wersji i budować portfolio projektów bez chaosu w plikach.
+              </p>
+            </div>
+
+            <a
+              href="https://github.com/mtkittles/nova-pulse"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-[#070812] transition hover:scale-105"
+            >
+              Repozytorium
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section id="process" className="mx-auto max-w-7xl px-6 py-20">
         <div className="mb-12 max-w-3xl">
           <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
@@ -468,6 +592,9 @@ function App() {
             <a href="#projects" className="transition hover:text-white">
               Projekty
             </a>
+<a href="#stack" className="transition hover:text-white">
+  Stack
+</a>
           </div>
         </div>
       </footer>
