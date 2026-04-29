@@ -6,9 +6,13 @@ import {
   Cpu,
   GitBranch,
   Layers3,
+  Mail,
+  MapPin,
   Menu,
+  MessageSquare,
   Palette,
   Rocket,
+  Send,
   Smartphone,
   Sparkles,
   X,
@@ -38,6 +42,7 @@ const navItems = [
   { label: "Projekty", href: "#projects" },
   { label: "Stack", href: "#stack" },
   { label: "Proces", href: "#process" },
+  { label: "Kontakt", href: "#contact" },
   { label: "Design", href: "#design" },
 ]
 const projects = [
@@ -559,6 +564,125 @@ function App() {
           ))}
         </div>
       </section>
+      <section id="contact" className="mx-auto max-w-7xl px-6 py-20">
+        <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
+              Kontakt
+            </p>
+
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
+              Formularz, który nadaje stronie realny charakter.
+            </h2>
+          </div>
+
+          <p className="max-w-md leading-7 text-white/55">
+            Na razie formularz działa jako element interfejsu. W kolejnym etapie
+            można podłączyć wysyłkę wiadomości przez zewnętrzną usługę albo
+            własny backend.
+          </p>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[2rem] border border-white/12 bg-white/[0.055] p-7 shadow-2xl shadow-black/20 backdrop-blur">
+            <div className="mb-8 grid h-14 w-14 place-items-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+              <MessageSquare className="h-6 w-6" />
+            </div>
+
+            <h3 className="text-3xl font-semibold tracking-tight">
+              Masz pomysł na kierunek strony?
+            </h3>
+
+            <p className="mt-4 leading-8 text-white/58">
+              Ten blok można później wykorzystać jako realny formularz kontaktowy
+              dla portfolio, strony firmowej, landing page’a produktu albo
+              projektu freelancowego.
+            </p>
+
+            <div className="mt-8 grid gap-4">
+              <div className="flex items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.045] p-4">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-cyan-200">
+                  <Mail className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <p className="text-sm text-white/40">Email</p>
+                  <p className="font-medium">contact@novapulse.dev</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.045] p-4">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-violet-200">
+                  <MapPin className="h-5 w-5" />
+                </div>
+
+                <div>
+                  <p className="text-sm text-white/40">Tryb pracy</p>
+                  <p className="font-medium">Projekt lokalny + GitHub</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              alert("Formularz działa. W kolejnym etapie można podłączyć realną wysyłkę wiadomości.")
+            }}
+            className="rounded-[2rem] border border-white/12 bg-gradient-to-br from-white/[0.09] to-white/[0.04] p-7 shadow-2xl shadow-black/25 backdrop-blur"
+          >
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className="grid gap-2">
+                <span className="text-sm text-white/55">Imię</span>
+                <input
+                  required
+                  type="text"
+                  placeholder="Np. Łukasz"
+                  className="rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+                />
+              </label>
+
+              <label className="grid gap-2">
+                <span className="text-sm text-white/55">Email</span>
+                <input
+                  required
+                  type="email"
+                  placeholder="twoj@email.com"
+                  className="rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+                />
+              </label>
+            </div>
+
+            <label className="mt-5 grid gap-2">
+              <span className="text-sm text-white/55">Temat</span>
+              <input
+                required
+                type="text"
+                placeholder="Np. Pomysł na stronę portfolio"
+                className="rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+              />
+            </label>
+
+            <label className="mt-5 grid gap-2">
+              <span className="text-sm text-white/55">Wiadomość</span>
+              <textarea
+                required
+                rows={6}
+                placeholder="Opisz krótko, co chcesz zbudować..."
+                className="resize-none rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-cyan-300 px-6 py-3 font-semibold text-[#070812] shadow-2xl shadow-cyan-300/10 transition hover:scale-[1.02] hover:bg-cyan-200"
+            >
+              Wyślij wiadomość
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+      </section>
       <section id="design" className="mx-auto max-w-7xl px-6 py-20">
         <div className="rounded-[2.4rem] border border-white/12 bg-gradient-to-br from-white/[0.10] to-white/[0.04] p-8 shadow-2xl shadow-black/30 backdrop-blur md:p-12">
           <p className="text-sm uppercase tracking-[0.3em] text-violet-200/70">
@@ -592,6 +716,9 @@ function App() {
             <a href="#projects" className="transition hover:text-white">
               Projekty
             </a>
+           <a href="#contact" className="transition hover:text-white">
+  Kontakt
+</a>
 <a href="#stack" className="transition hover:text-white">
   Stack
 </a>
