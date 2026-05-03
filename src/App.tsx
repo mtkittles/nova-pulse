@@ -131,7 +131,7 @@ function App() {
     <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur">
       <Sparkles className="h-5 w-5 text-cyan-300" />
     </div>
-    <span className="text-xl font-semibold">NovaPulse</span>
+    <span className="text-xl font-semibold">Gwyden Studio</span>
   </a>
 
   <nav className="hidden gap-8 text-sm text-white/60 md:flex">
@@ -296,9 +296,16 @@ function App() {
             <div className="relative rounded-[1.9rem] border border-white/10 bg-[#090a15]/90 p-5">
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-white/45">NovaPulse interface</p>
+                  <p className="text-sm text-white/45">Gwyden Studio interface</p>
                   <h2 className="mt-1 text-2xl font-semibold">
-                    Creative Panel
+               <div className="mb-5 rounded-[1.5rem] border border-[#E8E3D6]/10 bg-[#030914]/70 p-5">
+                 <img
+    src="/brand/gwyden-logo-full.svg"
+    alt="Gwyden Studio logo"
+    className="mx-auto h-auto w-full max-w-[280px]"
+  />
+</div>                   
+ Creative Panel
                   </h2>
                 </div>
 
@@ -703,7 +710,7 @@ function App() {
       <footer className="mx-auto max-w-7xl px-6 py-10">
         <div className="flex flex-col justify-between gap-5 border-t border-white/10 pt-8 text-sm text-white/45 md:flex-row md:items-center">
           <p>
-            © 2026 NovaPulse. Projekt edukacyjny zbudowany w React, Vite i Tailwind CSS.
+            © 2026 Gwyden Studio. Projekt edukacyjny zbudowany w React, Vite i Tailwind CSS.
           </p>
 
           <div className="flex gap-5">

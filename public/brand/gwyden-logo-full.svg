@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1600" viewBox="0 0 1000 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Gwyden Studio logo</title>
+  <desc id="desc">Premium Celtic-inspired G monogram with tree and roots motif for Gwyden Studio.</desc>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#0B1A2D"/>
+      <stop offset="60%" stop-color="#07101F"/>
+      <stop offset="100%" stop-color="#030914"/>
+    </radialGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.36  0 0 0 0 0.88  0 0 0 0 0.91  0 0 0 0.18 0" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <style>
+      .brand { font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif; letter-spacing: 0.18em; }
+      .studio { font-family: 'Montserrat', 'Inter', Arial, sans-serif; letter-spacing: 0.34em; }
+      .ivory { stroke: #E8E3D6; }
+      .cyan { stroke: #5DE1E8; }
+      .sage { stroke: #8BA08F; }
+    </style>
+  </defs>
+  <rect width="1000" height="1000" fill="url(#bg)"/>
+
+  <g transform="translate(0,-20) scale(0.76) translate(158,0)" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#softGlow)">
+    <path d="M650 168 A205 205 0 1 0 650 492" class="ivory" stroke-width="28"/>
+    <path d="M560 330 H720" class="ivory" stroke-width="28"/>
+    <path d="M720 330 A88 88 0 0 1 640 458" class="ivory" stroke-width="28"/>
+
+    <path d="M500 210 C500 260 500 295 500 510" class="ivory" stroke-width="14"/>
+    <path d="M500 310 C455 275 420 250 390 250" class="ivory" stroke-width="10"/>
+    <path d="M500 310 C545 275 580 250 610 250" class="ivory" stroke-width="10"/>
+    <path d="M500 275 C465 235 450 215 448 185" class="ivory" stroke-width="8"/>
+    <path d="M500 275 C535 235 550 215 552 185" class="ivory" stroke-width="8"/>
+
+    <path d="M500 500 C470 525 445 550 430 585" class="ivory" stroke-width="10"/>
+    <path d="M500 500 C530 525 555 550 570 585" class="ivory" stroke-width="10"/>
+    <path d="M470 520 C430 540 395 555 360 555" class="ivory" stroke-width="8"/>
+    <path d="M530 520 C570 540 605 555 640 555" class="ivory" stroke-width="8"/>
+    <path d="M450 545 C420 580 390 605 350 612" class="ivory" stroke-width="7"/>
+    <path d="M550 545 C580 580 610 605 650 612" class="ivory" stroke-width="7"/>
+    <path d="M485 535 C462 570 455 600 455 630" class="ivory" stroke-width="7"/>
+    <path d="M515 535 C538 570 545 600 545 630" class="ivory" stroke-width="7"/>
+
+    <path d="M500 210 L522 235 L500 260 L478 235 Z" class="cyan" stroke-width="6"/>
+    <path d="M500 390 L524 414 L500 438 L476 414 Z" class="cyan" stroke-width="6"/>
+    <path d="M500 590 L530 620 L500 650 L470 620 Z" class="cyan" stroke-width="6"/>
+    <path d="M475 575 C490 590 510 590 525 575" class="ivory" stroke-width="8"/>
+    <path d="M475 575 C490 560 510 560 525 575" class="ivory" stroke-width="8"/>
+
+    <path d="M500 145 V190" class="cyan" stroke-width="5"/>
+    <circle cx="500" cy="120" r="5" fill="#5DE1E8"/>
+    <circle cx="500" cy="98" r="4" fill="#E8E3D6"/>
+    <path d="M500 145 L520 160 M500 145 L480 160" class="ivory" stroke-width="6"/>
+    <path d="M500 282 L500 238 M484 270 L516 270" class="ivory" stroke-width="7"/>
+
+    <path d="M405 218 C382 203 380 180 405 168 C423 188 424 206 405 218 Z" fill="#5DE1E8" stroke="#E8E3D6" stroke-width="3" opacity="0.9"/>
+    <path d="M595 218 C618 203 620 180 595 168 C577 188 576 206 595 218 Z" fill="#5DE1E8" stroke="#E8E3D6" stroke-width="3" opacity="0.9"/>
+    <path d="M365 290 C340 282 332 260 356 244 C380 260 384 280 365 290 Z" fill="#5DE1E8" stroke="#E8E3D6" stroke-width="3" opacity="0.85"/>
+    <path d="M635 290 C660 282 668 260 644 244 C620 260 616 280 635 290 Z" fill="#5DE1E8" stroke="#E8E3D6" stroke-width="3" opacity="0.85"/>
+    <path d="M430 180 C410 165 414 145 438 138 C450 160 447 175 430 180 Z" fill="#5DE1E8" stroke="#E8E3D6" stroke-width="3" opacity="0.85"/>
+    <path d="M570 180 C590 165 586 145 562 138 C550 160 553 175 570 180 Z" fill="#5DE1E8" stroke="#E8E3D6" stroke-width="3" opacity="0.85"/>
+
+    <path d="M296 330 H340" class="ivory" stroke-width="6"/>
+    <path d="M660 330 H704" class="ivory" stroke-width="6"/>
+    <path d="M270 330 L286 314 L302 330 L286 346 Z" class="cyan" stroke-width="5"/>
+    <path d="M730 330 L746 314 L762 330 L746 346 Z" class="cyan" stroke-width="5"/>
+    <circle cx="250" cy="330" r="4" fill="#E8E3D6"/>
+    <circle cx="782" cy="330" r="4" fill="#E8E3D6"/>
+  </g>
+
+  <text x="500" y="750" text-anchor="middle" class="brand" font-size="86" fill="#E8E3D6">GWYDEN</text>
+  <text x="500" y="825" text-anchor="middle" class="studio" font-size="38" fill="#5DE1E8">STUDIO</text>
+  <path d="M245 812 H320" stroke="#8BA08F" stroke-width="3"/>
+  <path d="M680 812 H755" stroke="#8BA08F" stroke-width="3"/>
+  <path d="M225 812 L235 802 L245 812 L235 822 Z" stroke="#5DE1E8" stroke-width="3" fill="none"/>
+  <path d="M775 812 L785 802 L795 812 L785 822 Z" stroke="#5DE1E8" stroke-width="3" fill="none"/>
+</svg>

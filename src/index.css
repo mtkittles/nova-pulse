@@ -1,10 +1,28 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
+
+:root {
+  --gwyden-midnight: #07101f;
+  --gwyden-deep: #030914;
+  --gwyden-ivory: #e8e3d6;
+  --gwyden-cyan: #5de1e8;
+  --gwyden-sage: #8ba08f;
+}
 
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Montserrat", system-ui, sans-serif;
+  background: var(--gwyden-deep);
+  color: var(--gwyden-ivory);
+}
+
+.font-brand {
+  font-family: "Cinzel", Georgia, serif;
+}
+
+.font-ui {
+  font-family: "Montserrat", system-ui, sans-serif;
 }
