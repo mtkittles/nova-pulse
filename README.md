@@ -26,16 +26,20 @@ npm start        # serwer produkcyjny
 app/
   page.tsx                 # landing page
   dashboard/page.tsx       # panel „Dzisiejsze typy" (Server Component)
+  stats/page.tsx           # statystyki skuteczności + KPI (Server Component)
   login/page.tsx           # logowanie (UI placeholder, Etap 4)
-  api/tips/today/route.ts  # proxy server-side do danych bota
+  api/tips/today/route.ts  # proxy server-side do typów
+  api/stats/route.ts       # proxy server-side do agregatów skuteczności
 components/
   landing-page.tsx         # landing (client)
   tips-board.tsx           # lista typów + filtr rynku (client)
   tip-card.tsx             # karta typu z Q-Score
+  stats-charts.tsx         # wykresy Recharts (client)
 lib/
-  types.ts                 # typy danych (kontrakt API)
-  tips.ts                  # serwerowy dostęp do danych (mock → Oracle)
-  mock-tips.ts             # dane testowe
+  types.ts                 # typy typów (kontrakt API)
+  stats-types.ts           # typy statystyk (kontrakt API)
+  tips.ts / stats.ts       # serwerowy dostęp do danych (mock → Oracle)
+  mock-tips.ts / mock-stats.ts  # dane testowe
 ```
 
 ## Zasady bezpieczeństwa
@@ -49,6 +53,6 @@ lib/
 
 - ✅ Migracja na Next.js (App Router)
 - ✅ Panel „Dzisiejsze typy" na danych testowych (mock)
+- ✅ Statystyki skuteczności `/stats` — wykresy (win-rate, ROI, per rynek/liga, Q-Score)
 - ⏳ Endpoint na Oracle + podłączenie realnych danych
 - ⏳ Logowanie (Telegram + email/JWT) — Etap 4
-- ⏳ Wykresy skuteczności (win-rate, ROI, per liga)

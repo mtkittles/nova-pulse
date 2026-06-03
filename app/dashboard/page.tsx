@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, Sparkles } from "lucide-react"
+import { ArrowLeft, BarChart3, Sparkles } from "lucide-react"
 import { getTodayTips } from "@/lib/tips"
 import TipsBoard from "@/components/tips-board"
 
@@ -33,13 +33,22 @@ export default async function DashboardPage() {
           <span className="text-xl font-semibold">NovaPulse</span>
         </Link>
 
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Strona główna
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/stats"
+            className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-5 py-2.5 text-sm font-medium text-cyan-100 backdrop-blur transition hover:bg-cyan-300/15"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Statystyki
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Strona główna
+          </Link>
+        </div>
       </header>
 
       <section className="mx-auto max-w-7xl px-6 py-12">

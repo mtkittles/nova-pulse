@@ -1,8 +1,9 @@
 # PLAN — Nova-Pulse (web panel dla Lupus Bot)
 
 > Roadmapa wdrożenia strony jako web-interfejsu dla bota typującego piłkę nożną.
-> Status: **W TRAKCIE** — Etapy 1–3 zrobione (migracja Next.js + panel „Dzisiejsze
-> typy" na mocku). Następne: endpoint na Oracle, logowanie (Etap 4), wykresy.
+> Status: **W TRAKCIE** — zrobione: migracja Next.js, panel „Dzisiejsze typy",
+> strona „Statystyki skuteczności" (wykresy na mocku). Następne: endpoint na
+> Oracle (realne dane) i logowanie (Etap 4).
 
 ## Kontekst
 
@@ -79,6 +80,10 @@ Przeglądarka nigdy nie widzi klucza API ani adresu Oracle.
 4. ⏳ **Logowanie (Telegram + email/JWT)** — `/login` na razie UI placeholder.
 5. ⏳ **Podłączenie realnego API** — gdy endpoint na Oracle gotowy: w `lib/tips.ts`
    mock → fetch przez Cloudflare Tunnel (kod proxy już przygotowany w komentarzu).
+6. ✅ **Wykresy skuteczności** — strona `/stats`: KPI (win-rate, ROI, seria,
+   Q-Score), skumulowany ROI i trafialność w czasie, trafialność per rynek/liga,
+   kalibracja Q-Score, bilans wygrane/przegrane. Recharts, agregaty na mocku.
+   Kontrakt: `StatsResponse` (lib/stats-types.ts), docelowo `GET /public-api/stats`.
 
 ## Szczegóły UI (zatwierdzone)
 
