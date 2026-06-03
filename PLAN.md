@@ -1,7 +1,8 @@
 # PLAN — Nova-Pulse (web panel dla Lupus Bot)
 
 > Roadmapa wdrożenia strony jako web-interfejsu dla bota typującego piłkę nożną.
-> Status: **PLAN ZATWIERDZONY** — implementacja w kolejnej sesji.
+> Status: **W TRAKCIE** — Etapy 1–3 zrobione (migracja Next.js + panel „Dzisiejsze
+> typy" na mocku). Następne: endpoint na Oracle, logowanie (Etap 4), wykresy.
 
 ## Kontekst
 
@@ -69,14 +70,15 @@ Przeglądarka nigdy nie widzi klucza API ani adresu Oracle.
 
 ## Etapy (wszystko w repo nova-pulse)
 
-1. **Migracja na Next.js** — landing 1:1, routing `/`, `/login`, `/dashboard`
-   (chroniona). Komponenty z framer-motion oznaczone `"use client"`.
-2. **Warstwa danych** — Route Handler `app/api/tips/today` jako proxy do Oracle
-   (klucz w env). Start na **mocku** zgodnym z kontraktem powyżej.
-3. **UI „Dzisiejsze typy"** — karty w obecnym stylu premium (ciemny motyw, glass).
-4. **Logowanie (Telegram + email/JWT)** — patrz niżej.
-5. **Podłączenie realnego API** — gdy endpoint na Oracle gotowy: mock → fetch
-   przez Cloudflare Tunnel.
+1. ✅ **Migracja na Next.js** — landing 1:1, routing `/`, `/login`, `/dashboard`.
+   Komponenty z framer-motion oznaczone `"use client"`.
+2. ✅ **Warstwa danych** — Route Handler `app/api/tips/today` + serwerowy
+   `lib/tips.ts` jako punkt dostępu. Start na **mocku** zgodnym z kontraktem.
+3. ✅ **UI „Dzisiejsze typy"** — karty w stylu premium (ciemny motyw, glass),
+   badge rynku, Q-Score, filtr rynku, sort po Q-Score.
+4. ⏳ **Logowanie (Telegram + email/JWT)** — `/login` na razie UI placeholder.
+5. ⏳ **Podłączenie realnego API** — gdy endpoint na Oracle gotowy: w `lib/tips.ts`
+   mock → fetch przez Cloudflare Tunnel (kod proxy już przygotowany w komentarzu).
 
 ## Szczegóły UI (zatwierdzone)
 

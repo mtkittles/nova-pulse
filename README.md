@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# Nova-Pulse
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Web-interfejs dla **Lupus Bot** — bota Telegram do predykcji piłkarskich
+(BTTS, Over 1.5, Mix, Thriller). Strona to drugi interfejs nad tym samym
+silnikiem i bazą: „jeden mózg (silnik + baza), dwa interfejsy (Telegram + web)".
 
-Currently, two official plugins are available:
+Pełny plan: [`PLAN.md`](./PLAN.md). Kontekst dla Claude Code: [`CLAUDE.md`](./CLAUDE.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- **Next.js 15** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS 4** + **framer-motion** + **lucide-react**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Uruchomienie
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # build produkcyjny
+npm start        # serwer produkcyjny
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Struktura
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+app/
+  page.tsx                 # landing page
+  dashboard/page.tsx       # panel „Dzisiejsze typy" (Server Component)
+  login/page.tsx           # logowanie (UI placeholder, Etap 4)
+  api/tips/today/route.ts  # proxy server-side do danych bota
+components/
+  landing-page.tsx         # landing (client)
+  tips-board.tsx           # lista typów + filtr rynku (client)
+  tip-card.tsx             # karta typu z Q-Score
+lib/
+  types.ts                 # typy danych (kontrakt API)
+  tips.ts                  # serwerowy dostęp do danych (mock → Oracle)
+  mock-tips.ts             # dane testowe
+```
+
+## Zasady bezpieczeństwa
+
+- Oracle **nie jest wystawiony do przeglądarki** — dane wołamy server-side
+  (`lib/tips.ts`), za Cloudflare Tunnel + klucz API.
+- Sekrety tylko w `.env.local` (patrz `.env.example`), **nigdy w gicie**.
+- Strona **nie liczy predykcji** — serwuje gotowe rekordy z `bot_predictions`.
+
+## Status
+
+- ✅ Migracja na Next.js (App Router)
+- ✅ Panel „Dzisiejsze typy" na danych testowych (mock)
+- ⏳ Endpoint na Oracle + podłączenie realnych danych
+- ⏳ Logowanie (Telegram + email/JWT) — Etap 4
+- ⏳ Wykresy skuteczności (win-rate, ROI, per liga)
