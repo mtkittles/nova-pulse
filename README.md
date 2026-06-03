@@ -1,15 +1,24 @@
-# Nova-Pulse
+# LUPUS BETS
 
-Web-interfejs dla **Lupus Bot** — bota Telegram do predykcji piłkarskich
-(BTTS, Over 1.5, Mix, Thriller). Strona to drugi interfejs nad tym samym
-silnikiem i bazą: „jeden mózg (silnik + baza), dwa interfejsy (Telegram + web)".
+Web-interfejs (marka **LUPUS BETS**) dla **Lupus Bot** — bota Telegram do
+predykcji piłkarskich (BTTS, Over 1.5, Mix, Thriller). Strona to drugi interfejs
+nad tym samym silnikiem i bazą: „jeden mózg (silnik + baza), dwa interfejsy
+(Telegram + web)".
 
 Pełny plan: [`PLAN.md`](./PLAN.md). Kontekst dla Claude Code: [`CLAUDE.md`](./CLAUDE.md).
 
 ## Stack
 
 - **Next.js 15** (App Router) + **React 19** + **TypeScript**
-- **Tailwind CSS 4** + **framer-motion** + **lucide-react**
+- **Tailwind CSS 4** + **framer-motion** + **lucide-react** + **recharts**
+
+## Motywy
+
+Dwa motywy przełączane w nagłówku (zmienne CSS, zapis w `localStorage`):
+- **Nova** — cyan + violet (domyślny)
+- **Lupus** — granat + neon lime
+
+Bez migotania: motyw ustawiany inline-skryptem przed pierwszym malowaniem.
 
 ## Uruchomienie
 
@@ -31,7 +40,11 @@ app/
   api/tips/today/route.ts  # proxy server-side do typów
   api/stats/route.ts       # proxy server-side do agregatów skuteczności
 components/
-  landing-page.tsx         # landing (client)
+  landing-page.tsx         # strona główna LUPUS BETS (client, animacje)
+  brand.tsx                # logo wilka + wordmark LUPUS BETS
+  wolf-logo.tsx            # SVG logo (kolory z motywu)
+  theme-toggle.tsx         # przełącznik motywu Nova/Lupus (client)
+  faq.tsx                  # FAQ (accordion, client)
   tips-board.tsx           # lista typów + filtr rynku (client)
   tip-card.tsx             # karta typu z Q-Score
   stats-charts.tsx         # wykresy Recharts (client)
@@ -52,7 +65,10 @@ lib/
 ## Status
 
 - ✅ Migracja na Next.js (App Router)
+- ✅ Rebranding **LUPUS BETS** + logo wilka + system dwóch motywów
+- ✅ Strona główna: hero, jak to działa, tryby, skuteczność, FAQ, 18+
 - ✅ Panel „Dzisiejsze typy" na danych testowych (mock)
 - ✅ Statystyki skuteczności `/stats` — wykresy (win-rate, ROI, per rynek/liga, Q-Score)
+- ⏳ Logowanie przez Telegram + bramkowanie (gating) free
 - ⏳ Endpoint na Oracle + podłączenie realnych danych
-- ⏳ Logowanie (Telegram + email/JWT) — Etap 4
+- ⏳ Email/hasło (po Telegramie)

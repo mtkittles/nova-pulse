@@ -1,7 +1,9 @@
 import Link from "next/link"
-import { ArrowLeft, Flame, Gauge, Percent, Sparkles, Target, TrendingUp } from "lucide-react"
+import { ArrowLeft, Flame, Gauge, Percent, Target, TrendingUp } from "lucide-react"
 import { getStats } from "@/lib/stats"
 import StatsCharts from "@/components/stats-charts"
+import { Brand } from "@/components/brand"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default async function StatsPage() {
   const data = await getStats()
@@ -19,7 +21,7 @@ export default async function StatsPage() {
       icon: Target,
       label: "Trafialność",
       value: `${(s.win_rate * 100).toFixed(1)}%`,
-      tone: "text-cyan-300",
+      tone: "text-[color:var(--accent)]",
     },
     {
       icon: TrendingUp,
@@ -48,22 +50,20 @@ export default async function StatsPage() {
   ]
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#070812] text-white">
+    <main className="min-h-screen overflow-hidden bg-[var(--bg)] text-white">
       <div className="fixed inset-0 -z-10">
-        <div className="absolute left-[-120px] top-[-120px] h-96 w-96 rounded-full bg-cyan-500/25 blur-3xl" />
-        <div className="absolute right-[-120px] top-40 h-96 w-96 rounded-full bg-violet-600/25 blur-3xl" />
+        <div className="absolute left-[-120px] top-[-120px] h-96 w-96 rounded-full bg-[var(--glow-1)] blur-3xl" />
+        <div className="absolute right-[-120px] top-40 h-96 w-96 rounded-full bg-[var(--glow-2)] blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:72px_72px]" />
       </div>
 
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur">
-            <Sparkles className="h-5 w-5 text-cyan-300" />
-          </div>
-          <span className="text-xl font-semibold">NovaPulse</span>
-        </Link>
+        <Brand />
 
         <div className="flex items-center gap-3">
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
           <Link
             href="/dashboard"
             className="rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15"
@@ -75,7 +75,7 @@ export default async function StatsPage() {
             className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15"
           >
             <ArrowLeft className="h-4 w-4" />
-            Start
+            <span className="hidden md:inline">Start</span>
           </Link>
         </div>
       </header>

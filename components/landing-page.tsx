@@ -1,143 +1,165 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import {
+  Activity,
   ArrowRight,
-  Code2,
+  BarChart3,
+  CheckCircle2,
   Cpu,
-  GitBranch,
-  Layers3,
-  Mail,
-  MapPin,
+  Flame,
+  Gauge,
+  Lock,
   Menu,
-  MessageSquare,
-  Palette,
-  Rocket,
   Send,
-  Smartphone,
-  Sparkles,
+  ShieldCheck,
+  Target,
+  TrendingUp,
   X,
   Zap,
 } from "lucide-react"
+import { Brand } from "./brand"
+import { ThemeToggle } from "./theme-toggle"
+import { Faq } from "./faq"
 
-const cards = [
-  {
-    icon: Cpu,
-    title: "Nowoczesny stack",
-    text: "React, Vite i Tailwind jako szybka baza pod stronę, portfolio albo aplikację.",
-  },
-  {
-    icon: Layers3,
-    title: "Responsywny layout",
-    text: "Układ przygotowany pod komputer, tablet i telefon od samego początku.",
-  },
-  {
-    icon: Zap,
-    title: "Animacje",
-    text: "Subtelne przejścia i efekty, które dodają stronie życia bez przesady.",
-  },
-]
+type LandingProps = {
+  tipsToday: number
+  winRate: number // 0..1
+  roi: number // np. 0.05
+  totalTips: number
+}
+
 const navItems = [
   { label: "Start", href: "#start" },
-  { label: "Funkcje", href: "#features" },
-  { label: "Projekty", href: "#projects" },
-  { label: "Stack", href: "#stack" },
-  { label: "Proces", href: "#process" },
-  { label: "Kontakt", href: "#contact" },
-  { label: "Design", href: "#design" },
-]
-const projects = [
-  {
-    title: "Aurora Dashboard",
-    type: "Panel analityczny",
-    text: "Fikcyjny panel z kartami statystyk, wykresami i ciemnym interfejsem premium.",
-  },
-  {
-    title: "Lumen Studio",
-    type: "Portfolio kreatywne",
-    text: "Minimalistyczna strona dla studia graficznego z dużą typografią i galerią prac.",
-  },
-  {
-    title: "Orbit App",
-    type: "Landing page aplikacji",
-    text: "Strona promująca aplikację mobilną z sekcjami funkcji, opiniami i CTA.",
-  },
+  { label: "Jak to działa", href: "#how" },
+  { label: "Tryby", href: "#modes" },
+  { label: "Skuteczność", href: "#performance" },
+  { label: "FAQ", href: "#faq" },
 ]
 
-const processSteps = [
+const modes = [
   {
-    number: "01",
-    title: "Koncepcja",
-    text: "Najpierw powstaje kierunek wizualny: klimat strony, kolory, typografia, układ i przeznaczenie projektu.",
+    icon: Target,
+    name: "BTTS",
+    desc: "Obie drużyny strzelą. Najstabilniejszy rynek, oparty na formie ofensywnej i defensywnej.",
+    risk: "Ryzyko: niskie",
   },
   {
-    number: "02",
-    title: "Struktura",
-    text: "Następnie budowany jest szkielet strony: sekcje, nawigacja, responsywność i logiczny podział treści.",
-  },
-  {
-    number: "03",
-    title: "Efekt premium",
-    text: "Na końcu dochodzą animacje, gradienty, mikrointerakcje, dopracowane odstępy i wersja mobilna.",
-  },
-]
-
-const techStack = [
-  {
-    icon: Code2,
-    name: "React",
-    text: "Biblioteka do budowania interfejsu z komponentów.",
-  },
-  {
-    icon: Rocket,
-    name: "Next.js",
-    text: "Framework React z routingiem i warstwą serwerową (API).",
-  },
-  {
-    icon: Palette,
-    name: "Tailwind CSS",
-    text: "System klas do szybkiego projektowania nowoczesnego UI.",
+    icon: TrendingUp,
+    name: "Over 1.5",
+    desc: "W meczu padną co najmniej 2 gole. Wysoka trafialność przy niższych kursach.",
+    risk: "Ryzyko: niskie",
   },
   {
     icon: Zap,
-    name: "Framer Motion",
-    text: "Animacje wejścia, hover, scroll i mikrointerakcje.",
+    name: "Mix",
+    desc: "Silnik wybiera lepszy z BTTS / Over 1.5 dla każdego meczu osobno.",
+    risk: "Ryzyko: średnie",
   },
-
   {
-    icon: GitBranch,
-    name: "GitHub",
-    text: "Repozytorium online, historia zmian i portfolio projektu.",
-  },
-
-  {
-    icon: Smartphone,
-    name: "Responsive Design",
-    text: "Układ przygotowany pod komputer, tablet i telefon.",
+    icon: Flame,
+    name: "Thriller 3:2 / 2:3",
+    desc: "Dokładny wynik w strefie thriller. Wysokie kursy, ale to loteria — gra tylko świadoma.",
+    risk: "Ryzyko: wysokie",
   },
 ]
 
-export default function LandingPage() {
+const steps = [
+  {
+    icon: Cpu,
+    title: "Silnik liczy",
+    text: "Model Dixon-Coles + ELO + kalibracja Platt analizuje dziesiątki tysięcy meczów i wylicza prawdopodobieństwa — bez zaglądania w przyszłość (no-lookahead).",
+  },
+  {
+    icon: Send,
+    title: "Bot publikuje",
+    text: "Gotowe typy z Q-Score, kursem i edge trafiają na Telegram (@lupus_bet_bot) oraz tutaj. Strona serwuje policzone rekordy, nie liczy na żądanie.",
+  },
+  {
+    icon: Activity,
+    title: "Auto-weryfikacja",
+    text: "Po meczu live-tracker sprawdza wynik i aktualizuje skuteczność. Statystyki są prawdziwe i rozliczane automatycznie.",
+  },
+]
+
+// Licznik z animacją od 0. SSR i pierwszy render klienta = 0 → brak rozjazdu hydratacji.
+function CountUp({
+  to,
+  decimals = 0,
+  prefix = "",
+  suffix = "",
+  duration = 1200,
+}: {
+  to: number
+  decimals?: number
+  prefix?: string
+  suffix?: string
+  duration?: number
+}) {
+  const [val, setVal] = useState(0)
+  useEffect(() => {
+    let raf = 0
+    const start = performance.now()
+    const ease = (p: number) => 1 - Math.pow(1 - p, 3)
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / duration)
+      setVal(to * ease(p))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [to, duration])
+  return (
+    <>
+      {prefix}
+      {val.toFixed(decimals)}
+      {suffix}
+    </>
+  )
+}
+
+function Reveal({
+  children,
+  delay = 0,
+  className,
+}: {
+  children: React.ReactNode
+  delay?: number
+  className?: string
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.5, delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+export default function LandingPage({ tipsToday, winRate, roi, totalTips }: LandingProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const roiSign = roi >= 0 ? "+" : ""
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#070812] text-white">
+    <main className="min-h-screen overflow-hidden bg-[var(--bg)] text-white">
+      {/* tło */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute left-[-120px] top-[-120px] h-96 w-96 rounded-full bg-cyan-500/30 blur-3xl" />
-        <div className="absolute right-[-120px] top-40 h-96 w-96 rounded-full bg-violet-600/30 blur-3xl" />
+        <div className="absolute left-[-120px] top-[-120px] h-96 w-96 rounded-full bg-[var(--glow-1)] blur-3xl" />
+        <div className="absolute right-[-120px] top-40 h-96 w-96 rounded-full bg-[var(--glow-2)] blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:72px_72px]" />
       </div>
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
-        <a href="#start" className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur">
-            <Sparkles className="h-5 w-5 text-cyan-300" />
-          </div>
-          <span className="text-xl font-semibold">NovaPulse</span>
-        </a>
 
-        <nav className="hidden gap-8 text-sm text-white/60 md:flex">
+      {/* header */}
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+        <Brand />
+
+        <nav className="hidden gap-8 text-sm text-white/60 lg:flex">
           {navItems.map((item) => (
             <a key={item.href} href={item.href} className="transition hover:text-white">
               {item.label}
@@ -145,16 +167,19 @@ export default function LandingPage() {
           ))}
         </nav>
 
-        <Link
-          href="/dashboard"
-          className="hidden rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15 md:block"
-        >
-          Panel typów
-        </Link>
+        <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
+          <Link
+            href="/login"
+            className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
+          >
+            Zaloguj
+          </Link>
+        </div>
 
         <button
           type="button"
-          onClick={() => setMenuOpen((value) => !value)}
+          onClick={() => setMenuOpen((v) => !v)}
           className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 backdrop-blur md:hidden"
           aria-label="Otwórz menu"
         >
@@ -166,7 +191,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: -12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-6 right-6 top-20 rounded-3xl border border-white/15 bg-[#10111d]/95 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl md:hidden"
+            className="absolute left-6 right-6 top-20 rounded-3xl border border-white/15 bg-[var(--bg-soft)]/95 p-4 shadow-2xl shadow-black/40 backdrop-blur-xl md:hidden"
           >
             <nav className="grid gap-2">
               {navItems.map((item) => (
@@ -179,554 +204,397 @@ export default function LandingPage() {
                   {item.label}
                 </a>
               ))}
-
+              <div className="mt-1 flex items-center gap-2">
+                <ThemeToggle />
+              </div>
               <Link
-                href="/dashboard"
+                href="/login"
                 onClick={() => setMenuOpen(false)}
-                className="mt-2 rounded-2xl bg-cyan-300 px-4 py-3 text-center font-semibold text-[#070812]"
+                className="mt-1 rounded-2xl bg-[var(--accent)] px-4 py-3 text-center font-semibold text-[color:var(--on-accent)]"
               >
-                Panel typów
+                Zaloguj
               </Link>
             </nav>
           </motion.div>
         )}
       </header>
+
+      {/* hero */}
       <section
         id="start"
-        className="relative mx-auto grid min-h-[82vh] max-w-7xl items-center gap-14 px-6 py-16 md:grid-cols-[1.05fr_0.95fr] md:py-24"
+        className="relative mx-auto grid min-h-[80vh] max-w-7xl items-center gap-14 px-6 py-16 md:grid-cols-[1.05fr_0.95fr] md:py-20"
       >
         <motion.div
           initial={{ opacity: 0, y: 26 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75 }}
+          transition={{ duration: 0.7 }}
           className="relative z-10"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-6 inline-flex items-center gap-3 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100 shadow-lg shadow-cyan-500/10 backdrop-blur"
-          >
+          <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-[color:var(--accent)]/25 bg-[var(--accent)]/10 px-4 py-2 text-sm text-white/85 backdrop-blur">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-300" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
             </span>
-            Built with React · Next.js · Tailwind
-          </motion.div>
+            Model Dixon-Coles · auto-weryfikacja wyników
+          </div>
 
-          <h1 className="max-w-4xl text-5xl font-semibold tracking-[-0.065em] text-white sm:text-6xl lg:text-8xl">
-            Nowoczesna strona, która wygląda jak produkt premium.
+          <h1 className="text-5xl font-semibold tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+            Mądrzejsze typy.
+            <br />
+            <span className="text-[color:var(--accent)]">Model, nie przeczucie.</span>
           </h1>
 
-          <p className="mt-7 max-w-2xl text-lg leading-8 text-white/64 md:text-xl">
-            Projekt edukacyjny tworzony od podstaw: layout, animacje,
-            responsywność, komponenty, GitHub i późniejsze wdrożenie online.
-            To baza pod portfolio, landing page albo aplikację.
+          <p className="mt-7 max-w-xl text-lg leading-8 text-white/64 md:text-xl">
+            LUPUS BETS to interfejs nad silnikiem predykcji piłkarskich Lupus Bot.
+            Predykcje BTTS, Over 1.5, Mix i Thriller — z oceną jakości Q-Score i
+            realną, automatycznie weryfikowaną skutecznością.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/dashboard"
-              className="group inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-[#070812] shadow-2xl shadow-white/10 transition hover:scale-105"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)] shadow-2xl transition hover:scale-105"
             >
-              Zobacz panel typów
+              Zobacz dzisiejsze typy
               <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
             </Link>
-
-            <a
-              href="#process"
-              className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-6 py-3 font-semibold backdrop-blur transition hover:bg-white/15"
+            <Link
+              href="/stats"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-6 py-3 font-semibold backdrop-blur transition hover:bg-white/15"
             >
-              Jak powstaje strona
-            </a>
+              <BarChart3 className="h-4 w-4" />
+              Statystyki
+            </Link>
           </div>
 
+          {/* mini-KPI */}
           <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
             {[
-              ["01", "Design"],
-              ["02", "Motion"],
-              ["03", "Mobile"],
-            ].map(([number, label]) => (
+              { label: "Typy na dziś", value: <CountUp to={tipsToday} /> },
+              { label: "Trafialność", value: <CountUp to={winRate * 100} decimals={1} suffix="%" /> },
+              {
+                label: "ROI",
+                value: <CountUp to={roi * 100} decimals={1} prefix={roiSign} suffix="%" />,
+              },
+            ].map((kpi) => (
               <div
-                key={label}
+                key={kpi.label}
                 className="rounded-3xl border border-white/10 bg-white/[0.055] p-4 backdrop-blur"
               >
-                <p className="text-2xl font-semibold text-white">{number}</p>
-                <p className="mt-1 text-sm text-white/48">{label}</p>
+                <p className="text-2xl font-semibold text-[color:var(--accent)]">{kpi.value}</p>
+                <p className="mt-1 text-sm text-white/48">{kpi.label}</p>
               </div>
             ))}
           </div>
         </motion.div>
 
+        {/* karta-podgląd */}
         <motion.div
           initial={{ opacity: 0, scale: 0.94, y: 34 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.85, delay: 0.1 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
           className="relative z-10"
         >
-          <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-cyan-400/25 via-violet-500/20 to-transparent blur-3xl" />
-
+          <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-[var(--glow-1)] via-[var(--glow-2)] to-transparent blur-3xl" />
           <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -left-4 top-10 z-20 hidden rounded-3xl border border-white/15 bg-[#10111d]/85 p-4 shadow-2xl shadow-black/35 backdrop-blur-xl sm:block"
+            className="absolute -left-4 top-8 z-20 hidden rounded-3xl border border-white/15 bg-[var(--bg-soft)]/85 p-4 shadow-2xl shadow-black/35 backdrop-blur-xl sm:block"
           >
-            <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-              Status
-            </p>
-            <p className="mt-1 text-sm font-semibold text-emerald-200">
-              Online preview
-            </p>
+            <p className="text-xs uppercase tracking-[0.2em] text-white/40">Q-Score</p>
+            <p className="mt-1 text-sm font-semibold text-[color:var(--accent)]">82 / 100</p>
           </motion.div>
 
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -right-3 bottom-16 z-20 hidden rounded-3xl border border-white/15 bg-[#10111d]/85 p-4 shadow-2xl shadow-black/35 backdrop-blur-xl sm:block"
-          >
-            <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-              Stack
-            </p>
-            <p className="mt-1 text-sm font-semibold text-cyan-200">
-              React + Tailwind
-            </p>
-          </motion.div>
-
-          <div className="relative overflow-hidden rounded-[2.4rem] border border-white/15 bg-white/[0.075] p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
-            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
-            <div className="absolute bottom-0 left-0 h-44 w-44 rounded-full bg-violet-500/10 blur-3xl" />
-
-            <div className="relative rounded-[1.9rem] border border-white/10 bg-[#090a15]/90 p-5">
-              <div className="mb-6 flex items-center justify-between">
+          <div className="relative overflow-hidden rounded-[2.4rem] border border-white/15 bg-white/[0.06] p-4 shadow-2xl shadow-black/40 backdrop-blur-xl">
+            <div className="relative rounded-[1.9rem] border border-white/10 bg-[var(--bg)]/90 p-5">
+              <div className="mb-5 flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-white/45">NovaPulse interface</p>
-                  <h2 className="mt-1 text-2xl font-semibold">
-                    Creative Panel
-                  </h2>
+                  <p className="text-sm text-white/45">Przykładowy typ</p>
+                  <h2 className="mt-1 text-2xl font-semibold">Arsenal vs Chelsea</h2>
                 </div>
-
-                <div className="rounded-2xl bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200">
-                  Live
-                </div>
+                <span className="rounded-2xl bg-[var(--accent)]/10 px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
+                  BTTS
+                </span>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5">
-                  <p className="text-sm text-white/45">Visual quality</p>
-                  <p className="mt-3 text-4xl font-semibold">94%</p>
-
-                  <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
-                    <motion.div
-                      className="h-full rounded-full bg-cyan-300"
-                      initial={{ width: 0 }}
-                      animate={{ width: "94%" }}
-                      transition={{ duration: 1.2, delay: 0.5 }}
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-violet-400/20 to-white/[0.05] p-5">
-                  <p className="text-sm text-white/45">Responsive mode</p>
-                  <p className="mt-3 text-3xl font-semibold">PC + Mobile</p>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-3xl border border-white/10 bg-white/[0.05] p-5">
-                <div className="mb-5 flex items-center justify-between">
-                  <p className="font-medium">Project modules</p>
-                  <span className="rounded-full bg-cyan-300/10 px-3 py-1 text-xs text-cyan-200">
-                    active
-                  </span>
-                </div>
-
+              <div className="grid grid-cols-3 gap-3 text-center">
                 {[
-                  ["Hero section", "100%"],
-                  ["Mobile menu", "ready"],
-                  ["Projects grid", "ready"],
-                  ["Process section", "ready"],
-                ].map(([item, value]) => (
-                  <div
-                    key={item}
-                    className="mb-3 flex items-center justify-between rounded-2xl bg-white/[0.055] px-4 py-3 text-sm text-white/70 last:mb-0"
-                  >
-                    <span>{item}</span>
-                    <span className="text-white/40">{value}</span>
+                  ["Prawd.", "71%"],
+                  ["Kurs", "1.65"],
+                  ["Edge", "+8%"],
+                ].map(([k, v]) => (
+                  <div key={k} className="rounded-2xl border border-white/10 bg-white/[0.05] p-3">
+                    <p className="text-xs text-white/40">{k}</p>
+                    <p className="mt-1 text-xl font-semibold">{v}</p>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-5">
+                <div className="mb-1.5 flex justify-between text-xs">
+                  <span className="text-white/45">Q-Score</span>
+                  <span className="font-semibold text-[color:var(--accent)]">82 / 100</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <motion.div
+                    className="h-full rounded-full bg-[var(--accent)]"
+                    initial={{ width: 0 }}
+                    animate={{ width: "82%" }}
+                    transition={{ duration: 1.2, delay: 0.5 }}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </motion.div>
       </section>
 
-      <section id="features" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-10 max-w-2xl">
-          <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
-            Funkcje
+      {/* pasek zaufania */}
+      <section className="mx-auto max-w-7xl px-6 py-10">
+        <Reveal className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {[
+            { icon: BarChart3, value: <CountUp to={227} />, label: "aktywnych lig" },
+            { icon: Cpu, value: <CountUp to={69} suffix="k+" />, label: "meczów w bazie" },
+            { icon: Activity, value: "30 min", label: "cykl weryfikacji" },
+            { icon: Gauge, value: <CountUp to={totalTips} />, label: "rozliczonych typów" },
+          ].map((s) => {
+            const Icon = s.icon
+            return (
+              <div
+                key={s.label}
+                className="rounded-[1.6rem] border border-white/12 bg-white/[0.05] p-5 backdrop-blur"
+              >
+                <Icon className="mb-3 h-5 w-5 text-[color:var(--accent)]" />
+                <p className="text-2xl font-semibold">{s.value}</p>
+                <p className="mt-1 text-sm text-white/48">{s.label}</p>
+              </div>
+            )
+          })}
+        </Reveal>
+      </section>
+
+      {/* jak to działa */}
+      <section id="how" className="mx-auto max-w-7xl px-6 py-20">
+        <Reveal className="mb-12 max-w-2xl">
+          <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent)]/80">
+            Jak to działa
           </p>
           <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
-            Prosty projekt, ale z efektem strony premium.
+            Od modelu do gotowego typu w trzech krokach.
           </h2>
-        </div>
+        </Reveal>
 
         <div className="grid gap-5 md:grid-cols-3">
-          {cards.map((card, index) => {
-            const Icon = card.icon
-
+          {steps.map((step, i) => {
+            const Icon = step.icon
             return (
-              <motion.article
-                key={card.title}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="rounded-[2rem] border border-white/12 bg-white/[0.06] p-7 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.09]"
-              >
-                <div className="mb-7 grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-cyan-200">
-                  <Icon className="h-6 w-6" />
-                </div>
-
-                <h3 className="text-xl font-semibold">{card.title}</h3>
-                <p className="mt-3 leading-7 text-white/60">{card.text}</p>
-              </motion.article>
+              <Reveal key={step.title} delay={i * 0.1}>
+                <article className="h-full rounded-[2rem] border border-white/12 bg-white/[0.055] p-7 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085]">
+                  <div className="mb-6 grid h-12 w-12 place-items-center rounded-2xl border border-[color:var(--accent)]/20 bg-[var(--accent)]/10 text-[color:var(--accent)]">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold">{step.title}</h3>
+                  <p className="mt-3 leading-7 text-white/60">{step.text}</p>
+                </article>
+              </Reveal>
             )
           })}
         </div>
       </section>
 
-      <section id="projects" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.3em] text-violet-300/70">
-              Projekty
-            </p>
+      {/* tryby */}
+      <section id="modes" className="mx-auto max-w-7xl px-6 py-20">
+        <Reveal className="mb-12 max-w-2xl">
+          <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent)]/80">Tryby</p>
+          <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
+            Cztery rynki, jeden silnik.
+          </h2>
+        </Reveal>
 
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
-              Przykładowe kierunki, w które można rozwinąć stronę.
-            </h2>
-          </div>
-
-          <p className="max-w-md leading-7 text-white/55">
-            Na tym etapie strona nie musi mieć konkretnego przeznaczenia.
-            Budujemy uniwersalny szkielet, który później można zmienić w
-            portfolio, landing page, blog albo małą aplikację.
-          </p>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-3">
-          {projects.map((project, index) => (
-            <motion.article
-              key={project.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="group relative overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.055] p-7 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085]"
-            >
-              <div className="absolute right-[-40px] top-[-40px] h-32 w-32 rounded-full bg-cyan-300/10 blur-2xl transition group-hover:bg-cyan-300/20" />
-
-              <p className="relative text-sm text-cyan-200/70">
-                {project.type}
-              </p>
-
-              <h3 className="relative mt-5 text-2xl font-semibold">
-                {project.title}
-              </h3>
-
-              <p className="relative mt-4 leading-7 text-white/58">
-                {project.text}
-              </p>
-
-              <div className="relative mt-8 h-36 rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.03] p-4">
-                <div className="h-3 w-24 rounded-full bg-white/20" />
-                <div className="mt-5 grid gap-3">
-                  <div className="h-3 rounded-full bg-white/10" />
-                  <div className="h-3 w-3/4 rounded-full bg-white/10" />
-                  <div className="h-3 w-1/2 rounded-full bg-white/10" />
-                </div>
-              </div>
-            </motion.article>
-          ))}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {modes.map((mode, i) => {
+            const Icon = mode.icon
+            const high = mode.risk.includes("wysokie")
+            return (
+              <Reveal key={mode.name} delay={i * 0.08}>
+                <article className="h-full rounded-[2rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085]">
+                  <div className="mb-5 grid h-12 w-12 place-items-center rounded-2xl border border-[color:var(--accent)]/20 bg-[var(--accent)]/10 text-[color:var(--accent)]">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold">{mode.name}</h3>
+                  <p className="mt-3 text-sm leading-6 text-white/58">{mode.desc}</p>
+                  <span
+                    className={`mt-5 inline-block rounded-full border px-3 py-1 text-xs font-medium ${
+                      high
+                        ? "border-rose-300/30 bg-rose-300/10 text-rose-200"
+                        : "border-white/12 bg-white/[0.05] text-white/55"
+                    }`}
+                  >
+                    {mode.risk}
+                  </span>
+                </article>
+              </Reveal>
+            )
+          })}
         </div>
       </section>
-      <section id="stack" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
-              Tech stack
-            </p>
 
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
-              Narzędzia, na których budowany jest projekt.
-            </h2>
-          </div>
-
-          <p className="max-w-md leading-7 text-white/55">
-            Ta sekcja pokazuje technologie użyte w projekcie. Dzięki temu strona
-            zaczyna działać też jako pokaz umiejętności frontendowych.
-          </p>
-        </div>
-
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {techStack.map((item, index) => {
-            const Icon = item.icon
-
-            return (
-              <motion.article
-                key={item.name}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
-                className="group rounded-[2rem] border border-white/12 bg-white/[0.055] p-7 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085]"
-              >
-                <div className="mb-7 flex h-13 w-13 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200 transition group-hover:scale-110">
-                  <Icon className="h-6 w-6" />
-                </div>
-
-                <h3 className="text-2xl font-semibold">{item.name}</h3>
-
-                <p className="mt-4 leading-7 text-white/58">
-                  {item.text}
+      {/* skuteczność */}
+      <section id="performance" className="mx-auto max-w-7xl px-6 py-20">
+        <Reveal>
+          <div className="overflow-hidden rounded-[2.4rem] border border-white/12 bg-gradient-to-br from-[var(--accent)]/10 via-white/[0.04] to-[var(--glow-2)] p-8 backdrop-blur md:p-12">
+            <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
+              <div className="max-w-xl">
+                <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent)]/80">
+                  Skuteczność
                 </p>
-              </motion.article>
-            )
-          })}
-        </div>
-
-        <div className="mt-8 rounded-[2rem] border border-white/12 bg-gradient-to-br from-cyan-300/10 via-white/[0.04] to-violet-500/10 p-6 backdrop-blur">
-          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs text-white/55">
-                <GitBranch className="h-3.5 w-3.5" />
-                GitHub workflow
+                <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
+                  Liczby, nie obietnice.
+                </h2>
+                <p className="mt-5 leading-8 text-white/64">
+                  Każdy typ jest automatycznie rozliczany po meczu. Zobacz pełne
+                  wykresy: trafialność i ROI w czasie, podział na rynki i ligi oraz
+                  kalibrację Q-Score.
+                </p>
+                <Link
+                  href="/stats"
+                  className="mt-7 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
+                >
+                  Otwórz statystyki
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
 
-              <h3 className="text-2xl font-semibold">
-                Każdy etap projektu może być zapisany jako commit.
-              </h3>
-
-              <p className="mt-3 max-w-2xl leading-7 text-white/58">
-                Dzięki temu można śledzić historię zmian, wracać do poprzednich
-                wersji i budować portfolio projektów bez chaosu w plikach.
-              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { icon: Target, value: <CountUp to={winRate * 100} decimals={1} suffix="%" />, label: "Trafialność" },
+                  { icon: TrendingUp, value: <CountUp to={roi * 100} decimals={1} prefix={roiSign} suffix="%" />, label: "ROI" },
+                  { icon: Gauge, value: <CountUp to={68} />, label: "Śr. Q-Score" },
+                  { icon: BarChart3, value: <CountUp to={totalTips} />, label: "Typów" },
+                ].map((k) => {
+                  const Icon = k.icon
+                  return (
+                    <div
+                      key={k.label}
+                      className="rounded-[1.6rem] border border-white/12 bg-[var(--bg)]/40 p-5 backdrop-blur"
+                    >
+                      <Icon className="mb-3 h-5 w-5 text-[color:var(--accent)]" />
+                      <p className="text-3xl font-semibold">{k.value}</p>
+                      <p className="mt-1 text-sm text-white/48">{k.label}</p>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-
-            <a
-              href="https://github.com/mtkittles/nova-pulse"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-[#070812] transition hover:scale-105"
-            >
-              Repozytorium
-              <ArrowRight className="h-4 w-4" />
-            </a>
           </div>
+        </Reveal>
+      </section>
+
+      {/* dostęp / free */}
+      <section id="access" className="mx-auto max-w-7xl px-6 py-20">
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Reveal>
+            <div className="h-full rounded-[2rem] border border-white/12 bg-white/[0.055] p-8 backdrop-blur">
+              <div className="mb-6 grid h-12 w-12 place-items-center rounded-2xl border border-[color:var(--accent)]/20 bg-[var(--accent)]/10 text-[color:var(--accent)]">
+                <Lock className="h-6 w-6" />
+              </div>
+              <h3 className="text-2xl font-semibold">Darmowy dostęp na start</h3>
+              <p className="mt-4 leading-7 text-white/60">
+                Bez logowania zobaczysz dzisiejsze typy i podstawowe wskaźniki.
+                Zaloguj się przez Telegram, aby odblokować pełne statystyki,
+                historię i filtry — bez opłat.
+              </p>
+              <ul className="mt-6 grid gap-3 text-sm text-white/70">
+                {[
+                  "Dzisiejsze typy i podstawowe KPI — bez logowania",
+                  "Pełne wykresy, historia i filtry — po zalogowaniu",
+                  "Logowanie przez Telegram (email wkrótce)",
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-2">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.1}>
+            <div className="flex h-full flex-col justify-between rounded-[2rem] border border-white/12 bg-gradient-to-br from-[var(--accent)]/10 to-white/[0.04] p-8 backdrop-blur">
+              <div>
+                <div className="mb-6 grid h-12 w-12 place-items-center rounded-2xl border border-[color:var(--accent)]/20 bg-[var(--accent)]/10 text-[color:var(--accent)]">
+                  <Send className="h-6 w-6" />
+                </div>
+                <h3 className="text-2xl font-semibold">Bot na Telegramie</h3>
+                <p className="mt-4 leading-7 text-white/60">
+                  Ten sam silnik, drugi interfejs. Odbieraj typy bezpośrednio w
+                  Telegramie — natychmiast, z powiadomieniami.
+                </p>
+              </div>
+              <a
+                href="https://t.me/lupus_bet_bot"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
+              >
+                Otwórz @lupus_bet_bot
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      <section id="process" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-12 max-w-3xl">
-          <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
-            Proces
-          </p>
-
+      {/* FAQ */}
+      <section id="faq" className="mx-auto max-w-3xl px-6 py-20">
+        <Reveal className="mb-10 text-center">
+          <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent)]/80">FAQ</p>
           <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
-            Strona powstaje etapami, jak prawdziwy projekt produktowy.
+            Najczęstsze pytania.
           </h2>
-
-          <p className="mt-5 leading-8 text-white/60">
-            Ten projekt traktujemy jako poligon do nauki: od prostego layoutu,
-            przez komponenty i animacje, aż po publikację na GitHubie oraz
-            późniejsze wdrożenie online.
-          </p>
-        </div>
-
-        <div className="relative grid gap-5 md:grid-cols-3">
-          <div className="absolute left-0 top-1/2 hidden h-px w-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent md:block" />
-
-          {processSteps.map((step, index) => (
-            <motion.article
-              key={step.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.12 }}
-              className="relative rounded-[2rem] border border-white/12 bg-[#0d0e1a]/80 p-7 shadow-2xl shadow-black/20 backdrop-blur"
-            >
-              <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-lg font-semibold text-cyan-200">
-                {step.number}
-              </div>
-
-              <h3 className="text-2xl font-semibold">{step.title}</h3>
-
-              <p className="mt-4 leading-7 text-white/58">
-                {step.text}
-              </p>
-            </motion.article>
-          ))}
-        </div>
+        </Reveal>
+        <Reveal delay={0.05}>
+          <Faq />
+        </Reveal>
       </section>
-      <section id="contact" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
-          <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.3em] text-cyan-300/70">
-              Kontakt
-            </p>
 
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">
-              Formularz, który nadaje stronie realny charakter.
-            </h2>
-          </div>
-
-          <p className="max-w-md leading-7 text-white/55">
-            Na razie formularz działa jako element interfejsu. W kolejnym etapie
-            można podłączyć wysyłkę wiadomości przez zewnętrzną usługę albo
-            własny backend.
-          </p>
-        </div>
-
-        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[2rem] border border-white/12 bg-white/[0.055] p-7 shadow-2xl shadow-black/20 backdrop-blur">
-            <div className="mb-8 grid h-14 w-14 place-items-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
-              <MessageSquare className="h-6 w-6" />
-            </div>
-
-            <h3 className="text-3xl font-semibold tracking-tight">
-              Masz pomysł na kierunek strony?
-            </h3>
-
-            <p className="mt-4 leading-8 text-white/58">
-              Ten blok można później wykorzystać jako realny formularz kontaktowy
-              dla portfolio, strony firmowej, landing page’a produktu albo
-              projektu freelancowego.
-            </p>
-
-            <div className="mt-8 grid gap-4">
-              <div className="flex items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.045] p-4">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-cyan-200">
-                  <Mail className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <p className="text-sm text-white/40">Email</p>
-                  <p className="font-medium">contact@novapulse.dev</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 rounded-3xl border border-white/10 bg-white/[0.045] p-4">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/10 text-violet-200">
-                  <MapPin className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <p className="text-sm text-white/40">Tryb pracy</p>
-                  <p className="font-medium">Projekt lokalny + GitHub</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              alert("Formularz działa. W kolejnym etapie można podłączyć realną wysyłkę wiadomości.")
-            }}
-            className="rounded-[2rem] border border-white/12 bg-gradient-to-br from-white/[0.09] to-white/[0.04] p-7 shadow-2xl shadow-black/25 backdrop-blur"
-          >
-            <div className="grid gap-5 sm:grid-cols-2">
-              <label className="grid gap-2">
-                <span className="text-sm text-white/55">Imię</span>
-                <input
-                  required
-                  type="text"
-                  placeholder="Np. Łukasz"
-                  className="rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
-                />
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-sm text-white/55">Email</span>
-                <input
-                  required
-                  type="email"
-                  placeholder="twoj@email.com"
-                  className="rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
-                />
-              </label>
-            </div>
-
-            <label className="mt-5 grid gap-2">
-              <span className="text-sm text-white/55">Temat</span>
-              <input
-                required
-                type="text"
-                placeholder="Np. Pomysł na stronę portfolio"
-                className="rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
-              />
-            </label>
-
-            <label className="mt-5 grid gap-2">
-              <span className="text-sm text-white/55">Wiadomość</span>
-              <textarea
-                required
-                rows={6}
-                placeholder="Opisz krótko, co chcesz zbudować..."
-                className="resize-none rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-300/40 focus:ring-2 focus:ring-cyan-300/15"
-              />
-            </label>
-
-            <button
-              type="submit"
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-cyan-300 px-6 py-3 font-semibold text-[#070812] shadow-2xl shadow-cyan-300/10 transition hover:scale-[1.02] hover:bg-cyan-200"
-            >
-              Wyślij wiadomość
-              <Send className="h-4 w-4" />
-            </button>
-          </form>
-        </div>
-      </section>
-      <section id="design" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="rounded-[2.4rem] border border-white/12 bg-gradient-to-br from-white/[0.10] to-white/[0.04] p-8 shadow-2xl shadow-black/30 backdrop-blur md:p-12">
-          <p className="text-sm uppercase tracking-[0.3em] text-violet-200/70">
-            Następny krok
-          </p>
-
-          <h2 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
-            Teraz możemy zrobić z tego prawdziwą stronę.
-          </h2>
-
-          <p className="mt-6 max-w-2xl leading-8 text-white/60">
-            W kolejnym etapie dodamy menu mobilne, więcej sekcji, animacje przy
-            scrollowaniu, lepsze fonty, własną paletę kolorów i później
-            wdrożenie online.
-          </p>
-        </div>
-      </section>
+      {/* footer + 18+ */}
       <footer className="mx-auto max-w-7xl px-6 py-10">
-        <div className="flex flex-col justify-between gap-5 border-t border-white/10 pt-8 text-sm text-white/45 md:flex-row md:items-center">
-          <p>
-            © 2026 NovaPulse. Projekt edukacyjny zbudowany w React, Next.js i Tailwind CSS.
-          </p>
-
-          <div className="flex gap-5">
-            <a href="#start" className="transition hover:text-white">
-              Start
-            </a>
-            <a href="#features" className="transition hover:text-white">
-              Funkcje
-            </a>
-            <a href="#projects" className="transition hover:text-white">
-              Projekty
-            </a>
-            <a href="#contact" className="transition hover:text-white">
-              Kontakt
-            </a>
-            <a href="#stack" className="transition hover:text-white">
-              Stack
-            </a>
+        <div className="rounded-[1.6rem] border border-amber-300/20 bg-amber-300/[0.06] p-5 text-sm text-amber-100/80">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+            <p>
+              <strong className="font-semibold">18+ · Graj odpowiedzialnie.</strong> Typy
+              to predykcje statystyczne, nie gwarancja wygranej. Hazard wiąże się z
+              ryzykiem uzależnienia i utraty pieniędzy. Obstawiaj wyłącznie środki, które
+              możesz stracić. Pomoc: <span className="underline">uzaleznienia.pl</span>.
+            </p>
           </div>
         </div>
+
+        <div className="mt-8 flex flex-col justify-between gap-5 border-t border-white/10 pt-8 text-sm text-white/45 md:flex-row md:items-center">
+          <div className="flex items-center gap-3">
+            <Brand />
+          </div>
+          <div className="flex flex-wrap gap-5">
+            <Link href="/dashboard" className="transition hover:text-white">
+              Typy
+            </Link>
+            <Link href="/stats" className="transition hover:text-white">
+              Statystyki
+            </Link>
+            <a href="#faq" className="transition hover:text-white">
+              FAQ
+            </a>
+            <Link href="/login" className="transition hover:text-white">
+              Zaloguj
+            </Link>
+          </div>
+        </div>
+        <p className="mt-6 text-xs text-white/30">
+          © 2026 LUPUS BETS. Interfejs nad silnikiem Lupus Bot. Predykcje piłkarskie
+          oparte na modelu Dixon-Coles.
+        </p>
       </footer>
     </main>
   )

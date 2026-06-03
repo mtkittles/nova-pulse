@@ -1,14 +1,15 @@
 import Link from "next/link"
-import { ArrowLeft, Mail, Send, Sparkles } from "lucide-react"
+import { ArrowLeft, Mail, Send } from "lucide-react"
+import { Brand } from "@/components/brand"
 
-// Placeholder pod Etap 4 (logowanie Telegram + email/JWT).
+// Placeholder pod kolejny inkrement (logowanie Telegram + JWT, email później).
 // Na razie wyłącznie UI — bez realnego uwierzytelniania.
 export default function LoginPage() {
   return (
-    <main className="grid min-h-screen place-items-center overflow-hidden bg-[#070812] px-6 text-white">
+    <main className="grid min-h-screen place-items-center overflow-hidden bg-[var(--bg)] px-6 text-white">
       <div className="fixed inset-0 -z-10">
-        <div className="absolute left-[-120px] top-[-120px] h-96 w-96 rounded-full bg-cyan-500/25 blur-3xl" />
-        <div className="absolute right-[-120px] bottom-10 h-96 w-96 rounded-full bg-violet-600/25 blur-3xl" />
+        <div className="absolute left-[-120px] top-[-120px] h-96 w-96 rounded-full bg-[var(--glow-1)] blur-3xl" />
+        <div className="absolute right-[-120px] bottom-10 h-96 w-96 rounded-full bg-[var(--glow-2)] blur-3xl" />
       </div>
 
       <div className="w-full max-w-md">
@@ -21,16 +22,14 @@ export default function LoginPage() {
         </Link>
 
         <div className="rounded-[2rem] border border-white/12 bg-white/[0.06] p-8 shadow-2xl shadow-black/30 backdrop-blur">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10">
-              <Sparkles className="h-5 w-5 text-cyan-300" />
-            </div>
-            <span className="text-xl font-semibold">Zaloguj się</span>
+          <div className="mb-6">
+            <Brand />
           </div>
 
-          <p className="mb-6 text-sm leading-6 text-white/55">
-            Logowanie (Telegram + email) zostanie podłączone w kolejnym etapie.
-            Poniżej widać docelowy interfejs.
+          <h1 className="text-2xl font-semibold">Zaloguj się</h1>
+          <p className="mt-3 mb-6 text-sm leading-6 text-white/55">
+            Logowanie odblokowuje pełne statystyki, historię i filtry — za darmo.
+            Na start logujemy się przez Telegram; email dodamy wkrótce.
           </p>
 
           <button
@@ -41,36 +40,30 @@ export default function LoginPage() {
             <Send className="h-4 w-4" />
             Zaloguj przez Telegram
           </button>
+          <p className="text-center text-xs text-white/35">
+            Podłączenie w kolejnym kroku (wymaga konfiguracji bota).
+          </p>
 
           <div className="my-5 flex items-center gap-3 text-xs text-white/35">
             <span className="h-px flex-1 bg-white/10" />
-            albo
+            email wkrótce
             <span className="h-px flex-1 bg-white/10" />
           </div>
 
-          <div className="grid gap-4 opacity-70">
+          <div className="grid gap-4 opacity-60">
             <label className="grid gap-2">
               <span className="text-sm text-white/55">Email</span>
               <input
                 type="email"
                 disabled
                 placeholder="twoj@email.com"
-                className="rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none placeholder:text-white/30"
-              />
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm text-white/55">Hasło</span>
-              <input
-                type="password"
-                disabled
-                placeholder="••••••••"
-                className="rounded-2xl border border-white/10 bg-[#090a15]/70 px-4 py-3 text-white outline-none placeholder:text-white/30"
+                className="rounded-2xl border border-white/10 bg-[var(--bg)]/70 px-4 py-3 text-white outline-none placeholder:text-white/30"
               />
             </label>
             <button
               type="button"
               disabled
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-cyan-300 px-6 py-3 font-semibold text-[#070812]"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)]"
             >
               <Mail className="h-4 w-4" />
               Zaloguj przez email
