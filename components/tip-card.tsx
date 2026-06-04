@@ -1,5 +1,5 @@
 import type { BetType, Tip } from "@/lib/types"
-import { CheckCircle2, XCircle } from "lucide-react"
+import { CheckCircle2, Minus, Plus, XCircle } from "lucide-react"
 
 const MARKET: Record<BetType, { label: string; classes: string }> = {
   BTTS: { label: "BTTS", classes: "border-cyan-300/30 bg-cyan-300/10 text-cyan-200" },
@@ -13,7 +13,6 @@ function qScoreColor(q: number): string {
   if (q < 75) return "text-amber-300"
   return "text-emerald-300"
 }
-
 function qScoreBar(q: number): string {
   if (q < 50) return "bg-rose-400"
   if (q < 75) return "bg-amber-400"
@@ -21,23 +20,39 @@ function qScoreBar(q: number): string {
 }
 
 function formatKickoff(iso: string): string {
-  // Stała strefa czasowa → brak rozjazdu hydratacji SSR/klient.
   return new Intl.DateTimeFormat("pl-PL", {
+    weekday: "short",
+    day: "numeric",
+    month: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "Europe/Warsaw",
   }).format(new Date(iso))
 }
 
-export default function TipCard({ tip }: { tip: Tip }) {
+export default function TipCard({
+  tip,
+  selectable = false,
+  selected = false,
+  onToggle,
+}: {
+  tip: Tip
+  selectable?: boolean
+  selected?: boolean
+  onToggle?: () => void
+}) {
   const market = MARKET[tip.bet_type]
   const prob = Math.round(tip.model_prob * 100)
   const edgePct = (tip.edge * 100).toFixed(1)
   const settled = tip.actual_result !== null
 
   return (
-    <article className="group relative overflow-hidden rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085]">
-      <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-cyan-300/10 blur-2xl transition group-hover:bg-cyan-300/20" />
+    <article
+      className={`group relative flex flex-col overflow-hidden rounded-[1.8rem] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085] ${
+        selected ? "border-[color:var(--accent)]/60" : "border-white/12"
+      }`}
+    >
+      <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
 
       <div className="relative flex items-center justify-between">
         <span className="text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
@@ -94,6 +109,21 @@ export default function TipCard({ tip }: { tip: Tip }) {
           <div className={`h-full rounded-full ${qScoreBar(tip.q_score)}`} style={{ width: `${tip.q_score}%` }} />
         </div>
       </div>
+
+      {selectable && (
+        <button
+          type="button"
+          onClick={onToggle}
+          className={`relative mt-5 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+            selected
+              ? "bg-[var(--accent)] text-[color:var(--on-accent)] hover:scale-[1.02]"
+              : "border border-white/15 bg-white/10 text-white hover:bg-white/15"
+          }`}
+        >
+          {selected ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          {selected ? "W kuponie" : "Do kuponu"}
+        </button>
+      )}
     </article>
   )
 }

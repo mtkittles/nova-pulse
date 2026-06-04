@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { ArrowLeft, BarChart3 } from "lucide-react"
 import { getTodayTips } from "@/lib/tips"
-import TipsBoard from "@/components/tips-board"
+import TipsExplorer from "@/components/tips-explorer"
 import { Brand } from "@/components/brand"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LogoutButton } from "@/components/logout-button"
@@ -16,15 +16,7 @@ export default async function DashboardPage() {
   const [data, session] = await Promise.all([getTodayTips(), getSession()])
   const live = isOracleConfigured()
 
-  const formattedDate = new Intl.DateTimeFormat("pl-PL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Europe/Warsaw",
-  }).format(new Date(`${data.date}T12:00:00Z`))
-
-  const activeCount = data.tips.filter((t) => t.bet_type !== "THRILLER").length
+  const total = data.tips.length
 
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--bg)] text-white">
@@ -75,14 +67,16 @@ export default async function DashboardPage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
             </span>
-            {activeCount} typów na dziś
+            {total} typów na najbliższe dni
           </div>
 
           <h1 className="text-4xl font-semibold tracking-tight md:text-6xl">
-            Dzisiejsze typy
+            Typy meczowe
           </h1>
 
-          <p className="mt-4 text-lg capitalize text-white/55">{formattedDate}</p>
+          <p className="mt-4 text-lg text-white/55">
+            Wybierz dzień, filtruj po lidze, rynku i Q-Score, złóż kupon.
+          </p>
 
           {!live && (
             <p className="mt-2 text-sm text-white/40">
@@ -97,7 +91,7 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <TipsBoard data={data} />
+        <TipsExplorer data={data} />
       </section>
     </main>
   )
