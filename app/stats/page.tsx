@@ -126,8 +126,9 @@ export default async function StatsPage() {
             </p>
           )}
           {live && s.total_tips === 0 && (
-            <p className="mt-3 inline-block rounded-full border border-amber-300/25 bg-amber-300/10 px-4 py-2 text-sm text-amber-100/80">
-              Brak danych z API (Oracle nie zwróciło rozliczonych typów albo jest niedostępne).
+            <p className="mt-3 inline-block rounded-full border border-[color:var(--accent)]/25 bg-[var(--accent)]/10 px-4 py-2 text-sm text-white/75">
+              Statystyki pojawią się, gdy rozegrane mecze zostaną zweryfikowane przez bota —
+              baza typów dopiero się zapełnia. To normalne na starcie.
             </p>
           )}
         </div>
