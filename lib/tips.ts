@@ -18,7 +18,7 @@ function hasTipsArray(x: unknown): boolean {
 export async function getTodayTips(): Promise<TipsResponse> {
   if (!isOracleConfigured()) return mockTips
   try {
-    const data = await oracleFetch<unknown>("/public-api/tips/today", 300)
+    const data = await oracleFetch<unknown>("/public-api/tips/today")
     if (!hasTipsArray(data)) {
       console.error("getTodayTips: odpowiedź Oracle niezgodna z kontraktem")
       return emptyTips()
