@@ -9,6 +9,9 @@ import { LockedSection } from "@/components/locked-section"
 import { getSession } from "@/lib/auth"
 import { isOracleConfigured } from "@/lib/oracle"
 
+// Dane na żywo + sesja → renderuj per żądanie.
+export const dynamic = "force-dynamic"
+
 export default async function StatsPage() {
   const [data, session] = await Promise.all([getStats(), getSession()])
   const s = data.summary

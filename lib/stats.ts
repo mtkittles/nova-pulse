@@ -23,14 +23,35 @@ function emptyStats(): StatsResponse {
   }
 }
 
+// Sprawdza, czy odpowiedź Oracle pasuje do kontraktu (chroni przed crashem,
+// gdy endpoint zwróci błąd/inny kształt jako 200).
+function isValidStats(x: unknown): x is StatsResponse {
+  if (!x || typeof x !== "object") return false
+  const o = x as Record<string, unknown>
+  const s = o.summary as Record<string, unknown> | undefined
+  return (
+    !!s &&
+    typeof s.win_rate === "number" &&
+    Array.isArray(o.timeline) &&
+    Array.isArray(o.by_market) &&
+    Array.isArray(o.by_league) &&
+    Array.isArray(o.q_score_buckets)
+  )
+}
+
 // Serwerowy punkt dostępu do agregatów skuteczności. Wyłącznie server-side.
-// - Oracle skonfigurowane → realne agregaty z `bot_predictions`
-// - Oracle niedostępne (błąd/timeout) → puste statystyki (NIE crash)
+// - Oracle skonfigurowane + poprawna odpowiedź → realne agregaty
+// - Oracle niedostępne / zła odpowiedź → puste statystyki (NIE crash)
 // - brak konfiguracji → dane testowe (podgląd działa bez Oracle)
 export async function getStats(): Promise<StatsResponse> {
   if (!isOracleConfigured()) return mockStats
   try {
-    return await oracleFetch<StatsResponse>("/public-api/stats", 600)
+    const data = await oracleFetch<unknown>("/public-api/stats", 600)
+    if (!isValidStats(data)) {
+      console.error("getStats: odpowiedź Oracle niezgodna z kontraktem")
+      return emptyStats()
+    }
+    return data
   } catch (err) {
     console.error("getStats: Oracle niedostępne →", err)
     return emptyStats()

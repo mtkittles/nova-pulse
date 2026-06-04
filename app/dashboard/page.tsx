@@ -8,6 +8,9 @@ import { LogoutButton } from "@/components/logout-button"
 import { getSession } from "@/lib/auth"
 import { isOracleConfigured } from "@/lib/oracle"
 
+// Dane na żywo + sesja → renderuj per żądanie.
+export const dynamic = "force-dynamic"
+
 // Server Component: pobiera typy server-side (Oracle gdy skonfigurowane, inaczej mock).
 export default async function DashboardPage() {
   const [data, session] = await Promise.all([getTodayTips(), getSession()])
