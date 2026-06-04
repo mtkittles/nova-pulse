@@ -5,7 +5,7 @@
 export type BetType = "BTTS" | "OVER_1_5" | "MIX" | "THRILLER"
 
 export interface Tip {
-  event_id: number
+  event_id: string | number
   league: string
   home: string
   away: string
