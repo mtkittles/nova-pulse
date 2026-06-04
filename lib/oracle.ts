@@ -18,7 +18,7 @@ export async function oracleFetch<T>(path: string, revalidateSeconds: number): P
 
   const url = `${base.replace(/\/$/, "")}${path}`
   const res = await fetch(url, {
-    headers: { "x-api-key": key },
+    headers: { "X-API-Key": key },
     // bot liczy z wyprzedzeniem — cache chroni silnik przed obciążeniem
     next: { revalidate: revalidateSeconds },
   })

@@ -87,6 +87,11 @@ export default async function DashboardPage() {
               z tabeli <code className="text-white/60">bot_predictions</code>.
             </p>
           )}
+          {live && data.tips.length === 0 && (
+            <p className="mt-3 inline-block rounded-full border border-amber-300/25 bg-amber-300/10 px-4 py-2 text-sm text-amber-100/80">
+              API odpowiedziało, ale nie ma typów na dziś (albo Oracle jest chwilowo niedostępne).
+            </p>
+          )}
         </div>
 
         <TipsBoard data={data} />

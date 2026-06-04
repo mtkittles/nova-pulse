@@ -122,6 +122,11 @@ export default async function StatsPage() {
               pełne wykresy.
             </p>
           )}
+          {live && s.total_tips === 0 && (
+            <p className="mt-3 inline-block rounded-full border border-amber-300/25 bg-amber-300/10 px-4 py-2 text-sm text-amber-100/80">
+              Brak danych z API (Oracle nie zwróciło rozliczonych typów albo jest niedostępne).
+            </p>
+          )}
         </div>
 
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
