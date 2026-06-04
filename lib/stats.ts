@@ -1,16 +1,11 @@
 import type { StatsResponse } from "./stats-types"
 import { mockStats } from "./mock-stats"
+import { isOracleConfigured, oracleFetch } from "./oracle"
 
-// Serwerowy punkt dostępu do statystyk skuteczności. Wyłącznie server-side.
-//
-// MVP: zwraca mock. Po zbudowaniu endpointu na Oracle podmień na realny fetch:
-//
-//   const res = await fetch(`${process.env.ORACLE_API_URL}/public-api/stats`, {
-//     headers: { "x-api-key": process.env.ORACLE_API_KEY ?? "" },
-//     next: { revalidate: 600 }, // cache 10 min — agregaty liczy bot, nie strona
-//   })
-//   if (!res.ok) throw new Error(`Oracle API: ${res.status}`)
-//   return (await res.json()) as StatsResponse
+// Serwerowy punkt dostępu do agregatów skuteczności. Wyłącznie server-side.
+// - skonfigurowane Oracle → realne, policzone agregaty z `bot_predictions`
+// - brak konfiguracji → dane testowe (podgląd działa bez Oracle)
 export async function getStats(): Promise<StatsResponse> {
-  return mockStats
+  if (!isOracleConfigured()) return mockStats
+  return oracleFetch<StatsResponse>("/public-api/stats", 600)
 }

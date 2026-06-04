@@ -80,8 +80,10 @@ Przeglądarka nigdy nie widzi klucza API ani adresu Oracle.
 4. ✅ **Logowanie (Telegram + JWT)** — Telegram Login Widget → `/api/auth/telegram`
    (weryfikacja HMAC z tokenu bota) → sesja JWT w httpOnly cookie (7 dni) →
    bramkowanie: anon widzi KPI, zalogowany pełne `/stats`. Email/hasło: później.
-5. ⏳ **Podłączenie realnego API** — gdy endpoint na Oracle gotowy: w `lib/tips.ts`
-   mock → fetch przez Cloudflare Tunnel (kod proxy już przygotowany w komentarzu).
+5. ◑ **Podłączenie realnego API** — strona gotowa: `lib/oracle.ts` pobiera z Oracle
+   gdy ustawione `ORACLE_API_URL`/`ORACLE_API_KEY`, inaczej mock (podgląd działa).
+   Plakietka „dane testowe" znika przy danych na żywo; błędy → `error.tsx`.
+   **Pozostaje:** wystawić endpointy na Oracle wg `docs/ORACLE_API.md` + ustawić env.
 6. ✅ **Wykresy skuteczności** — strona `/stats`: KPI (win-rate, ROI, seria,
    Q-Score), skumulowany ROI i trafialność w czasie, trafialność per rynek/liga,
    kalibracja Q-Score, bilans wygrane/przegrane. Recharts, agregaty na mocku.

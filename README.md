@@ -81,5 +81,6 @@ Bez logowania: dzisiejsze typy + KPI. Po zalogowaniu (free): pełne wykresy.
 - ✅ Panel „Dzisiejsze typy" na danych testowych (mock)
 - ✅ Statystyki skuteczności `/stats` — wykresy (win-rate, ROI, per rynek/liga, Q-Score)
 - ✅ Logowanie przez Telegram (JWT) + bramkowanie (gating) free
-- ⏳ Endpoint na Oracle + podłączenie realnych danych
+- ✅ Warstwa danych Oracle (`lib/oracle.ts`) — auto-przełączanie mock ↔ live
+- ⏳ Endpointy na Oracle (`docs/ORACLE_API.md`) + zmienne `ORACLE_API_*`
 - ⏳ Email/hasło (po Telegramie)

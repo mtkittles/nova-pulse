@@ -6,10 +6,12 @@ import { Brand } from "@/components/brand"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LogoutButton } from "@/components/logout-button"
 import { getSession } from "@/lib/auth"
+import { isOracleConfigured } from "@/lib/oracle"
 
-// Server Component: pobiera typy server-side (mock w MVP, później Oracle).
+// Server Component: pobiera typy server-side (Oracle gdy skonfigurowane, inaczej mock).
 export default async function DashboardPage() {
   const [data, session] = await Promise.all([getTodayTips(), getSession()])
+  const live = isOracleConfigured()
 
   const formattedDate = new Intl.DateTimeFormat("pl-PL", {
     weekday: "long",
@@ -79,10 +81,12 @@ export default async function DashboardPage() {
 
           <p className="mt-4 text-lg capitalize text-white/55">{formattedDate}</p>
 
-          <p className="mt-2 text-sm text-white/40">
-            Dane testowe (mock). Po podłączeniu API Lupus Bota typy będą pobierane
-            z tabeli <code className="text-white/60">bot_predictions</code>.
-          </p>
+          {!live && (
+            <p className="mt-2 text-sm text-white/40">
+              Dane testowe (mock). Po podłączeniu API Lupus Bota typy będą pobierane
+              z tabeli <code className="text-white/60">bot_predictions</code>.
+            </p>
+          )}
         </div>
 
         <TipsBoard data={data} />

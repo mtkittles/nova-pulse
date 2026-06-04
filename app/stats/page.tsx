@@ -7,10 +7,12 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { LogoutButton } from "@/components/logout-button"
 import { LockedSection } from "@/components/locked-section"
 import { getSession } from "@/lib/auth"
+import { isOracleConfigured } from "@/lib/oracle"
 
 export default async function StatsPage() {
   const [data, session] = await Promise.all([getStats(), getSession()])
   const s = data.summary
+  const live = isOracleConfigured()
 
   const streakLabel =
     s.current_streak === 0
@@ -108,10 +110,12 @@ export default async function StatsPage() {
             Wyniki typów z ostatnich {data.range_days} dni — trafialność, ROI, podział
             na rynki i ligi oraz kalibracja Q-Score.
           </p>
-          <p className="mt-2 text-sm text-white/40">
-            Dane testowe (mock). Po podłączeniu API agregaty będą liczone przez bota
-            z tabeli <code className="text-white/60">bot_predictions</code>.
-          </p>
+          {!live && (
+            <p className="mt-2 text-sm text-white/40">
+              Dane testowe (mock). Po podłączeniu API agregaty będą liczone przez bota
+              z tabeli <code className="text-white/60">bot_predictions</code>.
+            </p>
+          )}
           {!session && (
             <p className="mt-3 inline-block rounded-full border border-[color:var(--accent)]/25 bg-[var(--accent)]/10 px-4 py-2 text-sm text-white/75">
               Podstawowe wskaźniki widzisz za darmo. Zaloguj się, aby odblokować
