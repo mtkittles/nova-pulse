@@ -4,10 +4,12 @@ import { getTodayTips } from "@/lib/tips"
 import TipsBoard from "@/components/tips-board"
 import { Brand } from "@/components/brand"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LogoutButton } from "@/components/logout-button"
+import { getSession } from "@/lib/auth"
 
 // Server Component: pobiera typy server-side (mock w MVP, później Oracle).
 export default async function DashboardPage() {
-  const data = await getTodayTips()
+  const [data, session] = await Promise.all([getTodayTips(), getSession()])
 
   const formattedDate = new Intl.DateTimeFormat("pl-PL", {
     weekday: "long",
@@ -41,6 +43,16 @@ export default async function DashboardPage() {
             <BarChart3 className="h-4 w-4 text-[color:var(--accent)]" />
             Statystyki
           </Link>
+          {session ? (
+            <LogoutButton />
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
+            >
+              Zaloguj
+            </Link>
+          )}
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15"

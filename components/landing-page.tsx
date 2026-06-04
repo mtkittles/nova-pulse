@@ -29,6 +29,7 @@ type LandingProps = {
   winRate: number // 0..1
   roi: number // np. 0.05
   totalTips: number
+  loggedIn?: boolean
 }
 
 const navItems = [
@@ -142,7 +143,13 @@ function Reveal({
   )
 }
 
-export default function LandingPage({ tipsToday, winRate, roi, totalTips }: LandingProps) {
+export default function LandingPage({
+  tipsToday,
+  winRate,
+  roi,
+  totalTips,
+  loggedIn = false,
+}: LandingProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const roiSign = roi >= 0 ? "+" : ""
 
@@ -170,10 +177,10 @@ export default function LandingPage({ tipsToday, winRate, roi, totalTips }: Land
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
           <Link
-            href="/login"
+            href={loggedIn ? "/stats" : "/login"}
             className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
           >
-            Zaloguj
+            {loggedIn ? "Mój panel" : "Zaloguj"}
           </Link>
         </div>
 
@@ -208,11 +215,11 @@ export default function LandingPage({ tipsToday, winRate, roi, totalTips }: Land
                 <ThemeToggle />
               </div>
               <Link
-                href="/login"
+                href={loggedIn ? "/stats" : "/login"}
                 onClick={() => setMenuOpen(false)}
                 className="mt-1 rounded-2xl bg-[var(--accent)] px-4 py-3 text-center font-semibold text-[color:var(--on-accent)]"
               >
-                Zaloguj
+                {loggedIn ? "Mój panel" : "Zaloguj"}
               </Link>
             </nav>
           </motion.div>

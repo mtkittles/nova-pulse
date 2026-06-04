@@ -1,10 +1,15 @@
 import Link from "next/link"
-import { ArrowLeft, Mail, Send } from "lucide-react"
+import { redirect } from "next/navigation"
+import { ArrowLeft, Mail } from "lucide-react"
 import { Brand } from "@/components/brand"
+import { TelegramLogin } from "@/components/telegram-login"
+import { getSession } from "@/lib/auth"
 
-// Placeholder pod kolejny inkrement (logowanie Telegram + JWT, email później).
-// Na razie wyłącznie UI — bez realnego uwierzytelniania.
-export default function LoginPage() {
+export default async function LoginPage() {
+  // już zalogowany? prosto do statystyk
+  const session = await getSession()
+  if (session) redirect("/stats")
+
   return (
     <main className="grid min-h-screen place-items-center overflow-hidden bg-[var(--bg)] px-6 text-white">
       <div className="fixed inset-0 -z-10">
@@ -32,19 +37,9 @@ export default function LoginPage() {
             Na start logujemy się przez Telegram; email dodamy wkrótce.
           </p>
 
-          <button
-            type="button"
-            disabled
-            className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#229ED9] px-6 py-3 font-semibold text-white opacity-70"
-          >
-            <Send className="h-4 w-4" />
-            Zaloguj przez Telegram
-          </button>
-          <p className="text-center text-xs text-white/35">
-            Podłączenie w kolejnym kroku (wymaga konfiguracji bota).
-          </p>
+          <TelegramLogin redirectTo="/stats" />
 
-          <div className="my-5 flex items-center gap-3 text-xs text-white/35">
+          <div className="my-6 flex items-center gap-3 text-xs text-white/35">
             <span className="h-px flex-1 bg-white/10" />
             email wkrótce
             <span className="h-px flex-1 bg-white/10" />
@@ -70,6 +65,11 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
+
+        <p className="mt-5 text-center text-xs text-white/30">
+          Logując się, akceptujesz, że typy to predykcje statystyczne, a nie
+          gwarancja wygranej. 18+ · graj odpowiedzialnie.
+        </p>
       </div>
     </main>
   )

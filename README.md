@@ -62,6 +62,17 @@ lib/
 - Sekrety tylko w `.env.local` (patrz `.env.example`), **nigdy w gicie**.
 - Strona **nie liczy predykcji** — serwuje gotowe rekordy z `bot_predictions`.
 
+## Logowanie (Telegram)
+
+1. W **BotFather** ustaw domenę strony: `/setdomain` → domena produkcyjna (np. `lupus-bets.vercel.app`). Widget działa tylko na tej domenie.
+2. W **Vercel → Settings → Environment Variables** ustaw (Production + Preview):
+   - `TELEGRAM_BOT_TOKEN` — token bota (sekret)
+   - `JWT_SECRET` — losowy sekret (`openssl rand -base64 32`)
+   - `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` — nazwa bota bez `@` (domyślnie `lupus_bet_bot`)
+3. Redeploy. Przepływ: widget → `/api/auth/telegram` (weryfikacja HMAC) → sesja JWT w httpOnly cookie → bramka `/stats` otwarta.
+
+Bez logowania: dzisiejsze typy + KPI. Po zalogowaniu (free): pełne wykresy.
+
 ## Status
 
 - ✅ Migracja na Next.js (App Router)
@@ -69,6 +80,6 @@ lib/
 - ✅ Strona główna: hero, jak to działa, tryby, skuteczność, FAQ, 18+
 - ✅ Panel „Dzisiejsze typy" na danych testowych (mock)
 - ✅ Statystyki skuteczności `/stats` — wykresy (win-rate, ROI, per rynek/liga, Q-Score)
-- ⏳ Logowanie przez Telegram + bramkowanie (gating) free
+- ✅ Logowanie przez Telegram (JWT) + bramkowanie (gating) free
 - ⏳ Endpoint na Oracle + podłączenie realnych danych
 - ⏳ Email/hasło (po Telegramie)

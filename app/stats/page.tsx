@@ -1,12 +1,15 @@
 import Link from "next/link"
-import { ArrowLeft, Flame, Gauge, Percent, Target, TrendingUp } from "lucide-react"
+import { ArrowLeft, Flame, Gauge, Percent, Target, TrendingUp, User } from "lucide-react"
 import { getStats } from "@/lib/stats"
 import StatsCharts from "@/components/stats-charts"
 import { Brand } from "@/components/brand"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LogoutButton } from "@/components/logout-button"
+import { LockedSection } from "@/components/locked-section"
+import { getSession } from "@/lib/auth"
 
 export default async function StatsPage() {
-  const data = await getStats()
+  const [data, session] = await Promise.all([getStats(), getSession()])
   const s = data.summary
 
   const streakLabel =
@@ -70,6 +73,22 @@ export default async function StatsPage() {
           >
             Dzisiejsze typy
           </Link>
+          {session ? (
+            <>
+              <span className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/[0.05] px-4 py-2.5 text-sm text-white/70 md:inline-flex">
+                <User className="h-4 w-4 text-[color:var(--accent)]" />
+                {session.name || session.username || "Konto"}
+              </span>
+              <LogoutButton />
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
+            >
+              Zaloguj
+            </Link>
+          )}
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-medium backdrop-blur transition hover:bg-white/15"
@@ -93,6 +112,12 @@ export default async function StatsPage() {
             Dane testowe (mock). Po podłączeniu API agregaty będą liczone przez bota
             z tabeli <code className="text-white/60">bot_predictions</code>.
           </p>
+          {!session && (
+            <p className="mt-3 inline-block rounded-full border border-[color:var(--accent)]/25 bg-[var(--accent)]/10 px-4 py-2 text-sm text-white/75">
+              Podstawowe wskaźniki widzisz za darmo. Zaloguj się, aby odblokować
+              pełne wykresy.
+            </p>
+          )}
         </div>
 
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -113,7 +138,7 @@ export default async function StatsPage() {
           })}
         </div>
 
-        <StatsCharts data={data} />
+        {session ? <StatsCharts data={data} /> : <LockedSection />}
       </section>
     </main>
   )

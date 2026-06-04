@@ -77,7 +77,9 @@ Przeglądarka nigdy nie widzi klucza API ani adresu Oracle.
    `lib/tips.ts` jako punkt dostępu. Start na **mocku** zgodnym z kontraktem.
 3. ✅ **UI „Dzisiejsze typy"** — karty w stylu premium (ciemny motyw, glass),
    badge rynku, Q-Score, filtr rynku, sort po Q-Score.
-4. ⏳ **Logowanie (Telegram + email/JWT)** — `/login` na razie UI placeholder.
+4. ✅ **Logowanie (Telegram + JWT)** — Telegram Login Widget → `/api/auth/telegram`
+   (weryfikacja HMAC z tokenu bota) → sesja JWT w httpOnly cookie (7 dni) →
+   bramkowanie: anon widzi KPI, zalogowany pełne `/stats`. Email/hasło: później.
 5. ⏳ **Podłączenie realnego API** — gdy endpoint na Oracle gotowy: w `lib/tips.ts`
    mock → fetch przez Cloudflare Tunnel (kod proxy już przygotowany w komentarzu).
 6. ✅ **Wykresy skuteczności** — strona `/stats`: KPI (win-rate, ROI, seria,

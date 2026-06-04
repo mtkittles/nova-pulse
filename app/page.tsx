@@ -1,9 +1,14 @@
 import LandingPage from "@/components/landing-page"
 import { getStats } from "@/lib/stats"
 import { getTodayTips } from "@/lib/tips"
+import { getSession } from "@/lib/auth"
 
 export default async function Home() {
-  const [stats, tips] = await Promise.all([getStats(), getTodayTips()])
+  const [stats, tips, session] = await Promise.all([
+    getStats(),
+    getTodayTips(),
+    getSession(),
+  ])
   const tipsToday = tips.tips.filter((t) => t.bet_type !== "THRILLER").length
 
   return (
@@ -12,6 +17,7 @@ export default async function Home() {
       winRate={stats.summary.win_rate}
       roi={stats.summary.roi}
       totalTips={stats.summary.total_tips}
+      loggedIn={Boolean(session)}
     />
   )
 }
