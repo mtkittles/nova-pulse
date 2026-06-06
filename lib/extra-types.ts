@@ -12,6 +12,13 @@ export interface MatchPrediction {
   actual_result: 0 | 1 | null
 }
 
+export interface H2HMatch {
+  home: string
+  away: string
+  score: string
+  date: string
+}
+
 export interface MatchInfo {
   found: boolean
   event_id: string | number
@@ -26,6 +33,7 @@ export interface MatchInfo {
   over25_pct: number | null
   avg_goals: number | null
   h2h: number | null
+  h2h_matches: H2HMatch[]
   predictions: MatchPrediction[]
 }
 
@@ -46,6 +54,7 @@ export interface TeamForm {
 
 export interface StandingRow {
   position: number
+  team_id: string | number | null
   team: string
   played: number
   points: number
@@ -58,4 +67,5 @@ export interface Scorer {
   team: string
   goals: number
   assists: number
+  appearances?: number
 }

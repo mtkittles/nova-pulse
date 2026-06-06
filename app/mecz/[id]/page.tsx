@@ -1,15 +1,39 @@
 import Link from "next/link"
 import { ArrowLeft, SearchX } from "lucide-react"
 import { getMatch } from "@/lib/match"
+import { getStandings } from "@/lib/league"
+import { leagueCodeByName } from "@/lib/leagues"
 import { getSession } from "@/lib/auth"
 import { AppShell } from "@/components/app-shell"
 import { MatchDetail } from "@/components/match-detail"
 
 export const dynamic = "force-dynamic"
 
+const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim()
+
+// /match nie zwraca team_id — pobieramy go ze standings ligi (po nazwie drużyny).
+async function resolveTeamIds(match: Awaited<ReturnType<typeof getMatch>>) {
+  if (!match.found) return
+  if (match.home_id != null && match.away_id != null) return
+  const code = leagueCodeByName(match.league)
+  if (!code) return
+  const standings = await getStandings(code)
+  if (standings.length === 0) return
+  const find = (name: string) => {
+    const n = norm(name)
+    return (
+      standings.find((r) => norm(r.team) === n) ??
+      standings.find((r) => norm(r.team).includes(n) || n.includes(norm(r.team)))
+    )
+  }
+  if (match.home_id == null) match.home_id = find(match.home)?.team_id ?? null
+  if (match.away_id == null) match.away_id = find(match.away)?.team_id ?? null
+}
+
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const [match, session] = await Promise.all([getMatch(id), getSession()])
+  await resolveTeamIds(match)
 
   return (
     <AppShell loggedIn={Boolean(session)}>

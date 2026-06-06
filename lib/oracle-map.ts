@@ -64,11 +64,11 @@ function mapBetSide(raw: unknown): string {
   return s
 }
 
-// Bezpieczne ISO: spacja → "T" (Safari!), dodaj "Z" gdy brak strefy.
+// Bezpieczne ISO: spacja → "T" (Safari!), usuń mikrosekundy, dodaj "Z" gdy brak strefy.
 function normalizeIso(d: unknown): string {
   let s = String(d ?? "").trim()
   if (!s) return ""
-  s = s.replace(" ", "T")
+  s = s.replace(" ", "T").replace(/\.\d+/, "")
   if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += "Z"
   return s
 }
@@ -224,14 +224,19 @@ function numOrNull(x: unknown): number | null {
 
 function adaptPrediction(raw: unknown): MatchPrediction {
   const p = rec(raw)
+  const model_prob = num(p.model_prob)
+  const odds = num(p.odds)
   const rawEdge = Number(p.edge)
+  const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
+  // Oracle podaje gotowy market_label (np. "O1.5 Gość") — użyj go, inaczej mapuj bet_side.
+  const label = p.market_label != null ? String(p.market_label) : mapBetSide(p.bet_side)
   return {
     bet_type: mapBetType(p.bet_type),
-    bet_side: mapBetSide(p.bet_side),
-    model_prob: num(p.model_prob),
-    odds: num(p.odds),
+    bet_side: label,
+    model_prob,
+    odds,
     q_score: num(p.q_score),
-    edge: Number.isFinite(rawEdge) ? rawEdge : 0,
+    edge,
     actual_result: mapResult(p),
   }
 }
@@ -246,20 +251,33 @@ export function adaptMatch(raw: unknown): MatchInfo {
       : []
   const found = r.found === true || (r.found !== false && r.match != null)
 
+  const h2hArr = Array.isArray(r.h2h) ? (r.h2h as unknown[]) : []
+  const h2h_matches = h2hArr.map((x) => {
+    const o = rec(x)
+    return {
+      home: String(o.home_team ?? o.home ?? "—"),
+      away: String(o.away_team ?? o.away ?? "—"),
+      score: `${num(o.home_score)}:${num(o.away_score)}`,
+      date: o.date != null ? String(o.date) : "",
+    }
+  })
+
   return {
     found: Boolean(found),
-    event_id: (m.event_id ?? m.id ?? "") as string | number,
-    home: String(m.home ?? m.home_team ?? "—"),
-    away: String(m.away ?? m.away_team ?? "—"),
+    event_id: (r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
+    home: String(m.home_team ?? m.home ?? "—"),
+    away: String(m.away_team ?? m.away ?? "—"),
     league: String(m.league ?? "—"),
-    kickoff_utc: normalizeIso(m.kickoff_utc ?? m.match_date ?? m.date),
-    home_id: pickId(m, ["home_id", "home_team_id", "homeId", "homeTeamId"]),
-    away_id: pickId(m, ["away_id", "away_team_id", "awayId", "awayTeamId"]),
-    btts_pct: pct(m.btts_pct ?? m.btts),
-    over15_pct: pct(m.over15_pct ?? m.over_1_5 ?? m.o15),
-    over25_pct: pct(m.over25_pct ?? m.over_2_5 ?? m.o25),
-    avg_goals: numOrNull(m.avg_goals ?? m.avg_total_goals ?? m.avg_goals_total),
-    h2h: numOrNull(r.h2h ?? m.h2h),
+    kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
+    // ID nie ma w /match — ustawiane później ze standings (po team_id).
+    home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
+    away_id: pickId(m, ["away_id", "away_team_id", "awayId"]),
+    btts_pct: pct(r.btts_prob ?? m.btts_pct ?? m.btts),
+    over15_pct: pct(r.over_1_5_prob ?? m.over_1_5 ?? m.over15_pct),
+    over25_pct: pct(r.over_2_5_prob ?? m.over_2_5 ?? m.over25_pct),
+    avg_goals: numOrNull(m.avg_goals ?? r.avg_goals),
+    h2h: numOrNull(r.h2h_count ?? m.h2h_count),
+    h2h_matches,
     predictions: (preds as unknown[]).map(adaptPrediction),
   }
 }
@@ -282,22 +300,25 @@ function formResult(raw: unknown): "W" | "D" | "L" {
 
 export function adaptForm(raw: unknown): TeamForm {
   const r = rec(raw)
-  const list = Array.isArray(r.matches) ? r.matches : []
+  const list = Array.isArray(r.form) ? r.form : Array.isArray(r.matches) ? r.matches : []
   const matches: FormMatch[] = (list as unknown[]).map((mm) => {
     const m = rec(mm)
+    const gf = m.goals_for
+    const ga = m.goals_against
+    const score = gf != null && ga != null ? `${num(gf)}:${num(ga)}` : m.score != null ? String(m.score) : undefined
     return {
       result: formResult(m),
       opponent: m.opponent != null ? String(m.opponent) : undefined,
-      score: m.score != null ? String(m.score) : undefined,
+      score,
       date: m.date != null ? String(m.date) : undefined,
     }
   })
   return {
-    team: String(r.team ?? "—"),
+    team: String(r.team_name ?? r.team ?? "—"),
     matches,
     btts_pct: pct(r.btts_pct),
-    avg_gf: numOrNull(r.avg_gf),
-    avg_ga: numOrNull(r.avg_ga),
+    avg_gf: numOrNull(r.avg_goals_for ?? r.avg_gf),
+    avg_ga: numOrNull(r.avg_goals_against ?? r.avg_ga),
   }
 }
 
@@ -308,6 +329,7 @@ export function adaptStandings(raw: unknown): StandingRow[] {
     const o = rec(row)
     return {
       position: num(o.position ?? o.pos ?? o.rank ?? i + 1),
+      team_id: pickId(o, ["team_id", "teamId", "id"]),
       team: String(o.team ?? o.name ?? o.team_name ?? "—"),
       played: num(o.played ?? o.mp ?? o.games ?? o.matches),
       points: num(o.points ?? o.pts),
@@ -327,6 +349,7 @@ export function adaptScorers(raw: unknown): Scorer[] {
       team: String(o.team ?? o.team_name ?? "—"),
       goals: num(o.goals ?? o.g),
       assists: num(o.assists ?? o.a),
+      appearances: o.appearances != null ? num(o.appearances) : undefined,
     }
   })
 }

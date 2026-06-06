@@ -21,7 +21,7 @@ export function FormPanel({ teamId, teamName }: { teamId: string | number | null
   const [scope, setScope] = useState<FormScope>("all")
   const [count, setCount] = useState(5)
   const [form, setForm] = useState<TeamForm | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(teamId != null)
 
   useEffect(() => {
     if (teamId == null) return

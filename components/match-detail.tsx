@@ -54,6 +54,26 @@ export function MatchDetail({ match }: { match: MatchInfo }) {
         ))}
       </div>
 
+      {/* mecze bezpośrednie */}
+      {match.h2h_matches.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-4 text-2xl font-semibold">Mecze bezpośrednie</h2>
+          <div className="overflow-hidden rounded-[1.6rem] border border-white/12 bg-white/[0.04]">
+            {match.h2h_matches.map((g, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between gap-3 border-b border-white/5 px-5 py-3 text-sm last:border-0"
+              >
+                <span className="truncate text-white/70">
+                  {g.home} <span className="text-white/35">vs</span> {g.away}
+                </span>
+                <span className="shrink-0 font-semibold">{g.score}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* predykcje */}
       <h2 className="mb-4 text-2xl font-semibold">Predykcje</h2>
       {match.predictions.length === 0 ? (

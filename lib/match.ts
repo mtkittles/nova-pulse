@@ -18,6 +18,7 @@ function notFound(id: string): MatchInfo {
     over25_pct: null,
     avg_goals: null,
     h2h: null,
+    h2h_matches: [],
     predictions: [],
   }
 }

@@ -2,18 +2,7 @@
 
 import { useEffect, useState } from "react"
 import type { Scorer, StandingRow } from "@/lib/extra-types"
-
-// Kody lig (styl football-data.org — używany przez bota). Dostosuj do realnych kodów API.
-const LEAGUES = [
-  { code: "PL", name: "Premier League" },
-  { code: "PD", name: "La Liga" },
-  { code: "SA", name: "Serie A" },
-  { code: "BL1", name: "Bundesliga" },
-  { code: "FL1", name: "Ligue 1" },
-  { code: "DED", name: "Eredivisie" },
-  { code: "PPL", name: "Primeira Liga" },
-  { code: "ELC", name: "Championship" },
-]
+import { LEAGUES } from "@/lib/leagues"
 
 type Tab = "standings" | "scorers"
 
@@ -60,7 +49,7 @@ export function LigiView() {
         >
           {LEAGUES.map((l) => (
             <option key={l.code} value={l.code}>
-              {l.name}
+              {l.name} ({l.country})
             </option>
           ))}
         </select>
