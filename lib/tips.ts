@@ -3,29 +3,45 @@ import { mockTips } from "./mock-tips"
 import { isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptTips } from "./oracle-map"
 
-function emptyTips(): TipsResponse {
-  return { date: new Date().toISOString().slice(0, 10), tips: [] }
+function todayWarsaw(): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Warsaw",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date())
+}
+
+function emptyTips(date: string): TipsResponse {
+  return { date, tips: [] }
 }
 
 function hasTipsArray(x: unknown): boolean {
   return !!x && typeof x === "object" && Array.isArray((x as { tips?: unknown }).tips)
 }
 
-// Serwerowy punkt dostępu do typów. Wyłącznie server-side.
-// - Oracle skonfigurowane + poprawna odpowiedź → realne dane (mapowane adapterem)
+// Typy dla konkretnego dnia (domyślnie dziś). Wyłącznie server-side.
+// - Oracle skonfigurowane → realne dane z `/tips?date=` (mapowane adapterem)
 // - Oracle niedostępne / zła odpowiedź → pusta lista (NIE crash)
-// - brak konfiguracji → dane testowe (podgląd działa bez Oracle)
-export async function getTodayTips(): Promise<TipsResponse> {
-  if (!isOracleConfigured()) return mockTips
+// - brak konfiguracji → dane testowe
+export async function getTips(date?: string): Promise<TipsResponse> {
+  const d = date || todayWarsaw()
+  if (!isOracleConfigured()) return { ...mockTips, date: d }
   try {
-    const data = await oracleFetch<unknown>("/public-api/tips/today")
+    const data = await oracleFetch<unknown>(`/tips?date=${encodeURIComponent(d)}`)
+    console.log(`[oracle] /tips?date=${d} raw:`, JSON.stringify(data).slice(0, 500))
     if (!hasTipsArray(data)) {
-      console.error("getTodayTips: odpowiedź Oracle niezgodna z kontraktem")
-      return emptyTips()
+      console.error("getTips: odpowiedź Oracle niezgodna z kontraktem")
+      return emptyTips(d)
     }
     return adaptTips(data)
   } catch (err) {
-    console.error("getTodayTips: Oracle niedostępne →", err)
-    return emptyTips()
+    console.error("getTips: Oracle niedostępne →", err)
+    return emptyTips(d)
   }
+}
+
+// Zachowane dla zgodności (landing).
+export async function getTodayTips(): Promise<TipsResponse> {
+  return getTips()
 }

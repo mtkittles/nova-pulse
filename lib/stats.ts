@@ -35,7 +35,7 @@ function hasSummary(x: unknown): boolean {
 export async function getStats(): Promise<StatsResponse> {
   if (!isOracleConfigured()) return mockStats
   try {
-    const data = await oracleFetch<unknown>("/public-api/stats")
+    const data = await oracleFetch<unknown>("/stats")
     if (!hasSummary(data)) {
       console.error("getStats: odpowiedź Oracle niezgodna z kontraktem")
       return emptyStats()

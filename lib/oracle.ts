@@ -7,26 +7,28 @@ export function isOracleConfigured(): boolean {
   return Boolean(process.env.ORACLE_API_URL && process.env.ORACLE_API_KEY)
 }
 
-// Pobiera i parsuje JSON z endpointu Oracle.
-// `cache: "no-store"` — zawsze świeże dane. Vercel Data Cache potrafił trzymać
-// starą (pustą) odpowiedź między deployami, przez co strona pokazywała pusto
-// mimo że API zwracało typy. Payload jest mały i policzony z wyprzedzeniem,
-// więc brak cache nie obciąża silnika.
-export async function oracleFetch<T>(path: string): Promise<T> {
+// Pobiera JSON z Oracle. `path` bez prefiksu (np. "/dates", "/tips?date=...").
+// Próbuje najpierw "/public-api<path>", a przy 404 — samego "<path>"
+// (odporność na to, czy endpointy są pod prefiksem czy w korzeniu).
+export async function oracleFetch<T>(path: string, revalidate = 300): Promise<T> {
   const base = process.env.ORACLE_API_URL
   const key = process.env.ORACLE_API_KEY
   if (!base || !key) {
     throw new Error("Oracle API nie jest skonfigurowane (ORACLE_API_URL / ORACLE_API_KEY).")
   }
 
-  const url = `${base.replace(/\/$/, "")}${path}`
-  const res = await fetch(url, {
-    headers: { "X-API-Key": key },
-    cache: "no-store",
-  })
+  const clean = base.replace(/\/$/, "")
+  const candidates = path.startsWith("/public-api") ? [path] : [`/public-api${path}`, path]
 
-  if (!res.ok) {
-    throw new Error(`Oracle API zwróciło ${res.status} dla ${path}`)
+  let lastStatus = 0
+  for (const p of candidates) {
+    const res = await fetch(`${clean}${p}`, {
+      headers: { "X-API-Key": key },
+      next: { revalidate },
+    })
+    if (res.ok) return (await res.json()) as T
+    lastStatus = res.status
+    if (res.status !== 404) break // 404 → spróbuj alternatywnej ścieżki; inne błędy → przerwij
   }
-  return (await res.json()) as T
+  throw new Error(`Oracle API zwróciło ${lastStatus} dla ${path}`)
 }

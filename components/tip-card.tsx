@@ -1,11 +1,13 @@
+import Link from "next/link"
 import type { BetType, Tip } from "@/lib/types"
-import { CheckCircle2, Minus, Plus, XCircle } from "lucide-react"
+import { BET_TYPE_PL, BET_TYPE_SHORT, statusInfo } from "@/lib/labels"
+import { AlertTriangle, Minus, Plus } from "lucide-react"
 
-const MARKET: Record<BetType, { label: string; classes: string }> = {
-  BTTS: { label: "BTTS", classes: "border-cyan-300/30 bg-cyan-300/10 text-cyan-200" },
-  OVER_1_5: { label: "Over 1.5", classes: "border-violet-300/30 bg-violet-300/10 text-violet-200" },
-  MIX: { label: "Mix", classes: "border-emerald-300/30 bg-emerald-300/10 text-emerald-200" },
-  THRILLER: { label: "Thriller", classes: "border-amber-300/30 bg-amber-300/10 text-amber-200" },
+const MARKET_BADGE: Record<BetType, string> = {
+  BTTS: "border-cyan-300/30 bg-cyan-300/10 text-cyan-200",
+  OVER_1_5: "border-violet-300/30 bg-violet-300/10 text-violet-200",
+  MIX: "border-emerald-300/30 bg-emerald-300/10 text-emerald-200",
+  THRILLER: "border-amber-300/30 bg-amber-300/10 text-amber-200",
 }
 
 function qScoreColor(q: number): string {
@@ -32,31 +34,29 @@ function formatKickoff(iso: string): string {
 
 export default function TipCard({
   tip,
+  href,
   selectable = false,
   selected = false,
   onToggle,
 }: {
   tip: Tip
+  href?: string
   selectable?: boolean
   selected?: boolean
   onToggle?: () => void
 }) {
-  const market = MARKET[tip.bet_type]
   const prob = Math.round(tip.model_prob * 100)
   const edgePct = (tip.edge * 100).toFixed(1)
-  const settled = tip.actual_result !== null
+  const status = statusInfo(tip.actual_result)
+  const isThriller = tip.bet_type === "THRILLER"
 
-  return (
-    <article
-      className={`group relative flex flex-col overflow-hidden rounded-[1.8rem] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085] ${
-        selected ? "border-[color:var(--accent)]/60" : "border-white/12"
-      }`}
-    >
+  const inner = (
+    <>
       <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
 
       <div className="relative flex items-center justify-between">
-        <span className="text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
-        <span className="text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
+        <span className="truncate text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
+        <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
       </div>
 
       <h3 className="relative mt-4 text-lg font-semibold leading-6">
@@ -64,25 +64,24 @@ export default function TipCard({
       </h3>
 
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${market.classes}`}>
-          {market.label}
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${MARKET_BADGE[tip.bet_type]}`}>
+          {BET_TYPE_SHORT[tip.bet_type]}
         </span>
-        <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/65">
-          {tip.bet_side}
+        <span className={`rounded-full border px-3 py-1 text-xs font-medium ${status.classes}`}>
+          {status.label}
         </span>
-        {settled &&
-          (tip.actual_result === 1 ? (
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Trafione
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full border border-rose-300/30 bg-rose-300/10 px-3 py-1 text-xs font-semibold text-rose-200">
-              <XCircle className="h-3.5 w-3.5" /> Pudło
-            </span>
-          ))}
+        {isThriller && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-200">
+            <AlertTriangle className="h-3.5 w-3.5" /> wysokie ryzyko
+          </span>
+        )}
       </div>
 
-      <div className="relative mt-5 grid grid-cols-3 gap-3 text-center">
+      <p className="relative mt-3 text-sm text-white/65">
+        {BET_TYPE_PL[tip.bet_type]} — <span className="font-medium text-white/85">{tip.bet_side}</span>
+      </p>
+
+      <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <p className="text-xs text-white/40">Prawd.</p>
           <p className="mt-1 text-xl font-semibold">{prob}%</p>
@@ -100,7 +99,7 @@ export default function TipCard({
         </div>
       </div>
 
-      <div className="relative mt-5">
+      <div className="relative mt-4">
         <div className="mb-1.5 flex items-center justify-between text-xs">
           <span className="text-white/45">Q-Score</span>
           <span className={`font-semibold ${qScoreColor(tip.q_score)}`}>{tip.q_score}/100</span>
@@ -109,8 +108,17 @@ export default function TipCard({
           <div className={`h-full rounded-full ${qScoreBar(tip.q_score)}`} style={{ width: `${tip.q_score}%` }} />
         </div>
       </div>
+    </>
+  )
 
-      {selectable && (
+  const cardClass = `group relative flex flex-col overflow-hidden rounded-[1.8rem] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085] ${
+    selected ? "border-[color:var(--accent)]/60" : "border-white/12"
+  }`
+
+  if (selectable) {
+    return (
+      <article className={cardClass}>
+        {inner}
         <button
           type="button"
           onClick={onToggle}
@@ -123,7 +131,17 @@ export default function TipCard({
           {selected ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {selected ? "W kuponie" : "Do kuponu"}
         </button>
-      )}
-    </article>
-  )
+      </article>
+    )
+  }
+
+  if (href) {
+    return (
+      <Link href={href} className={cardClass}>
+        {inner}
+      </Link>
+    )
+  }
+
+  return <article className={cardClass}>{inner}</article>
 }

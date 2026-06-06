@@ -259,7 +259,7 @@ export default function LandingPage({
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="/dashboard"
+              href="/typy"
               className="group inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)] shadow-2xl transition hover:scale-105"
             >
               Zobacz dzisiejsze typy
@@ -584,7 +584,7 @@ export default function LandingPage({
             <Brand />
           </div>
           <div className="flex flex-wrap gap-5">
-            <Link href="/dashboard" className="transition hover:text-white">
+            <Link href="/typy" className="transition hover:text-white">
               Typy
             </Link>
             <Link href="/stats" className="transition hover:text-white">
