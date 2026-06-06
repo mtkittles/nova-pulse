@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Newspaper, Target, Ticket, Trophy } from "lucide-react"
+import { BarChart3, Newspaper, Shield, Target, Ticket, Trophy } from "lucide-react"
 import { Brand } from "./brand"
 import { ThemeToggle } from "./theme-toggle"
 import { LogoutButton } from "./logout-button"
@@ -15,9 +15,10 @@ const NAV = [
   { href: "/kupony", label: "Kupony", icon: Ticket },
 ]
 
-export function AppNav({ loggedIn }: { loggedIn: boolean }) {
+export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdmin?: boolean }) {
   const path = usePathname()
   const isActive = (href: string) => path === href || path.startsWith(`${href}/`)
+  const items = isAdmin ? [...NAV, { href: "/admin", label: "Admin", icon: Shield }] : NAV
 
   return (
     <>
@@ -26,7 +27,7 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
           <Brand />
 
           <nav className="hidden items-center gap-1 lg:flex">
-            {NAV.map((item) => {
+            {items.map((item) => {
               const Icon = item.icon
               const active = isActive(item.href)
               return (
@@ -64,8 +65,11 @@ export function AppNav({ loggedIn }: { loggedIn: boolean }) {
 
       {/* dolny tab-bar (mobile) */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[var(--bg-soft)]/95 backdrop-blur-xl lg:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5">
-          {NAV.map((item) => {
+        <div
+          className="mx-auto grid max-w-md"
+          style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+        >
+          {items.map((item) => {
             const Icon = item.icon
             const active = isActive(item.href)
             return (

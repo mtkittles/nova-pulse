@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { ArrowLeft, SearchX } from "lucide-react"
 import { getMatch } from "@/lib/match"
 import { getStandings } from "@/lib/league"
@@ -32,11 +33,13 @@ async function resolveTeamIds(match: Awaited<ReturnType<typeof getMatch>>) {
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const [match, session] = await Promise.all([getMatch(id), getSession()])
+  const session = await getSession()
+  if (!session) redirect("/login")
+  const match = await getMatch(id)
   await resolveTeamIds(match)
 
   return (
-    <AppShell loggedIn={Boolean(session)}>
+    <AppShell loggedIn isAdmin={session.isAdmin}>
       <Link
         href="/typy"
         className="mb-6 inline-flex items-center gap-2 text-sm text-white/55 transition hover:text-white"

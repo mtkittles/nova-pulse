@@ -22,10 +22,25 @@ export default async function Page() {
   const defaultDate =
     dates.dates.find((d) => d >= today) ?? dates.dates[dates.dates.length - 1] ?? today
   const tips = await getTips(defaultDate)
+  const loggedIn = Boolean(session)
 
   return (
-    <AppShell loggedIn={Boolean(session)}>
-      <TypyPage initialDate={defaultDate} initialTips={tips.tips} availableDates={dates.dates} />
+    <AppShell loggedIn={loggedIn} isAdmin={session?.isAdmin}>
+      {!loggedIn && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--accent)]/25 bg-[var(--accent)]/10 px-5 py-4">
+          <p className="text-sm text-white/80">
+            Widzisz dzisiejsze mecze. <strong>Zaloguj się</strong>, aby odblokować typ, kurs, Q-Score,
+            kalendarz i statystyki — za darmo.
+          </p>
+        </div>
+      )}
+
+      <TypyPage
+        initialDate={defaultDate}
+        initialTips={tips.tips}
+        availableDates={dates.dates}
+        loggedIn={loggedIn}
+      />
 
       <p className="mt-10 text-center text-xs text-white/30">
         18+ · Typy to analiza statystyczna, nie gwarancja wygranej. Graj odpowiedzialnie.

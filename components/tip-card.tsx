@@ -1,7 +1,7 @@
 import Link from "next/link"
 import type { BetType, Tip } from "@/lib/types"
 import { BET_TYPE_PL, BET_TYPE_SHORT, statusInfo } from "@/lib/labels"
-import { AlertTriangle, Minus, Plus } from "lucide-react"
+import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
 
 const MARKET_BADGE: Record<BetType, string> = {
   BTTS: "border-cyan-300/30 bg-cyan-300/10 text-cyan-200",
@@ -40,18 +40,46 @@ export default function TipCard({
   selectable = false,
   selected = false,
   onToggle,
+  locked = false,
 }: {
   tip: Tip
   href?: string
   selectable?: boolean
   selected?: boolean
   onToggle?: () => void
+  locked?: boolean
 }) {
   // defensywnie: niekompletny rekord → komunikat zamiast crasha
   if (!tip.home || !tip.away) {
     return (
       <article className="grid min-h-[12rem] place-items-center rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-6 text-center text-sm text-white/45">
         Dane niepełne
+      </article>
+    )
+  }
+
+  // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem
+  if (locked) {
+    return (
+      <article className="relative flex flex-col overflow-hidden rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
+        <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
+        <div className="relative flex items-center justify-between">
+          <span className="truncate text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
+          <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
+        </div>
+        <h3 className="relative mt-4 text-lg font-semibold leading-6">
+          {tip.home} <span className="text-white/35">vs</span> {tip.away}
+        </h3>
+        <div className="relative mt-5 grid place-items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-center">
+          <Lock className="h-6 w-6 text-[color:var(--accent)]" />
+          <p className="text-sm text-white/60">Zaloguj, aby zobaczyć typ, kurs i Q-Score</p>
+          <Link
+            href="/login"
+            className="rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
+          >
+            Zaloguj przez Telegram
+          </Link>
+        </div>
       </article>
     )
   }

@@ -5,10 +5,14 @@ import { SignJWT, jwtVerify } from "jose"
 export const SESSION_COOKIE = "lb_session"
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 dni
 
-export type Session = {
+export type Tier = "free" | "premium"
+
+export interface Session {
   uid: string
   username?: string
   name?: string
+  tier: Tier
+  isAdmin: boolean
 }
 
 function key(): Uint8Array {
@@ -17,27 +21,43 @@ function key(): Uint8Array {
   return new TextEncoder().encode(secret)
 }
 
-// Podpisuje sesję JWT (HS256). Używane przez /api/auth/telegram.
-export async function signSession(payload: Session): Promise<string> {
-  return await new SignJWT({ ...payload })
+// Tier liczony z env (bez bazy): admin = ADMIN_TELEGRAM_ID,
+// premium = admin lub na liście PREMIUM_TELEGRAM_IDS (CSV). Zawsze świeży.
+export function resolveTier(uid: string): { tier: Tier; isAdmin: boolean } {
+  const id = String(uid)
+  const admin = process.env.ADMIN_TELEGRAM_ID
+  const isAdmin = Boolean(admin && String(admin) === id)
+  const premiumIds = (process.env.PREMIUM_TELEGRAM_IDS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const premium = isAdmin || premiumIds.includes(id)
+  return { tier: premium ? "premium" : "free", isAdmin }
+}
+
+// JWT przechowuje tylko tożsamość — tier/isAdmin liczone per request.
+export async function signSession(p: { uid: string; username?: string; name?: string }): Promise<string> {
+  return await new SignJWT({ uid: p.uid, username: p.username, name: p.name })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_MAX_AGE}s`)
     .sign(key())
 }
 
-// Czyta i weryfikuje sesję z cookie. Zwraca null, gdy brak/niepoprawna.
-// Wyłącznie server-side (Server Component / Route Handler).
 export async function getSession(): Promise<Session | null> {
   try {
     const store = await cookies()
     const token = store.get(SESSION_COOKIE)?.value
     if (!token) return null
     const { payload } = await jwtVerify(token, key())
+    const uid = String(payload.uid)
+    const { tier, isAdmin } = resolveTier(uid)
     return {
-      uid: String(payload.uid),
+      uid,
       username: typeof payload.username === "string" ? payload.username : undefined,
       name: typeof payload.name === "string" ? payload.name : undefined,
+      tier,
+      isAdmin,
     }
   } catch {
     return null

@@ -46,10 +46,12 @@ export default function TypyPage({
   initialDate,
   initialTips,
   availableDates,
+  loggedIn = false,
 }: {
   initialDate: string
   initialTips: Tip[]
   availableDates: string[]
+  loggedIn?: boolean
 }) {
   const [date, setDate] = useState(initialDate)
   const [tips, setTips] = useState<Tip[]>(initialTips)
@@ -207,7 +209,12 @@ export default function TypyPage({
               </p>
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {visible.map((tip) => (
-                  <TipCard key={String(tip.event_id)} tip={tip} href={`/mecz/${tip.event_id}`} />
+                  <TipCard
+                    key={String(tip.event_id)}
+                    tip={tip}
+                    href={loggedIn ? `/mecz/${tip.event_id}` : undefined}
+                    locked={!loggedIn}
+                  />
                 ))}
               </div>
             </>
