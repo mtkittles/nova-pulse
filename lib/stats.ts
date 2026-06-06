@@ -28,14 +28,13 @@ function hasSummary(x: unknown): boolean {
   return !!x && typeof x === "object" && !!(x as { summary?: unknown }).summary
 }
 
-// Serwerowy punkt dostępu do agregatów skuteczności. Wyłącznie server-side.
-// - Oracle skonfigurowane + poprawna odpowiedź → realne agregaty (mapowane adapterem)
-// - Oracle niedostępne / zła odpowiedź → puste statystyki (NIE crash)
-// - brak konfiguracji → dane testowe (podgląd działa bez Oracle)
-export async function getStats(): Promise<StatsResponse> {
+// period: "7" | "30" | "all"
+export async function getStats(period?: string): Promise<StatsResponse> {
   if (!isOracleConfigured()) return mockStats
+  const path = period ? `/stats?period=${encodeURIComponent(period)}` : "/stats"
   try {
-    const data = await oracleFetch<unknown>("/stats")
+    const data = await oracleFetch<unknown>(path)
+    console.log(`[oracle] /stats?period=${period ?? ""} raw:`, JSON.stringify(data).slice(0, 500))
     if (!hasSummary(data)) {
       console.error("getStats: odpowiedź Oracle niezgodna z kontraktem")
       return emptyStats()

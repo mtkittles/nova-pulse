@@ -7,6 +7,14 @@ import type {
   StatsResponse,
   TimelinePoint,
 } from "./stats-types"
+import type {
+  FormMatch,
+  MatchInfo,
+  MatchPrediction,
+  Scorer,
+  StandingRow,
+  TeamForm,
+} from "./extra-types"
 
 // ——— FAKTYCZNY kształt typu z Oracle API (potwierdzony surowym JSON) ———
 export interface OracleTip {
@@ -184,4 +192,141 @@ export function adaptStats(raw: unknown): StatsResponse {
     by_league,
     q_score_buckets,
   }
+}
+
+// ——— mecz / forma / ligi (defensywnie) ———
+
+function rec(x: unknown): Record<string, unknown> {
+  return (x ?? {}) as Record<string, unknown>
+}
+
+function pickId(o: Record<string, unknown>, keys: string[]): string | number | null {
+  for (const k of keys) {
+    const v = o[k]
+    if (v != null && v !== "") return v as string | number
+  }
+  return null
+}
+
+// Procent w 0..100 (akceptuje 0..1 lub 0..100).
+function pct(x: unknown): number | null {
+  if (x == null) return null
+  const n = Number(x)
+  if (!Number.isFinite(n)) return null
+  return Math.round((n <= 1 ? n * 100 : n) * 10) / 10
+}
+
+function numOrNull(x: unknown): number | null {
+  if (x == null) return null
+  const n = Number(x)
+  return Number.isFinite(n) ? n : null
+}
+
+function adaptPrediction(raw: unknown): MatchPrediction {
+  const p = rec(raw)
+  const rawEdge = Number(p.edge)
+  return {
+    bet_type: mapBetType(p.bet_type),
+    bet_side: mapBetSide(p.bet_side),
+    model_prob: num(p.model_prob),
+    odds: num(p.odds),
+    q_score: num(p.q_score),
+    edge: Number.isFinite(rawEdge) ? rawEdge : 0,
+    actual_result: mapResult(p),
+  }
+}
+
+export function adaptMatch(raw: unknown): MatchInfo {
+  const r = rec(raw)
+  const m = rec(r.match ?? r)
+  const preds = Array.isArray(r.predictions)
+    ? r.predictions
+    : Array.isArray(m.predictions)
+      ? (m.predictions as unknown[])
+      : []
+  const found = r.found === true || (r.found !== false && r.match != null)
+
+  return {
+    found: Boolean(found),
+    event_id: (m.event_id ?? m.id ?? "") as string | number,
+    home: String(m.home ?? m.home_team ?? "—"),
+    away: String(m.away ?? m.away_team ?? "—"),
+    league: String(m.league ?? "—"),
+    kickoff_utc: normalizeIso(m.kickoff_utc ?? m.match_date ?? m.date),
+    home_id: pickId(m, ["home_id", "home_team_id", "homeId", "homeTeamId"]),
+    away_id: pickId(m, ["away_id", "away_team_id", "awayId", "awayTeamId"]),
+    btts_pct: pct(m.btts_pct ?? m.btts),
+    over15_pct: pct(m.over15_pct ?? m.over_1_5 ?? m.o15),
+    over25_pct: pct(m.over25_pct ?? m.over_2_5 ?? m.o25),
+    avg_goals: numOrNull(m.avg_goals ?? m.avg_total_goals ?? m.avg_goals_total),
+    h2h: numOrNull(r.h2h ?? m.h2h),
+    predictions: (preds as unknown[]).map(adaptPrediction),
+  }
+}
+
+function formResult(raw: unknown): "W" | "D" | "L" {
+  const m = rec(raw)
+  const r = String(m.result ?? m.outcome ?? "").toUpperCase()
+  if (r.startsWith("W")) return "W"
+  if (r.startsWith("L")) return "L"
+  if (r.startsWith("D") || r.startsWith("R")) return "D" // draw / remis
+  const gf = Number(m.gf ?? m.goals_for ?? m.scored)
+  const ga = Number(m.ga ?? m.goals_against ?? m.conceded)
+  if (Number.isFinite(gf) && Number.isFinite(ga)) {
+    if (gf > ga) return "W"
+    if (gf < ga) return "L"
+    return "D"
+  }
+  return "D"
+}
+
+export function adaptForm(raw: unknown): TeamForm {
+  const r = rec(raw)
+  const list = Array.isArray(r.matches) ? r.matches : []
+  const matches: FormMatch[] = (list as unknown[]).map((mm) => {
+    const m = rec(mm)
+    return {
+      result: formResult(m),
+      opponent: m.opponent != null ? String(m.opponent) : undefined,
+      score: m.score != null ? String(m.score) : undefined,
+      date: m.date != null ? String(m.date) : undefined,
+    }
+  })
+  return {
+    team: String(r.team ?? "—"),
+    matches,
+    btts_pct: pct(r.btts_pct),
+    avg_gf: numOrNull(r.avg_gf),
+    avg_ga: numOrNull(r.avg_ga),
+  }
+}
+
+export function adaptStandings(raw: unknown): StandingRow[] {
+  const r = rec(raw)
+  const list = Array.isArray(raw) ? raw : Array.isArray(r.standings) ? r.standings : Array.isArray(r.table) ? r.table : []
+  return (list as unknown[]).map((row, i) => {
+    const o = rec(row)
+    return {
+      position: num(o.position ?? o.pos ?? o.rank ?? i + 1),
+      team: String(o.team ?? o.name ?? o.team_name ?? "—"),
+      played: num(o.played ?? o.mp ?? o.games ?? o.matches),
+      points: num(o.points ?? o.pts),
+      gf: num(o.gf ?? o.goals_for ?? o.scored),
+      ga: num(o.ga ?? o.goals_against ?? o.conceded),
+    }
+  })
+}
+
+export function adaptScorers(raw: unknown): Scorer[] {
+  const r = rec(raw)
+  const list = Array.isArray(raw) ? raw : Array.isArray(r.scorers) ? r.scorers : Array.isArray(r.players) ? r.players : []
+  return (list as unknown[]).map((row) => {
+    const o = rec(row)
+    return {
+      player: String(o.player ?? o.name ?? o.player_name ?? "—"),
+      team: String(o.team ?? o.team_name ?? "—"),
+      goals: num(o.goals ?? o.g),
+      assists: num(o.assists ?? o.a),
+    }
+  })
 }
