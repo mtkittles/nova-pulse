@@ -1,0 +1,56 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+/* ===== Motywy (zmienne CSS, przełączane przez [data-theme]) ===== */
+/* Domyślny: Nova (cyan + violet) */
+:root,
+[data-theme="nova"] {
+  --bg: #070812;
+  --bg-soft: #0d0e1a;
+  --accent: #67e8f9; /* cyan-300 */
+  --accent-2: #c4b5fd; /* violet-300 */
+  --accent-strong: #22d3ee; /* cyan-400 */
+  --on-accent: #070812;
+  --glow-1: rgba(34, 211, 238, 0.3);
+  --glow-2: rgba(124, 58, 237, 0.3);
+}
+
+/* Lupus: wilczy granat + neon lime */
+[data-theme="lupus"] {
+  --bg: #07100b;
+  --bg-soft: #0c1510;
+  --accent: #a3e635; /* lime-400 */
+  --accent-2: #34d399; /* emerald-400 */
+  --accent-strong: #84cc16; /* lime-500 */
+  --on-accent: #06120a;
+  --glow-1: rgba(163, 230, 53, 0.26);
+  --glow-2: rgba(16, 185, 129, 0.28);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: var(--bg);
+}
+
+/* płynne przejście kolorów przy zmianie motywu */
+body,
+body * {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 300ms;
+  transition-timing-function: ease;
+}
+
+/* respektuj preferencję ograniczenia animacji */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  body,
+  body * {
+    transition: none !important;
+  }
+}
