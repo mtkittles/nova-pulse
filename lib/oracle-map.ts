@@ -8,74 +8,105 @@ import type {
   TimelinePoint,
 } from "./stats-types"
 
-// Adaptery: realny kształt API Oracle → wewnętrzne typy strony.
-// Oracle używa innych nazw pól i enumów (home_team, match_date, "O15", status…),
-// więc tłumaczymy je tutaj w jednym miejscu. Defensywnie — tolerujemy drobne
-// różnice (różne nazwy liczników itp.).
+// ——— FAKTYCZNY kształt typu z Oracle API (potwierdzony surowym JSON) ———
+export interface OracleTip {
+  event_id: string | number
+  league: string
+  home: string
+  away: string
+  kickoff_utc: string
+  bet_type: "OVER_1_5" | "BTTS" | "MIX" | "EXACT_32_23" | string
+  bet_side: string
+  model_prob: number
+  odds: number
+  edge: number // może być ujemny
+  q_score: number
+  actual_result: 0 | 1 | null
+}
+
+export interface OracleTipsResponse {
+  date?: string
+  count?: number
+  tips: OracleTip[]
+}
+
+// ——— mapowanie API → wewnętrzny typ (jedyne miejsce!) ———
 
 function num(x: unknown, def = 0): number {
   const n = Number(x)
   return Number.isFinite(n) ? n : def
 }
 
+// bet_type Oracle → wewnętrzny enum (tolerancyjnie, z obsługą starych wartości)
 function mapBetType(raw: unknown): BetType {
   const k = String(raw ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "")
-  if (k.startsWith("BTTS")) return "BTTS"
-  if (k.startsWith("O15") || k.includes("OVER")) return "OVER_1_5"
-  if (k.startsWith("MIX")) return "MIX"
-  if (k.startsWith("THRIL")) return "THRILLER"
+  if (k.includes("BTTS")) return "BTTS"
+  if (k.includes("OVER") || k === "O15") return "OVER_1_5"
+  if (k.includes("EXACT") || k.includes("THRIL") || k.includes("3223")) return "THRILLER"
+  if (k.includes("MIX")) return "MIX"
   return "MIX"
 }
 
 function mapBetSide(raw: unknown): string {
-  const s = String(raw ?? "").toLowerCase()
-  if (s === "yes") return "TAK"
-  if (s === "no") return "NIE"
-  if (s === "32_or_23") return "3:2 / 2:3"
-  return String(raw ?? "")
+  const s = String(raw ?? "").trim()
+  const low = s.toLowerCase()
+  if (low === "yes") return "TAK"
+  if (low === "no") return "NIE"
+  if (low === "32_or_23" || low === "3:2/2:3" || low === "exact_32_23") return "3:2 / 2:3"
+  return s
 }
 
-// match_date bez strefy → traktuj jako UTC (bot zapisuje utc_date).
-function toIsoUtc(d: unknown): string {
-  const s = String(d ?? "")
-  if (!s) return new Date().toISOString()
-  return /[zZ]|[+-]\d{2}:?\d{2}$/.test(s) ? s : `${s}Z`
+// Bezpieczne ISO: spacja → "T" (Safari!), dodaj "Z" gdy brak strefy.
+function normalizeIso(d: unknown): string {
+  let s = String(d ?? "").trim()
+  if (!s) return ""
+  s = s.replace(" ", "T")
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += "Z"
+  return s
 }
 
-function statusToResult(s: unknown): 0 | 1 | null {
-  const v = String(s ?? "").toLowerCase()
-  if (v === "won" || v === "win") return 1
-  if (v === "lost" || v === "lose") return 0
+function mapResult(t: Record<string, unknown>): 0 | 1 | null {
+  const r = t.actual_result
+  if (r === 1 || r === "1") return 1
+  if (r === 0 || r === "0") return 0
+  // fallback dla starego kształtu ze "status"
+  const s = String(t.status ?? "").toLowerCase()
+  if (s === "won" || s === "win") return 1
+  if (s === "lost" || s === "lose") return 0
   return null
 }
 
-type RawTip = Record<string, unknown>
+export function adaptTip(raw: unknown): Tip {
+  const t = (raw ?? {}) as Record<string, unknown>
+  const model_prob = num(t.model_prob)
+  const odds = num(t.odds)
+  // użyj realnego edge (może być ujemny); gdy brak — policz przewagę nad kursem
+  const rawEdge = Number(t.edge)
+  const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
+
+  return {
+    event_id: (t.event_id as string | number) ?? "",
+    league: String(t.league ?? "—"),
+    home: String(t.home ?? t.home_team ?? ""),
+    away: String(t.away ?? t.away_team ?? ""),
+    kickoff_utc: normalizeIso(t.kickoff_utc ?? t.match_date),
+    bet_type: mapBetType(t.bet_type),
+    bet_side: mapBetSide(t.bet_side),
+    model_prob,
+    odds,
+    edge,
+    q_score: num(t.q_score),
+    actual_result: mapResult(t),
+  }
+}
 
 export function adaptTips(raw: unknown): TipsResponse {
   const r = (raw ?? {}) as Record<string, unknown>
-  const list = Array.isArray(r.tips) ? (r.tips as RawTip[]) : []
-  const tips: Tip[] = list.map((t) => {
-    const bet_type = mapBetType(t.bet_type)
-    const model_prob = num(t.model_prob)
-    const odds = num(t.odds)
-    // Oracle nie zwraca edge — liczymy przewagę nad kursem (prob − implikowane).
-    const edge = odds > 0 ? model_prob - 1 / odds : 0
-    return {
-      event_id: (t.event_id as string | number) ?? `${t.home_team}-${t.away_team}-${t.match_date}`,
-      league: String(t.league ?? "—"),
-      home: String(t.home_team ?? t.home ?? "—"),
-      away: String(t.away_team ?? t.away ?? "—"),
-      kickoff_utc: toIsoUtc(t.match_date ?? t.kickoff_utc),
-      bet_type,
-      bet_side: mapBetSide(t.bet_side),
-      model_prob,
-      odds,
-      edge,
-      q_score: num(t.q_score),
-      actual_result: statusToResult(t.status),
-    }
-  })
-  return { date: String(r.date ?? new Date().toISOString().slice(0, 10)), tips }
+  const list = Array.isArray(r.tips) ? r.tips : []
+  return {
+    date: String(r.date ?? new Date().toISOString().slice(0, 10)),
+    tips: list.map(adaptTip),
+  }
 }
 
 // ——— statystyki ———
@@ -93,9 +124,12 @@ function pickRoi(o: unknown): number {
   return r.roi == null ? 0 : num(r.roi)
 }
 
-// by_market / q_score_buckets mogą być obiektem {klucz:{…}} lub tablicą.
 function asEntries(x: unknown): [string, unknown][] {
-  if (Array.isArray(x)) return x.map((v) => [String((v as Record<string, unknown>)?.bet_type ?? (v as Record<string, unknown>)?.bucket ?? ""), v])
+  if (Array.isArray(x))
+    return x.map((v) => [
+      String((v as Record<string, unknown>)?.bet_type ?? (v as Record<string, unknown>)?.bucket ?? ""),
+      v,
+    ])
   if (x && typeof x === "object") return Object.entries(x as Record<string, unknown>)
   return []
 }
@@ -121,7 +155,7 @@ export function adaptStats(raw: unknown): StatsResponse {
   const by_market: MarketStat[] = []
   for (const [k, v] of asEntries(r.by_market)) {
     const bt = mapBetType(k)
-    if (bt === "THRILLER") continue // MarketStat wyklucza THRILLER
+    if (bt === "THRILLER") continue
     by_market.push({ bet_type: bt as MarketStat["bet_type"], tips: pickCount(v), win_rate: pickWinRate(v), roi: pickRoi(v) })
   }
 

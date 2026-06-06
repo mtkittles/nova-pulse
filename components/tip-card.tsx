@@ -22,6 +22,8 @@ function qScoreBar(q: number): string {
 }
 
 function formatKickoff(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return "termin nieznany"
   return new Intl.DateTimeFormat("pl-PL", {
     weekday: "short",
     day: "numeric",
@@ -29,7 +31,7 @@ function formatKickoff(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "Europe/Warsaw",
-  }).format(new Date(iso))
+  }).format(d)
 }
 
 export default function TipCard({
@@ -45,6 +47,15 @@ export default function TipCard({
   selected?: boolean
   onToggle?: () => void
 }) {
+  // defensywnie: niekompletny rekord → komunikat zamiast crasha
+  if (!tip.home || !tip.away) {
+    return (
+      <article className="grid min-h-[12rem] place-items-center rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-6 text-center text-sm text-white/45">
+        Dane niepełne
+      </article>
+    )
+  }
+
   const prob = Math.round(tip.model_prob * 100)
   const edgePct = (tip.edge * 100).toFixed(1)
   const status = statusInfo(tip.actual_result)
