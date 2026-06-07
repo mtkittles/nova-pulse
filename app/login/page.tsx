@@ -1,14 +1,17 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ArrowLeft, Mail } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Brand } from "@/components/brand"
+import { TelegramDeepLinkLogin } from "@/components/telegram-deep-link"
 import { TelegramLogin } from "@/components/telegram-login"
 import { getSession } from "@/lib/auth"
+import { isKvConfigured } from "@/lib/kv-auth"
 
 export default async function LoginPage() {
-  // już zalogowany? prosto do statystyk
   const session = await getSession()
   if (session) redirect("/stats")
+
+  const deepLinkAvailable = isKvConfigured()
 
   return (
     <main className="grid min-h-screen place-items-center overflow-hidden bg-[var(--bg)] px-6 text-white">
@@ -33,37 +36,26 @@ export default async function LoginPage() {
 
           <h1 className="text-2xl font-semibold">Zaloguj się</h1>
           <p className="mt-3 mb-6 text-sm leading-6 text-white/55">
-            Logowanie odblokowuje pełne statystyki, historię i filtry — za darmo.
-            Na start logujemy się przez Telegram; email dodamy wkrótce.
+            Logowanie odblokowuje pełne statystyki, kalendarz i historię — za darmo.
           </p>
+
+          {deepLinkAvailable && (
+            <>
+              <TelegramDeepLinkLogin redirectTo="/stats" />
+              <div className="my-6 flex items-center gap-3 text-xs text-white/35">
+                <span className="h-px flex-1 bg-white/10" />
+                lub przez przeglądarkę
+                <span className="h-px flex-1 bg-white/10" />
+              </div>
+            </>
+          )}
 
           <TelegramLogin redirectTo="/stats" />
 
-          <div className="my-6 flex items-center gap-3 text-xs text-white/35">
-            <span className="h-px flex-1 bg-white/10" />
-            email wkrótce
-            <span className="h-px flex-1 bg-white/10" />
-          </div>
-
-          <div className="grid gap-4 opacity-60">
-            <label className="grid gap-2">
-              <span className="text-sm text-white/55">Email</span>
-              <input
-                type="email"
-                disabled
-                placeholder="twoj@email.com"
-                className="rounded-2xl border border-white/10 bg-[var(--bg)]/70 px-4 py-3 text-white outline-none placeholder:text-white/30"
-              />
-            </label>
-            <button
-              type="button"
-              disabled
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)]"
-            >
-              <Mail className="h-4 w-4" />
-              Zaloguj przez email
-            </button>
-          </div>
+          <p className="mt-5 text-center text-xs text-white/35">
+            Wybierz „Otwórz w aplikacji Telegram", jeśli używasz telefonu — od razu otworzy się
+            Telegram, w którym jesteś zalogowany, bez wpisywania numeru.
+          </p>
         </div>
 
         <p className="mt-5 text-center text-xs text-white/30">
