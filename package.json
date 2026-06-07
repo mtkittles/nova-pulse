@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@upstash/redis": "^1.38.0",
     "framer-motion": "^12.38.0",
     "jose": "^6.2.3",
     "lucide-react": "^1.12.0",

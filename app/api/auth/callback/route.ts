@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Nieprawidłowy telegram_id." }, { status: 400 })
   }
 
-  const ok = confirmToken(token, {
+  const ok = await confirmToken(token, {
     telegram_id: tid,
     first_name: String(first_name ?? ""),
     last_name: last_name ? String(last_name) : undefined,

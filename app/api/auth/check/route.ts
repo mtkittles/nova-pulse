@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false }, { status: 400 })
   }
 
-  const result = checkToken(token)
+  const result = await checkToken(token)
 
   if (result.status === "notfound" || result.status === "expired") {
     return NextResponse.json({ ok: false, expired: result.status === "expired" })
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   const name = [first_name, last_name].filter(Boolean).join(" ").trim() || undefined
   const jwt = await signSession({ uid: String(telegram_id), username, name })
 
-  consumeToken(token)
+  await consumeToken(token)
 
   const res = NextResponse.json({ ok: true, redirect: "/stats" })
   res.cookies.set(SESSION_COOKIE, jwt, {

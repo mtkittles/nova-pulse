@@ -14,7 +14,7 @@ export default async function LoginPage() {
   if (session) redirect("/stats")
 
   const token = randomUUID()
-  createPendingToken(token)
+  await createPendingToken(token)
 
   return (
     <main className="grid min-h-screen place-items-center overflow-hidden bg-[var(--bg)] px-6 text-white">
