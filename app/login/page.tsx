@@ -1,14 +1,20 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { randomUUID } from "crypto"
 import { ArrowLeft, Mail } from "lucide-react"
 import { Brand } from "@/components/brand"
-import { TelegramLogin } from "@/components/telegram-login"
+import { DeepLinkLogin } from "@/components/deep-link-login"
 import { getSession } from "@/lib/auth"
+import { createPendingToken } from "@/lib/login-tokens"
+
+export const dynamic = "force-dynamic"
 
 export default async function LoginPage() {
-  // już zalogowany? prosto do statystyk
   const session = await getSession()
   if (session) redirect("/stats")
+
+  const token = randomUUID()
+  createPendingToken(token)
 
   return (
     <main className="grid min-h-screen place-items-center overflow-hidden bg-[var(--bg)] px-6 text-white">
@@ -34,10 +40,11 @@ export default async function LoginPage() {
           <h1 className="text-2xl font-semibold">Zaloguj się</h1>
           <p className="mt-3 mb-6 text-sm leading-6 text-white/55">
             Logowanie odblokowuje pełne statystyki, historię i filtry — za darmo.
-            Na start logujemy się przez Telegram; email dodamy wkrótce.
+            Kliknij przycisk poniżej, naciśnij{" "}
+            <strong className="text-white/80">START</strong> w Telegramie i wróć na tę stronę.
           </p>
 
-          <TelegramLogin redirectTo="/stats" />
+          <DeepLinkLogin token={token} redirectTo="/stats" />
 
           <div className="my-6 flex items-center gap-3 text-xs text-white/35">
             <span className="h-px flex-1 bg-white/10" />
