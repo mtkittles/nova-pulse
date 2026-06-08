@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import type { BetType } from "@/lib/types"
 import type { StatsResponse } from "@/lib/stats-types"
+import { BET_TYPE_SHORT } from "@/lib/labels"
 import { CheckCircle2, Hourglass, Percent, Target, TrendingUp } from "lucide-react"
 import StatsCharts from "./stats-charts"
-import { LockedSection } from "./locked-section"
 
 const PERIODS = [
   { k: "7", l: "7 dni" },
@@ -12,18 +13,20 @@ const PERIODS = [
   { k: "all", l: "Całość" },
 ]
 
-export function StatsView({
-  initial,
-  initialPeriod,
-  loggedIn,
-}: {
-  initial: StatsResponse
-  initialPeriod: string
-  loggedIn: boolean
-}) {
+const MODES: ("ALL" | BetType)[] = ["ALL", "BTTS", "OVER_1_5", "MIX", "THRILLER"]
+
+function bucketLower(label: string): number {
+  const m = label.match(/\d+/)
+  return m ? Number(m[0]) : 0
+}
+
+export function StatsView({ initial, initialPeriod }: { initial: StatsResponse; initialPeriod: string }) {
   const [period, setPeriod] = useState(initialPeriod)
   const [data, setData] = useState(initial)
   const [loading, setLoading] = useState(false)
+  const [mode, setMode] = useState<"ALL" | BetType>("ALL")
+  const [minQ, setMinQ] = useState(0)
+  const [leagues, setLeagues] = useState<Set<string>>(new Set())
 
   async function pick(p: string) {
     if (p === period) return
@@ -32,13 +35,39 @@ export function StatsView({
     try {
       const res = await fetch(`/api/stats?period=${p}`)
       const j = await res.json()
-      if (j && j.summary) setData(j)
+      if (j && j.summary) {
+        setData(j)
+        setLeagues(new Set())
+      }
     } catch {
       /* zostaw poprzednie */
     } finally {
       setLoading(false)
     }
   }
+
+  const allLeagues = useMemo(() => data.by_league.map((l) => l.league), [data])
+
+  function toggleLeague(l: string) {
+    setLeagues((prev) => {
+      const n = new Set(prev)
+      if (n.has(l)) n.delete(l)
+      else n.add(l)
+      return n
+    })
+  }
+
+  // filtry przeliczają wykresy (by_market wg trybu, by_league wg wyboru, q-score wg progu)
+  const filtered = useMemo<StatsResponse>(
+    () => ({
+      ...data,
+      by_market: mode === "ALL" ? data.by_market : data.by_market.filter((m) => m.bet_type === mode),
+      by_league:
+        leagues.size === 0 ? data.by_league : data.by_league.filter((l) => leagues.has(l.league)),
+      q_score_buckets: data.q_score_buckets.filter((b) => bucketLower(b.bucket) >= minQ),
+    }),
+    [data, mode, leagues, minQ],
+  )
 
   const s = data.summary
   const empty = s.total_tips === 0
@@ -55,39 +84,28 @@ export function StatsView({
     },
   ]
 
+  const chip = (active: boolean) =>
+    `rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+      active
+        ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
+        : "border-white/12 bg-white/[0.05] text-white/55 hover:bg-white/10"
+    }`
+
   return (
     <div>
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Statystyki skuteczności</h1>
-          <p className="mt-3 text-white/55">Trafialność, ROI i kalibracja Q-Score — z auto-weryfikacji wyników.</p>
-        </div>
-        <div className="flex gap-2">
-          {PERIODS.map((p) => (
-            <button
-              key={p.k}
-              type="button"
-              onClick={() => pick(p.k)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                period === p.k
-                  ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
-                  : "border-white/12 bg-white/[0.05] text-white/60 hover:bg-white/10"
-              }`}
-            >
-              {p.l}
-            </button>
-          ))}
-        </div>
+      <div className="mb-6 flex justify-end gap-2">
+        {PERIODS.map((p) => (
+          <button key={p.k} type="button" onClick={() => pick(p.k)} className={chip(period === p.k)}>
+            {p.l}
+          </button>
+        ))}
       </div>
 
       <div className={`mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4 ${loading ? "opacity-50" : ""}`}>
         {kpis.map((kpi) => {
           const Icon = kpi.icon
           return (
-            <div
-              key={kpi.label}
-              className="rounded-[1.6rem] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur"
-            >
+            <div key={kpi.label} className="rounded-[1.6rem] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur">
               <div className="mb-4 grid h-10 w-10 place-items-center rounded-2xl bg-white/10 text-white/70">
                 <Icon className="h-5 w-5" />
               </div>
@@ -109,12 +127,43 @@ export function StatsView({
             i wykresy ożyją.
           </p>
         </div>
-      ) : loggedIn ? (
-        <div className={loading ? "opacity-50 transition" : "transition"}>
-          <StatsCharts data={data} />
-        </div>
       ) : (
-        <LockedSection />
+        <>
+          {/* filtry */}
+          <div className="mb-6 space-y-3 rounded-[1.4rem] border border-white/12 bg-white/[0.04] p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-sm text-white/45">Tryb:</span>
+              {MODES.map((m) => (
+                <button key={m} type="button" onClick={() => setMode(m)} className={chip(mode === m)}>
+                  {m === "ALL" ? "Wszystkie" : BET_TYPE_SHORT[m]}
+                </button>
+              ))}
+              <label className="ml-auto flex items-center gap-2 text-sm text-white/60">
+                Min. Q-Score: <span className="font-semibold text-[color:var(--accent)]">{minQ}</span>
+                <input type="range" min={0} max={100} step={10} value={minQ} onChange={(e) => setMinQ(Number(e.target.value))} className="accent-[var(--accent)]" />
+              </label>
+            </div>
+            {allLeagues.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-sm text-white/45">Ligi:</span>
+                {allLeagues.map((l) => (
+                  <button key={l} type="button" onClick={() => toggleLeague(l)} className={chip(leagues.has(l))}>
+                    {l}
+                  </button>
+                ))}
+                {leagues.size > 0 && (
+                  <button type="button" onClick={() => setLeagues(new Set())} className="text-xs text-white/45 underline hover:text-white">
+                    wyczyść
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className={loading ? "opacity-50 transition" : "transition"}>
+            <StatsCharts data={filtered} />
+          </div>
+        </>
       )}
     </div>
   )
