@@ -11,11 +11,17 @@ import type {
   CalendarDay,
   FormMatch,
   FormResult,
+  H2HMatch,
+  H2HSummary,
+  MatchDetailed,
   MatchInfo,
   MatchPrediction,
+  MatchStatus,
   Scorer,
+  ScoreDist,
   StandingRow,
   TeamForm,
+  TeamMetrics,
   TeamSeason,
   UpcomingMatch,
 } from "./extra-types"
@@ -458,4 +464,151 @@ export function adaptUpcoming(raw: unknown): UpcomingMatch[] {
       predictions: preds.map(adaptPrediction),
     }
   })
+}
+
+// ——— szczegółowy mecz (/match/{id}/detailed) ———
+
+function round1(x: number): number {
+  return Math.round(x * 10) / 10
+}
+
+function teamMetrics(raw: unknown, fallbackName: string): TeamMetrics | null {
+  if (raw == null) return null
+  const o = rec(raw)
+  const played = num(o.played ?? o.games ?? o.matches)
+  const gf = num(o.gf ?? o.goals_for ?? o.scored)
+  const ga = num(o.ga ?? o.goals_against ?? o.conceded)
+  const gf_avg = o.gf_avg != null ? num(o.gf_avg) : played ? gf / played : 0
+  const ga_avg = o.ga_avg != null ? num(o.ga_avg) : played ? ga / played : 0
+  const cs =
+    pct(o.clean_sheets_pct) ??
+    (o.clean_sheets != null && played ? Math.round((num(o.clean_sheets) / played) * 100) : 0)
+  const fr = resultsFromForm(o.form ?? o.recent_form)
+  const form_points = fr.length
+    ? Math.round((fr.reduce((a, r) => a + (r === "W" ? 3 : r === "D" ? 1 : 0), 0) / (fr.length * 3)) * 100)
+    : o.form_points != null
+      ? Math.min(100, num(o.form_points))
+      : 0
+  return {
+    name: String(o.name ?? o.team ?? fallbackName),
+    gf_avg: round1(gf_avg),
+    ga_avg: round1(ga_avg),
+    btts_pct: pct(o.btts_pct ?? o.btts) ?? 0,
+    over15_pct: pct(o.over_1_5_pct ?? o.over15_pct ?? o.over_1_5) ?? 0,
+    clean_sheets_pct: cs ?? 0,
+    form_points,
+  }
+}
+
+function adaptScoreDist(x: unknown): ScoreDist[] {
+  let list: ScoreDist[] = []
+  if (Array.isArray(x)) {
+    list = x.map((it) => {
+      const o = rec(it)
+      return { score: String(o.score ?? o.result ?? ""), count: num(o.count ?? o.freq ?? o.n) }
+    })
+  } else if (x && typeof x === "object") {
+    list = Object.entries(x as Record<string, unknown>).map(([score, v]) => ({
+      score,
+      count: num(v && typeof v === "object" ? rec(v).count : v),
+    }))
+  }
+  return list.filter((d) => /^\d+\s*[:\-]\s*\d+$/.test(d.score)).map((d) => ({ score: d.score.replace(/\s|-/g, ":"), count: d.count }))
+}
+
+function h2hSummaryFrom(rawH2h: unknown[], homeName: string): H2HSummary {
+  let hw = 0
+  let aw = 0
+  let dr = 0
+  let btts = 0
+  let goals = 0
+  const n = rawH2h.length
+  for (const it of rawH2h) {
+    const o = rec(it)
+    const hs = num(o.home_score)
+    const as = num(o.away_score)
+    const h = String(o.home_team ?? o.home ?? "")
+    goals += hs + as
+    if (hs > 0 && as > 0) btts++
+    const homeIsThis = h.toLowerCase() === homeName.toLowerCase()
+    if (hs === as) dr++
+    else {
+      const homeWon = hs > as
+      if ((homeWon && homeIsThis) || (!homeWon && !homeIsThis)) hw++
+      else aw++
+    }
+  }
+  return {
+    home_wins: hw,
+    away_wins: aw,
+    draws: dr,
+    btts_pct: n ? Math.round((btts / n) * 100) : null,
+    avg_goals: n ? round1(goals / n) : null,
+  }
+}
+
+function mapStatus(raw: unknown): MatchStatus {
+  const s = String(raw ?? "").toLowerCase()
+  if (s.includes("live") || s.includes("play") || s.includes("1h") || s.includes("2h")) return "live"
+  if (s.includes("fin") || s.includes("ft") || s.includes("end") || s.includes("zak")) return "finished"
+  return "pending"
+}
+
+export function adaptMatchDetailed(raw: unknown): MatchDetailed {
+  const r = rec(raw)
+  const m = rec(r.match ?? r)
+  const found = r.found === true || (r.found !== false && (r.match != null || m.home_team != null || m.home != null))
+  const home = String(m.home_team ?? m.home ?? "—")
+  const away = String(m.away_team ?? m.away ?? "—")
+
+  const preds = Array.isArray(r.predictions)
+    ? r.predictions
+    : Array.isArray(m.predictions)
+      ? (m.predictions as unknown[])
+      : []
+
+  const rawH2h = Array.isArray(r.h2h) ? (r.h2h as unknown[]) : Array.isArray(m.h2h) ? (m.h2h as unknown[]) : []
+  const h2h_matches: H2HMatch[] = rawH2h.map((x) => {
+    const o = rec(x)
+    return {
+      home: String(o.home_team ?? o.home ?? "—"),
+      away: String(o.away_team ?? o.away ?? "—"),
+      score: `${num(o.home_score)}:${num(o.away_score)}`,
+      date: o.date != null ? String(o.date) : "",
+    }
+  })
+
+  return {
+    found: Boolean(found),
+    event_id: (r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
+    home,
+    away,
+    league: String(m.league ?? "—"),
+    kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
+    stadium: m.stadium != null ? String(m.stadium) : m.venue != null ? String(m.venue) : null,
+    status: mapStatus(m.status ?? r.status),
+    home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
+    away_id: pickId(m, ["away_id", "away_team_id", "awayId"]),
+    predictions: (preds as unknown[]).map(adaptPrediction),
+    home_metrics: teamMetrics(r.home_stats ?? m.home_stats ?? r.home ?? m.home, home),
+    away_metrics: teamMetrics(r.away_stats ?? m.away_stats ?? r.away ?? m.away, away),
+    h2h_matches,
+    h2h_summary: (r.h2h_summary
+      ? (() => {
+          const o = rec(r.h2h_summary)
+          return {
+            home_wins: num(o.home_wins),
+            away_wins: num(o.away_wins),
+            draws: num(o.draws),
+            btts_pct: pct(o.btts_pct),
+            avg_goals: numOrNull(o.avg_goals),
+          }
+        })()
+      : rawH2h.length
+        ? h2hSummaryFrom(rawH2h, home)
+        : null) as H2HSummary | null,
+    score_distribution: adaptScoreDist(r.score_distribution ?? r.score_dist ?? m.score_distribution),
+    home_scorers: adaptScorers(r.home_scorers ?? r.home_top_scorers ?? rec(r.home).scorers),
+    away_scorers: adaptScorers(r.away_scorers ?? r.away_top_scorers ?? rec(r.away).scorers),
+  }
 }
