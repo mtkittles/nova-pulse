@@ -24,6 +24,7 @@ import type {
   TeamMetrics,
   TeamSeason,
   UpcomingMatch,
+  UserPick,
 } from "./extra-types"
 
 // ——— FAKTYCZNY kształt typu z Oracle API (potwierdzony surowym JSON) ———
@@ -611,4 +612,38 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     home_scorers: adaptScorers(r.home_scorers ?? r.home_top_scorers ?? rec(r.home).scorers),
     away_scorers: adaptScorers(r.away_scorers ?? r.away_top_scorers ?? rec(r.away).scorers),
   }
+}
+
+// ——— kupony użytkownika ———
+
+function pickStatus(o: Record<string, unknown>): "pending" | "won" | "lost" {
+  const s = String(o.status ?? "").toLowerCase()
+  if (s === "won" || s === "win") return "won"
+  if (s === "lost" || s === "lose") return "lost"
+  if (s === "pending") return "pending"
+  const r = mapResult(o)
+  if (r === 1) return "won"
+  if (r === 0) return "lost"
+  return "pending"
+}
+
+export function adaptUserPicks(raw: unknown): UserPick[] {
+  const r = rec(raw)
+  const list = Array.isArray(raw) ? raw : Array.isArray(r.picks) ? (r.picks as unknown[]) : []
+  return (list as unknown[]).map((p, i) => {
+    const o = rec(p)
+    return {
+      id: (o.id ?? o.pick_id ?? `${o.event_id ?? i}`) as string | number,
+      event_id: (o.event_id ?? "") as string | number,
+      date: normalizeIso(o.kickoff_utc ?? o.match_date ?? o.date ?? o.created_at),
+      home: String(o.home ?? o.home_team ?? "—"),
+      away: String(o.away ?? o.away_team ?? "—"),
+      league: String(o.league ?? "—"),
+      bet_type: mapBetType(o.bet_type),
+      bet_side: o.market_label != null ? String(o.market_label) : mapBetSide(o.bet_side),
+      odds: num(o.odds),
+      stake: num(o.stake, 0),
+      status: pickStatus(o),
+    }
+  })
 }

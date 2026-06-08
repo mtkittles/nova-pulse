@@ -113,6 +113,21 @@ export interface LeagueFormRow {
   results: FormResult[]
 }
 
+// — kupony użytkownika (/user/{telegram_id}/picks) —
+export interface UserPick {
+  id: string | number
+  event_id: string | number
+  date: string
+  home: string
+  away: string
+  league: string
+  bet_type: BetType
+  bet_side: string
+  odds: number
+  stake: number
+  status: "pending" | "won" | "lost"
+}
+
 // — szczegółowy mecz (/match/{id}/detailed) —
 export interface TeamMetrics {
   name: string
