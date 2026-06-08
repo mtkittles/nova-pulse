@@ -8,6 +8,7 @@ import type {
   TimelinePoint,
 } from "./stats-types"
 import type {
+  CalendarDay,
   FormMatch,
   MatchInfo,
   MatchPrediction,
@@ -352,4 +353,34 @@ export function adaptScorers(raw: unknown): Scorer[] {
       appearances: o.appearances != null ? num(o.appearances) : undefined,
     }
   })
+}
+
+// ——— kalendarz (liczniki typów per dzień) ———
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+
+export function adaptCalendar(raw: unknown): CalendarDay[] {
+  const r = rec(raw)
+  let list: unknown[] = []
+  if (Array.isArray(raw)) list = raw
+  else if (Array.isArray(r.days)) list = r.days as unknown[]
+  else if (Array.isArray(r.calendar)) list = r.calendar as unknown[]
+  else if (r.days && typeof r.days === "object")
+    list = Object.entries(r.days as Record<string, unknown>).map(([date, v]) => ({ date, ...rec(v) }))
+  else if (raw && typeof raw === "object")
+    // mapa data→liczniki na poziomie głównym
+    list = Object.entries(r)
+      .filter(([k]) => DATE_RE.test(k))
+      .map(([date, v]) => ({ date, ...rec(v) }))
+
+  return (list as unknown[])
+    .map((d) => {
+      const o = rec(d)
+      return {
+        date: String(o.date ?? ""),
+        tips: num(o.tips ?? o.count ?? o.total),
+        matches: num(o.matches ?? o.match_count ?? o.matches_count),
+        leagues: num(o.leagues ?? o.league_count ?? o.leagues_count),
+      }
+    })
+    .filter((d) => DATE_RE.test(d.date))
 }

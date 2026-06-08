@@ -1,5 +1,5 @@
-import { getDates } from "@/lib/dates"
 import { getTips } from "@/lib/tips"
+import { getCalendar } from "@/lib/calendar"
 import { getSession } from "@/lib/auth"
 import { AppShell } from "@/components/app-shell"
 import TypyPage from "@/components/typy-page"
@@ -16,11 +16,15 @@ function todayWarsaw(): string {
 }
 
 export default async function Page() {
-  const [dates, session] = await Promise.all([getDates(), getSession()])
+  const [calendar, session] = await Promise.all([getCalendar(), getSession()])
   const today = todayWarsaw()
-  // domyślnie: najbliższy dzień z typami >= dziś, inaczej ostatni dostępny, inaczej dziś
-  const defaultDate =
-    dates.dates.find((d) => d >= today) ?? dates.dates[dates.dates.length - 1] ?? today
+
+  // dni z typami (tips !== 0) → wybór domyślnej daty: najbliższy dzień ≥ dziś
+  const withTips = calendar
+    .filter((d) => d.tips !== 0)
+    .map((d) => d.date)
+    .sort()
+  const defaultDate = withTips.find((d) => d >= today) ?? withTips[withTips.length - 1] ?? today
   const tips = await getTips(defaultDate)
   const loggedIn = Boolean(session)
 
@@ -38,7 +42,7 @@ export default async function Page() {
       <TypyPage
         initialDate={defaultDate}
         initialTips={tips.tips}
-        availableDates={dates.dates}
+        calendar={calendar}
         loggedIn={loggedIn}
       />
 

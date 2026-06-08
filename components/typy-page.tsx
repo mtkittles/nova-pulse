@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import type { BetType, Tip } from "@/lib/types"
+import type { CalendarDay } from "@/lib/extra-types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
 import { AlertTriangle, CalendarOff } from "lucide-react"
 import TipCard from "./tip-card"
@@ -45,14 +46,18 @@ function nearest(target: string, dates: string[]): string | null {
 export default function TypyPage({
   initialDate,
   initialTips,
-  availableDates,
+  calendar,
   loggedIn = false,
 }: {
   initialDate: string
   initialTips: Tip[]
-  availableDates: string[]
+  calendar: CalendarDay[]
   loggedIn?: boolean
 }) {
+  const availableDates = useMemo(
+    () => calendar.filter((d) => d.tips !== 0).map((d) => d.date),
+    [calendar],
+  )
   const [date, setDate] = useState(initialDate)
   const [tips, setTips] = useState<Tip[]>(initialTips)
   const [loading, setLoading] = useState(false)
@@ -60,6 +65,8 @@ export default function TypyPage({
   const [league, setLeague] = useState("ALL")
   const [minQ, setMinQ] = useState(0)
   const [sort, setSort] = useState<Sort>("q")
+
+  const selectedDay = useMemo(() => calendar.find((d) => d.date === date), [calendar, date])
 
   async function selectDate(d: string) {
     if (d === date) return
@@ -110,7 +117,13 @@ export default function TypyPage({
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <Calendar value={date} available={availableDates} onSelect={selectDate} />
+          <Calendar value={date} days={calendar} onSelect={selectDate} />
+          {selectedDay && selectedDay.tips > 0 && (
+            <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-center text-sm text-white/70">
+              <span className="font-semibold text-[color:var(--accent)]">{selectedDay.tips}</span> typów ·{" "}
+              {selectedDay.matches} meczów · {selectedDay.leagues} lig
+            </p>
+          )}
         </aside>
 
         <div>
