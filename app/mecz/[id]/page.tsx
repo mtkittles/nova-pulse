@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft, SearchX } from "lucide-react"
-import { getMatch } from "@/lib/match"
+import { getMatchDetailed } from "@/lib/match"
 import { getStandings } from "@/lib/league"
 import { leagueCodeByName } from "@/lib/leagues"
 import { getSession } from "@/lib/auth"
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic"
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim()
 
 // /match nie zwraca team_id — pobieramy go ze standings ligi (po nazwie drużyny).
-async function resolveTeamIds(match: Awaited<ReturnType<typeof getMatch>>) {
+async function resolveTeamIds(match: Awaited<ReturnType<typeof getMatchDetailed>>) {
   if (!match.found) return
   if (match.home_id != null && match.away_id != null) return
   const code = leagueCodeByName(match.league)
@@ -35,7 +35,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const { id } = await params
   const session = await getSession()
   if (!session) redirect("/login")
-  const match = await getMatch(id)
+  const match = await getMatchDetailed(id)
   await resolveTeamIds(match)
 
   return (

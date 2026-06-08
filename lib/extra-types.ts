@@ -112,3 +112,50 @@ export interface LeagueFormRow {
   team: string
   results: FormResult[]
 }
+
+// — szczegółowy mecz (/match/{id}/detailed) —
+export interface TeamMetrics {
+  name: string
+  gf_avg: number
+  ga_avg: number
+  btts_pct: number
+  over15_pct: number
+  clean_sheets_pct: number
+  form_points: number // 0..100
+}
+
+export interface H2HSummary {
+  home_wins: number
+  away_wins: number
+  draws: number
+  btts_pct: number | null
+  avg_goals: number | null
+}
+
+export interface ScoreDist {
+  score: string // np. "2:1"
+  count: number
+}
+
+export type MatchStatus = "pending" | "live" | "finished"
+
+export interface MatchDetailed {
+  found: boolean
+  event_id: string | number
+  home: string
+  away: string
+  league: string
+  kickoff_utc: string
+  stadium: string | null
+  status: MatchStatus
+  home_id: string | number | null
+  away_id: string | number | null
+  predictions: MatchPrediction[]
+  home_metrics: TeamMetrics | null
+  away_metrics: TeamMetrics | null
+  h2h_matches: H2HMatch[]
+  h2h_summary: H2HSummary | null
+  score_distribution: ScoreDist[]
+  home_scorers: Scorer[]
+  away_scorers: Scorer[]
+}
