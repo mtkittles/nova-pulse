@@ -2,6 +2,13 @@ import type { BetType } from "./types"
 
 export type FormScope = "all" | "home" | "away"
 
+export interface CalendarDay {
+  date: string // YYYY-MM-DD
+  tips: number // -1 = są typy, liczba nieznana
+  matches: number
+  leagues: number
+}
+
 export interface MatchPrediction {
   bet_type: BetType
   bet_side: string
