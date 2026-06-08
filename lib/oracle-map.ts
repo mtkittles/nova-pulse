@@ -10,11 +10,14 @@ import type {
 import type {
   CalendarDay,
   FormMatch,
+  FormResult,
   MatchInfo,
   MatchPrediction,
   Scorer,
   StandingRow,
   TeamForm,
+  TeamSeason,
+  UpcomingMatch,
 } from "./extra-types"
 
 // ——— FAKTYCZNY kształt typu z Oracle API (potwierdzony surowym JSON) ———
@@ -383,4 +386,76 @@ export function adaptCalendar(raw: unknown): CalendarDay[] {
       }
     })
     .filter((d) => DATE_RE.test(d.date))
+}
+
+// ——— drużyna / nadchodzące mecze ———
+
+function oneResult(s: unknown): FormResult {
+  const c = String(s ?? "").trim().toUpperCase()[0]
+  if (c === "W") return "W"
+  if (c === "L") return "L"
+  return "D"
+}
+
+// form może być: ["W","D",...] / "WWDLW" / [{result/gf/ga}, ...]
+export function resultsFromForm(x: unknown): FormResult[] {
+  if (Array.isArray(x))
+    return x.map((it) => (it && typeof it === "object" ? formResult(it) : oneResult(it)))
+  if (typeof x === "string") return x.replace(/[^WDLwdl]/g, "").split("").map(oneResult)
+  return []
+}
+
+export function adaptScorerList(raw: unknown): Scorer[] {
+  // akceptuje tablicę lub {scorers:[...]}/{players:[...]}
+  return adaptScorers(raw)
+}
+
+export function adaptTeam(raw: unknown): TeamSeason | null {
+  const r = rec(raw)
+  const t = rec(r.team ?? r)
+  const found = r.found !== false && (t.team_id != null || t.id != null || t.name != null || t.team != null)
+  if (!found) return null
+  return {
+    team_id: (t.team_id ?? t.id ?? "") as string | number,
+    name: String(t.name ?? t.team_name ?? t.team ?? "—"),
+    league: String(t.league ?? "—"),
+    country: String(t.country ?? "—"),
+    logo: t.logo != null ? String(t.logo) : t.logo_url != null ? String(t.logo_url) : t.crest != null ? String(t.crest) : null,
+    played: num(t.played ?? t.mp ?? t.games),
+    wins: num(t.wins ?? t.won ?? t.w),
+    draws: num(t.draws ?? t.draw ?? t.d),
+    losses: num(t.losses ?? t.lost ?? t.l),
+    gf: num(t.gf ?? t.goals_for ?? t.scored),
+    ga: num(t.ga ?? t.goals_against ?? t.conceded),
+    btts_pct: pct(t.btts_pct ?? t.btts),
+    over15_pct: pct(t.over_1_5_pct ?? t.over15_pct ?? t.over_1_5),
+    over25_pct: pct(t.over_2_5_pct ?? t.over25_pct ?? t.over_2_5),
+    form: resultsFromForm(t.form ?? t.recent_form ?? r.form),
+    scorers: adaptScorers(t.scorers ?? t.top_scorers ?? r.scorers ?? r.top_scorers),
+  }
+}
+
+export function adaptUpcoming(raw: unknown): UpcomingMatch[] {
+  const r = rec(raw)
+  const list = Array.isArray(raw)
+    ? raw
+    : Array.isArray(r.matches)
+      ? (r.matches as unknown[])
+      : Array.isArray(r.upcoming)
+        ? (r.upcoming as unknown[])
+        : Array.isArray(r.fixtures)
+          ? (r.fixtures as unknown[])
+          : []
+  return (list as unknown[]).map((m) => {
+    const o = rec(m)
+    const preds = Array.isArray(o.predictions) ? (o.predictions as unknown[]) : []
+    return {
+      event_id: (o.event_id ?? o.id ?? "") as string | number,
+      home: String(o.home_team ?? o.home ?? "—"),
+      away: String(o.away_team ?? o.away ?? "—"),
+      league: String(o.league ?? "—"),
+      kickoff_utc: normalizeIso(o.match_date ?? o.kickoff_utc ?? o.date),
+      predictions: preds.map(adaptPrediction),
+    }
+  })
 }

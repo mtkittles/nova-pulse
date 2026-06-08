@@ -76,3 +76,39 @@ export interface Scorer {
   assists: number
   appearances?: number
 }
+
+export type FormResult = "W" | "D" | "L"
+
+export interface TeamSeason {
+  team_id: string | number
+  name: string
+  league: string
+  country: string
+  logo: string | null
+  played: number
+  wins: number
+  draws: number
+  losses: number
+  gf: number
+  ga: number
+  btts_pct: number | null
+  over15_pct: number | null
+  over25_pct: number | null
+  form: FormResult[]
+  scorers: Scorer[]
+}
+
+export interface UpcomingMatch {
+  event_id: string | number
+  home: string
+  away: string
+  league: string
+  kickoff_utc: string
+  predictions: MatchPrediction[]
+}
+
+export interface LeagueFormRow {
+  team_id: string | number | null
+  team: string
+  results: FormResult[]
+}
