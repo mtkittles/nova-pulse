@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import { AUDIT_PUBLIC } from "@/lib/audit"
+import { AuditBanner } from "@/components/audit-banner"
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -59,7 +61,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="bg-[var(--bg)] text-white antialiased">{children}</body>
+      <body className="bg-[var(--bg)] text-white antialiased">
+        {AUDIT_PUBLIC && <AuditBanner />}
+        {children}
+      </body>
     </html>
   )
 }

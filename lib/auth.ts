@@ -1,6 +1,7 @@
 import "server-only"
 import { cookies } from "next/headers"
 import { SignJWT, jwtVerify } from "jose"
+import { AUDIT_PUBLIC } from "./audit"
 
 export const SESSION_COOKIE = "lb_session"
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 dni
@@ -44,7 +45,8 @@ export async function signSession(p: { uid: string; username?: string; name?: st
     .sign(key())
 }
 
-export async function getSession(): Promise<Session | null> {
+// Realna sesja z cookie + JWT — logika niezmieniona względem main.
+async function readRealSession(): Promise<Session | null> {
   try {
     const store = await cookies()
     const token = store.get(SESSION_COOKIE)?.value
@@ -62,4 +64,22 @@ export async function getSession(): Promise<Session | null> {
   } catch {
     return null
   }
+}
+
+// audit/lighthouse-public: gdy nie ma realnej sesji, zwracamy syntetyczną
+// sesję premium (nie-admin), aby odblokować wszystkie featury do audytu.
+// isAdmin pozostaje false — panel admina NIE jest publiczny w podglądzie.
+const AUDIT_SESSION: Session = {
+  uid: "preview",
+  username: "audit",
+  name: "Audyt Lighthouse",
+  tier: "premium",
+  isAdmin: false,
+}
+
+export async function getSession(): Promise<Session | null> {
+  const real = await readRealSession()
+  if (real) return real
+  if (AUDIT_PUBLIC) return AUDIT_SESSION
+  return null
 }
