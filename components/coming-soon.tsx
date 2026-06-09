@@ -17,7 +17,7 @@ export function ComingSoon({
         </div>
         <h1 className="text-2xl font-semibold">{title}</h1>
         <p className="mt-3 leading-7 text-white/55">{desc}</p>
-        <span className="mt-6 inline-block rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/45">
+        <span className="mt-6 inline-block rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/60">
           Wkrótce
         </span>
       </div>

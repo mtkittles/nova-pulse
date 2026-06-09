@@ -49,7 +49,7 @@ export default async function Page() {
         loggedIn={loggedIn}
       />
 
-      <p className="mt-10 text-center text-xs text-white/30">
+      <p className="mt-10 text-center text-xs text-white/55">
         18+ · Typy to analiza statystyczna, nie gwarancja wygranej. Graj odpowiedzialnie.
       </p>
     </AppShell>

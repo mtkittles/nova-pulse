@@ -61,7 +61,7 @@ export function DeepLinkLogin({ token, redirectTo = "/stats" }: { token: string;
         <p className="text-sm text-white/55">Czekamy na potwierdzenie w Telegramie…</p>
         <button
           onClick={openTelegram}
-          className="text-xs text-white/40 underline underline-offset-2 hover:text-white/70"
+          className="text-xs text-white/60 underline underline-offset-2 hover:text-white/70"
         >
           Otwórz Telegram ponownie
         </button>

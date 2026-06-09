@@ -52,7 +52,7 @@ export default function TipCard({
   // defensywnie: niekompletny rekord → komunikat zamiast crasha
   if (!tip.home || !tip.away) {
     return (
-      <article className="grid min-h-[12rem] place-items-center rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-6 text-center text-sm text-white/45">
+      <article className="grid min-h-[12rem] place-items-center rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-6 text-center text-sm text-white/60">
         Dane niepełne
       </article>
     )
@@ -64,11 +64,11 @@ export default function TipCard({
       <article className="relative flex flex-col overflow-hidden rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
         <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
         <div className="relative flex items-center justify-between">
-          <span className="truncate text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
+          <span className="truncate text-xs uppercase tracking-[0.18em] text-white/60">{tip.league}</span>
           <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
         </div>
         <h3 className="relative mt-4 text-lg font-semibold leading-6">
-          {tip.home} <span className="text-white/35">vs</span> {tip.away}
+          {tip.home} <span className="text-white/55">vs</span> {tip.away}
         </h3>
         <div className="relative mt-5 grid place-items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-center">
           <Lock className="h-6 w-6 text-[color:var(--accent)]" />
@@ -94,12 +94,12 @@ export default function TipCard({
       <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
 
       <div className="relative flex items-center justify-between">
-        <span className="truncate text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
+        <span className="truncate text-xs uppercase tracking-[0.18em] text-white/60">{tip.league}</span>
         <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
       </div>
 
       <h3 className="relative mt-4 text-lg font-semibold leading-6">
-        {tip.home} <span className="text-white/35">vs</span> {tip.away}
+        {tip.home} <span className="text-white/55">vs</span> {tip.away}
       </h3>
 
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
@@ -122,15 +122,15 @@ export default function TipCard({
 
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/40">Prawd.</p>
+          <p className="text-xs text-white/60">Prawd.</p>
           <p className="mt-1 text-xl font-semibold">{prob}%</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/40">Kurs</p>
+          <p className="text-xs text-white/60">Kurs</p>
           <p className="mt-1 text-xl font-semibold">{tip.odds.toFixed(2)}</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/40">Edge</p>
+          <p className="text-xs text-white/60">Edge</p>
           <p className={`mt-1 text-xl font-semibold ${tip.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
             {tip.edge >= 0 ? "+" : ""}
             {edgePct}%
@@ -140,7 +140,7 @@ export default function TipCard({
 
       <div className="relative mt-4">
         <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="text-white/45">Q-Score</span>
+          <span className="text-white/60">Q-Score</span>
           <span className={`font-semibold ${qScoreColor(tip.q_score)}`}>{tip.q_score}/100</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-white/10">
