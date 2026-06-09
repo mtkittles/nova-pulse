@@ -172,6 +172,8 @@ export interface MatchDetailed {
   h2h_matches: H2HMatch[]
   h2h_summary: H2HSummary | null
   score_distribution: ScoreDist[]
+  /** Macierz P(home=i, away=j) z modelu Dixon-Coles; i,j = 0..N (zwykle 0..5). 0..1. */
+  score_matrix: number[][] | null
   home_scorers: Scorer[]
   away_scorers: Scorer[]
 }

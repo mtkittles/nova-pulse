@@ -43,8 +43,23 @@ function detailedNotFound(id: string): MatchDetailed {
     found: false, event_id: id, home: "—", away: "—", league: "—", kickoff_utc: "",
     stadium: null, status: "pending", home_id: null, away_id: null, predictions: [],
     home_metrics: null, away_metrics: null, h2h_matches: [], h2h_summary: null,
-    score_distribution: [], home_scorers: [], away_scorers: [],
+    score_distribution: [], score_matrix: null, home_scorers: [], away_scorers: [],
   }
+}
+
+// Macierz Poissona 6×6 (przybliżenie Dixon-Coles) na potrzeby danych testowych.
+function poissonMatrix(lh: number, la: number, size = 6): number[][] {
+  const pois = (k: number, l: number) => (Math.exp(-l) * Math.pow(l, k)) / factorial(k)
+  const m = Array.from({ length: size }, (_, i) =>
+    Array.from({ length: size }, (_, j) => pois(i, lh) * pois(j, la)),
+  )
+  const total = m.reduce((s, row) => s + row.reduce((a, b) => a + b, 0), 0)
+  return m.map((row) => row.map((v) => v / total))
+}
+function factorial(n: number): number {
+  let r = 1
+  for (let i = 2; i <= n; i++) r *= i
+  return r
 }
 
 function mockDetailed(id: string): MatchDetailed {
@@ -73,6 +88,7 @@ function mockDetailed(id: string): MatchDetailed {
       { score: "2:0", count: 4 }, { score: "2:1", count: 8 }, { score: "2:2", count: 3 },
       { score: "3:1", count: 2 }, { score: "3:2", count: 4 }, { score: "2:3", count: 1 },
     ],
+    score_matrix: poissonMatrix(1.8, 1.3),
     home_scorers: [
       { player: "Diego Oliveira", team: "FC Tokyo", goals: 14, assists: 3 },
       { player: "Ryotaro Araki", team: "FC Tokyo", goals: 8, assists: 5 },
