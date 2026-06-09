@@ -518,6 +518,57 @@ function adaptScoreDist(x: unknown): ScoreDist[] {
   return list.filter((d) => /^\d+\s*[:\-]\s*\d+$/.test(d.score)).map((d) => ({ score: d.score.replace(/\s|-/g, ":"), count: d.count }))
 }
 
+// Macierz wyników 6×6 P(home=i, away=j), znormalizowana do sumy 1.
+// Źródło: r.score_matrix (2D array lub obiekt "i:j"->p) lub fallback z rozkładu wyników.
+function adaptScoreMatrix(raw: unknown, dist: ScoreDist[], size = 6): number[][] | null {
+  const m: number[][] = Array.from({ length: size }, () => Array.from({ length: size }, () => 0))
+  let any = false
+
+  if (Array.isArray(raw)) {
+    for (let i = 0; i < Math.min(size, raw.length); i++) {
+      const row = raw[i]
+      if (!Array.isArray(row)) continue
+      for (let j = 0; j < Math.min(size, row.length); j++) {
+        const v = num(row[j])
+        if (v > 0) {
+          m[i][j] = v
+          any = true
+        }
+      }
+    }
+  } else if (raw && typeof raw === "object") {
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+      const mt = k.match(/^(\d+)\s*[:\-]\s*(\d+)$/)
+      if (!mt) continue
+      const i = Number(mt[1])
+      const j = Number(mt[2])
+      if (i < size && j < size) {
+        m[i][j] = num(v && typeof v === "object" ? rec(v).count ?? rec(v).p : v)
+        any = true
+      }
+    }
+  }
+
+  // fallback: zbuduj z rozkładu wyników (count)
+  if (!any && dist.length) {
+    for (const d of dist) {
+      const mt = d.score.match(/^(\d+):(\d+)$/)
+      if (!mt) continue
+      const i = Number(mt[1])
+      const j = Number(mt[2])
+      if (i < size && j < size) {
+        m[i][j] = d.count
+        any = true
+      }
+    }
+  }
+
+  if (!any) return null
+  const total = m.reduce((s, row) => s + row.reduce((a, b) => a + b, 0), 0)
+  if (total <= 0) return null
+  return m.map((row) => row.map((v) => v / total))
+}
+
 function h2hSummaryFrom(rawH2h: unknown[], homeName: string): H2HSummary {
   let hw = 0
   let aw = 0
@@ -610,6 +661,10 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
         ? h2hSummaryFrom(rawH2h, home)
         : null) as H2HSummary | null,
     score_distribution: adaptScoreDist(r.score_distribution ?? r.score_dist ?? m.score_distribution),
+    score_matrix: adaptScoreMatrix(
+      r.score_matrix ?? m.score_matrix ?? r.scoreline_matrix ?? r.dixon_coles_matrix,
+      adaptScoreDist(r.score_distribution ?? r.score_dist ?? m.score_distribution),
+    ),
     home_scorers: adaptScorers(r.home_scorers ?? r.home_top_scorers ?? rec(r.home).scorers),
     away_scorers: adaptScorers(r.away_scorers ?? r.away_top_scorers ?? rec(r.away).scorers),
   }
