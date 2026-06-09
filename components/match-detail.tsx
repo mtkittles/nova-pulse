@@ -67,7 +67,7 @@ function PredictionCard({ p }: { p: MatchPrediction }) {
 
       <div className="mt-3">
         <div className="mb-1 flex justify-between text-xs">
-          <span className="text-white/45">Q-Score</span>
+          <span className="text-white/60">Q-Score</span>
           <span className={`font-semibold ${a.text}`}>{p.q_score}/100</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-white/10">
@@ -77,15 +77,15 @@ function PredictionCard({ p }: { p: MatchPrediction }) {
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div>
-          <p className="text-[11px] text-white/40">Prawd.</p>
+          <p className="text-[11px] text-white/60">Prawd.</p>
           <p className="font-semibold">{Math.round(p.model_prob * 100)}%</p>
         </div>
         <div>
-          <p className="text-[11px] text-white/40">Kurs</p>
+          <p className="text-[11px] text-white/60">Kurs</p>
           <p className="font-semibold">{p.odds.toFixed(2)}</p>
         </div>
         <div>
-          <p className="text-[11px] text-white/40">Edge</p>
+          <p className="text-[11px] text-white/60">Edge</p>
           <p className={`font-semibold ${p.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
             {p.edge >= 0 ? "+" : ""}
             {(p.edge * 100).toFixed(1)}%
@@ -105,15 +105,15 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
       {/* 1. nagłówek */}
       <div className="mb-8 rounded-[2rem] border border-white/12 bg-white/[0.05] p-7 backdrop-blur">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs uppercase tracking-[0.2em] text-white/45">{match.league}</span>
+          <span className="text-xs uppercase tracking-[0.2em] text-white/60">{match.league}</span>
           <StatusBadge status={match.status} />
         </div>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-          <TeamName name={match.home} id={match.home_id} /> <span className="text-white/35">vs</span>{" "}
+          <TeamName name={match.home} id={match.home_id} /> <span className="text-white/55">vs</span>{" "}
           <TeamName name={match.away} id={match.away_id} />
         </h1>
         <p className="mt-2 capitalize text-white/55">{fmtDate(match.kickoff_utc)}</p>
-        {match.stadium && <p className="mt-1 text-sm text-white/45">🏟 {match.stadium}</p>}
+        {match.stadium && <p className="mt-1 text-sm text-white/60">🏟 {match.stadium}</p>}
       </div>
 
       {/* 2. predykcje */}
@@ -176,9 +176,9 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
           <div className="mb-10 overflow-hidden rounded-[1.4rem] border border-white/12 bg-white/[0.04]">
             {match.h2h_matches.slice(0, 10).map((g, i) => (
               <div key={i} className="flex items-center justify-between gap-3 border-b border-white/5 px-5 py-3 text-sm last:border-0">
-                <span className="w-24 shrink-0 text-white/45">{g.date?.slice(0, 10)}</span>
+                <span className="w-24 shrink-0 text-white/60">{g.date?.slice(0, 10)}</span>
                 <span className="flex-1 truncate text-white/80">
-                  {g.home} <span className="text-white/35">vs</span> {g.away}
+                  {g.home} <span className="text-white/55">vs</span> {g.away}
                 </span>
                 <span className="shrink-0 font-semibold">{g.score}</span>
               </div>
@@ -216,7 +216,7 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
                   <TeamName name={side.team} id={side.id} />
                 </h3>
                 {side.list.length === 0 ? (
-                  <p className="text-sm text-white/45">Brak danych.</p>
+                  <p className="text-sm text-white/60">Brak danych.</p>
                 ) : (
                   <div className="space-y-2">
                     {side.list.slice(0, 3).map((sc, i) => (

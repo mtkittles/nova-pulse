@@ -29,7 +29,7 @@ function fmt(iso: string): string {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
-      <p className="text-xs text-white/40">{label}</p>
+      <p className="text-xs text-white/60">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   )
@@ -47,17 +47,17 @@ function UpcomingCard({ m, teamName }: { m: UpcomingMatch; teamName: string }) {
   const inner = (
     <>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs uppercase tracking-[0.16em] text-white/45">{m.league}</span>
+        <span className="text-xs uppercase tracking-[0.16em] text-white/60">{m.league}</span>
         <span className="text-sm text-white/55">{fmt(m.kickoff_utc)}</span>
       </div>
       <h4 className="mt-2 font-semibold">
         {m.home && m.away ? (
           <>
-            {m.home} <span className="text-white/35">vs</span> {m.away}
+            {m.home} <span className="text-white/55">vs</span> {m.away}
           </>
         ) : (
           <>
-            {teamName} <span className="text-white/35">vs</span> {m.opponent || "—"}
+            {teamName} <span className="text-white/55">vs</span> {m.opponent || "—"}
           </>
         )}
       </h4>
@@ -78,7 +78,7 @@ function UpcomingCard({ m, teamName }: { m: UpcomingMatch; teamName: string }) {
           })}
         </div>
       ) : (
-        <p className="mt-3 text-sm text-white/45">Brak predykcji.</p>
+        <p className="mt-3 text-sm text-white/60">Brak predykcji.</p>
       )}
     </>
   )

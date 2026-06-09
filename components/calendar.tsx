@@ -78,7 +78,7 @@ export function Calendar({
         </button>
       </div>
 
-      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-xs text-white/40">
+      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-xs text-white/60">
         {DOW.map((d) => (
           <div key={d}>{d}</div>
         ))}
@@ -118,7 +118,7 @@ export function Calendar({
                 </span>
               ) : (
                 matches > 0 && (
-                  <span className="absolute right-1 top-0.5 text-[9px] leading-none text-white/40">{matches}m</span>
+                  <span className="absolute right-1 top-0.5 text-[9px] leading-none text-white/60">{matches}m</span>
                 )
               )}
 
@@ -132,7 +132,7 @@ export function Calendar({
       </div>
 
       {/* legenda skali */}
-      <div className="mt-4 flex items-center gap-2 text-[11px] text-white/45">
+      <div className="mt-4 flex items-center gap-2 text-[11px] text-white/60">
         <span>mniej</span>
         <span className="h-3 w-3 rounded bg-[var(--accent)]/15" />
         <span className="h-3 w-3 rounded bg-[var(--accent)]/35" />

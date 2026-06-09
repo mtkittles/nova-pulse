@@ -127,6 +127,7 @@ export default function TypyPage({
         </aside>
 
         <div>
+          <h2 className="sr-only">Typy na wybrany dzień</h2>
           {/* tryby */}
           <div className="mb-4 flex flex-wrap gap-2">
             {MODES.map((m) => (
@@ -147,7 +148,7 @@ export default function TypyPage({
 
           {/* filtry + sort */}
           <div className="mb-6 flex flex-wrap items-center gap-2">
-            <select value={league} onChange={(e) => setLeague(e.target.value)} className={selectClass}>
+            <select value={league} onChange={(e) => setLeague(e.target.value)} className={selectClass} aria-label="Filtruj po lidze">
               <option value="ALL">Wszystkie ligi</option>
               {leagues.map((l) => (
                 <option key={l} value={l}>
@@ -156,7 +157,7 @@ export default function TypyPage({
               ))}
             </select>
 
-            <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className={selectClass}>
+            <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className={selectClass} aria-label="Sortowanie typów">
               <option value="q">Sortuj: Q-Score</option>
               <option value="date">Sortuj: data</option>
               <option value="odds">Sortuj: kurs</option>
@@ -216,7 +217,7 @@ export default function TypyPage({
             </div>
           ) : (
             <>
-              <p className="mb-5 text-sm text-white/45">
+              <p className="mb-5 text-sm text-white/60">
                 Pokazano <span className="font-semibold text-white/80">{visible.length}</span> z {tips.length}{" "}
                 typów.
               </p>

@@ -33,6 +33,7 @@ export function StatsTabs({
       <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Statystyki</h1>
       <p className="mt-3 mb-6 text-white/55">Skuteczność typów bota oraz Twoich zapisanych kuponów.</p>
 
+      <h2 className="sr-only">Wybór zakładki statystyk</h2>
       <div className="mb-8 flex flex-wrap gap-2">
         <button type="button" onClick={() => setTab("bot")} className={tabBtn(tab === "bot")}>
           <BarChart3 className="h-4 w-4" /> Typy bota

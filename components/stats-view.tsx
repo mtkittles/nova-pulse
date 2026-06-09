@@ -109,7 +109,7 @@ export function StatsView({ initial, initialPeriod }: { initial: StatsResponse; 
               <div className="mb-4 grid h-10 w-10 place-items-center rounded-2xl bg-white/10 text-white/70">
                 <Icon className="h-5 w-5" />
               </div>
-              <p className="text-sm text-white/45">{kpi.label}</p>
+              <p className="text-sm text-white/60">{kpi.label}</p>
               <p className={`mt-1 text-3xl font-semibold ${kpi.tone}`}>{kpi.value}</p>
             </div>
           )
@@ -132,7 +132,7 @@ export function StatsView({ initial, initialPeriod }: { initial: StatsResponse; 
           {/* filtry */}
           <div className="mb-6 space-y-3 rounded-[1.4rem] border border-white/12 bg-white/[0.04] p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-sm text-white/45">Tryb:</span>
+              <span className="mr-1 text-sm text-white/60">Tryb:</span>
               {MODES.map((m) => (
                 <button key={m} type="button" onClick={() => setMode(m)} className={chip(mode === m)}>
                   {m === "ALL" ? "Wszystkie" : BET_TYPE_SHORT[m]}
@@ -145,14 +145,14 @@ export function StatsView({ initial, initialPeriod }: { initial: StatsResponse; 
             </div>
             {allLeagues.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-sm text-white/45">Ligi:</span>
+                <span className="mr-1 text-sm text-white/60">Ligi:</span>
                 {allLeagues.map((l) => (
                   <button key={l} type="button" onClick={() => toggleLeague(l)} className={chip(leagues.has(l))}>
                     {l}
                   </button>
                 ))}
                 {leagues.size > 0 && (
-                  <button type="button" onClick={() => setLeagues(new Set())} className="text-xs text-white/45 underline hover:text-white">
+                  <button type="button" onClick={() => setLeagues(new Set())} className="text-xs text-white/60 underline hover:text-white">
                     wyczyść
                   </button>
                 )}
