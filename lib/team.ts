@@ -39,6 +39,7 @@ function mockUpcoming(): UpcomingMatch[] {
       event_id: "u1",
       home: "Kashima",
       away: "Vissel Kobe",
+      opponent: "Vissel Kobe",
       league: "J1 League",
       kickoff_utc: d(2),
       predictions: [
@@ -50,6 +51,7 @@ function mockUpcoming(): UpcomingMatch[] {
       event_id: "u2",
       home: "Urawa Reds",
       away: "Kashima",
+      opponent: "Urawa Reds",
       league: "J1 League",
       kickoff_utc: d(6),
       predictions: [

@@ -102,6 +102,7 @@ export interface UpcomingMatch {
   event_id: string | number
   home: string
   away: string
+  opponent: string // dla /team/{id}/upcoming (przeciwnik względem drużyny)
   league: string
   kickoff_utc: string
   predictions: MatchPrediction[]

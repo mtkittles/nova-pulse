@@ -24,9 +24,9 @@ function todayWarsaw(): string {
 }
 
 // skala intensywności heatmapy wg liczby typów
-function bucketClass(tips: number): string {
+function bucketClass(tips: number, matches: number): string {
   if (tips < 0) return "bg-[var(--accent)]/25 text-white" // są typy, liczba nieznana
-  if (tips === 0) return "text-white/25 line-through" // brak typów
+  if (tips === 0) return matches > 0 ? "bg-white/[0.07] text-white/70" : "text-white/25 line-through"
   if (tips <= 5) return "bg-[var(--accent)]/15 text-white"
   if (tips <= 15) return "bg-[var(--accent)]/35 text-white"
   return "bg-[var(--accent)]/70 font-semibold text-[color:var(--on-accent)]" // 16+
@@ -90,15 +90,16 @@ export function Calendar({
           const key = ymd(view.y, view.m, d)
           const info = map.get(key)
           const tips = info ? info.tips : 0
+          const matches = info ? info.matches : 0
+          const leagues = info ? info.leagues : 0
           const selected = key === value
           const isToday = key === today
-          const hasTips = tips !== 0
           const tooltip =
             tips < 0
               ? "typy dostępne"
-              : tips > 0
-                ? `${tips} typów · ${info?.matches ?? 0} meczów · ${info?.leagues ?? 0} lig`
-                : "brak typów"
+              : tips > 0 || matches > 0
+                ? `${Math.max(tips, 0)} typów · ${matches} meczów · ${leagues} lig`
+                : "brak meczów"
 
           return (
             <button
@@ -107,14 +108,18 @@ export function Calendar({
               onClick={() => onSelect(key)}
               className={`group relative grid aspect-square place-items-center rounded-xl text-sm transition hover:brightness-125 ${
                 selected ? "ring-2 ring-[var(--accent)]" : isToday ? "ring-1 ring-white/50" : ""
-              } ${bucketClass(tips)}`}
+              } ${bucketClass(tips, matches)}`}
             >
               {d}
 
-              {tips > 0 && (
+              {tips > 0 ? (
                 <span className="absolute right-1 top-0.5 text-[9px] font-semibold leading-none text-white/70">
                   {tips}
                 </span>
+              ) : (
+                matches > 0 && (
+                  <span className="absolute right-1 top-0.5 text-[9px] leading-none text-white/40">{matches}m</span>
+                )
               )}
 
               {/* tooltip (hover, desktop) */}
