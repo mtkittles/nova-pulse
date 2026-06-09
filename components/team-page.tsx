@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import type { BetType } from "@/lib/types"
 import type { TeamSeason, UpcomingMatch } from "@/lib/extra-types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
@@ -103,8 +104,7 @@ export function TeamPage({ team, upcoming }: { team: TeamSeason; upcoming: Upcom
       <div className="mb-8 flex items-center gap-4 rounded-[2rem] border border-white/12 bg-white/[0.05] p-6 backdrop-blur">
         <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl border border-white/12 bg-white/[0.06]">
           {team.logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={team.logo} alt="" className="h-full w-full object-contain" />
+            <Image src={team.logo} alt={team.name} width={64} height={64} className="h-full w-full object-contain" />
           ) : (
             <span className="text-2xl font-bold text-[color:var(--accent)]">{team.name.charAt(0)}</span>
           )}

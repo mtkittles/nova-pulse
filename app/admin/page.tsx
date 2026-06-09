@@ -5,6 +5,9 @@ import { AdminPanel } from "@/components/admin-panel"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = { title: "Panel admina", description: "Zarządzanie danymi." }
+
+
 export default async function Page() {
   const session = await getSession()
   if (!session?.isAdmin) redirect("/")

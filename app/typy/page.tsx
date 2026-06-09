@@ -6,6 +6,9 @@ import TypyPage from "@/components/typy-page"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = { title: "Typy", description: "Typy meczowe z kalendarzem, filtrami i Q-Score — BTTS, Over 1.5, Mix, Thriller." }
+
+
 function todayWarsaw(): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Warsaw",

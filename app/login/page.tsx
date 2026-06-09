@@ -9,6 +9,8 @@ import { createPendingToken } from "@/lib/login-tokens"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = { title: "Zaloguj" }
+
 export default async function LoginPage() {
   const session = await getSession()
   if (session) redirect("/stats")

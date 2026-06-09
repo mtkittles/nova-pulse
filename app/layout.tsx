@@ -1,18 +1,47 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
+import { Inter } from "next/font/google"
 import "./globals.css"
 
+const inter = Inter({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-inter",
+})
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nova-pulse-sage.vercel.app"
+
 export const metadata: Metadata = {
-  title: "LUPUS BETS — predykcje piłkarskie napędzane modelem",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "LUPUS BETS — predykcje piłkarskie napędzane modelem",
+    template: "%s · LUPUS BETS",
+  },
   description:
     "Mądrzejsze typy zamiast przeczucia. Predykcje BTTS, Over 1.5, Mix i Thriller z oceną Q-Score i automatycznie weryfikowaną skutecznością. Napędzane silnikiem Lupus Bot.",
+  applicationName: "LUPUS BETS",
   authors: [{ name: "LUPUS BETS" }],
-  icons: { icon: "/favicon.svg" },
-  openGraph: {
-    title: "LUPUS BETS — predykcje piłkarskie napędzane modelem",
-    description:
-      "Predykcje BTTS, Over 1.5, Mix i Thriller z oceną Q-Score i realną skutecznością.",
-    type: "website",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
+  openGraph: {
+    type: "website",
+    siteName: "LUPUS BETS",
+    title: "LUPUS BETS — predykcje piłkarskie napędzane modelem",
+    description: "Predykcje BTTS, Over 1.5, Mix i Thriller z oceną Q-Score i realną skutecznością.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LUPUS BETS",
+    description: "Predykcje piłkarskie napędzane modelem Dixon-Coles.",
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#070812",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover", // safe-area (notch/home indicator)
 }
 
 // Ustawia motyw z localStorage PRZED pierwszym malowaniem — brak migotania.
@@ -24,17 +53,13 @@ try {
 } catch (e) {}
 `
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pl" data-theme="nova">
+    <html lang="pl" data-theme="nova" className={inter.variable}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="bg-[var(--bg)] text-white">{children}</body>
+      <body className="bg-[var(--bg)] text-white antialiased">{children}</body>
     </html>
   )
 }
