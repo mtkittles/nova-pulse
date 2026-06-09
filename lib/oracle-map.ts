@@ -458,8 +458,9 @@ export function adaptUpcoming(raw: unknown): UpcomingMatch[] {
     const preds = Array.isArray(o.predictions) ? (o.predictions as unknown[]) : []
     return {
       event_id: (o.event_id ?? o.id ?? "") as string | number,
-      home: String(o.home_team ?? o.home ?? "—"),
-      away: String(o.away_team ?? o.away ?? "—"),
+      home: o.home_team != null || o.home != null ? String(o.home_team ?? o.home) : "",
+      away: o.away_team != null || o.away != null ? String(o.away_team ?? o.away) : "",
+      opponent: o.opponent != null ? String(o.opponent) : "",
       league: String(o.league ?? "—"),
       kickoff_utc: normalizeIso(o.match_date ?? o.kickoff_utc ?? o.date),
       predictions: preds.map(adaptPrediction),

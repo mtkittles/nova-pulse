@@ -27,12 +27,21 @@ function mockCalendar(): CalendarDay[] {
 // - Oracle skonfigurowane → /public-api/calendar
 // - brak endpointu → fallback do /dates (tips: -1 = „są typy, liczba nieznana")
 // - brak konfiguracji → mock
+function ymd(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
 export async function getCalendar(): Promise<CalendarDay[]> {
   if (!isOracleConfigured()) return mockCalendar()
 
+  // Oracle wymaga zakresu — pobieramy poprzedni miesiąc … +2 miesiące (pokrywa nawigację).
+  const today = new Date()
+  const from = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+  const to = new Date(today.getFullYear(), today.getMonth() + 2, 0)
+
   try {
-    const data = await oracleFetch<unknown>("/calendar", 300)
-    console.log("[oracle] /calendar raw:", JSON.stringify(data).slice(0, 400))
+    const data = await oracleFetch<unknown>(`/calendar?from=${ymd(from)}&to=${ymd(to)}`, 300)
+    console.log("[oracle] /calendar raw:", JSON.stringify(data).slice(0, 500))
     const days = adaptCalendar(data)
     if (days.length > 0) return days
   } catch (err) {

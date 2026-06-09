@@ -34,24 +34,31 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function UpcomingCard({ m }: { m: UpcomingMatch }) {
+function UpcomingCard({ m, teamName }: { m: UpcomingMatch; teamName: string }) {
   // najmocniejszy tryb z Q≥70 → akcent koloru karty
   const best = [...m.predictions].filter((p) => p.q_score >= 70).sort((a, b) => b.q_score - a.q_score)[0]
   const accent = best ? ACCENT[best.bet_type] : null
+  const hasEvent = m.event_id !== "" && m.event_id != null
+  const className = `block rounded-[1.4rem] border border-l-4 bg-white/[0.05] p-5 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/[0.08] ${
+    accent ? accent.ring : "border-l-white/15"
+  } border-white/12`
 
-  return (
-    <Link
-      href={`/mecz/${m.event_id}`}
-      className={`block rounded-[1.4rem] border border-l-4 bg-white/[0.05] p-5 backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/[0.08] ${
-        accent ? accent.ring : "border-l-white/15"
-      } border-white/12`}
-    >
+  const inner = (
+    <>
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs uppercase tracking-[0.16em] text-white/45">{m.league}</span>
         <span className="text-sm text-white/55">{fmt(m.kickoff_utc)}</span>
       </div>
       <h4 className="mt-2 font-semibold">
-        {m.home} <span className="text-white/35">vs</span> {m.away}
+        {m.home && m.away ? (
+          <>
+            {m.home} <span className="text-white/35">vs</span> {m.away}
+          </>
+        ) : (
+          <>
+            {teamName} <span className="text-white/35">vs</span> {m.opponent || "—"}
+          </>
+        )}
       </h4>
 
       {m.predictions.length > 0 ? (
@@ -72,7 +79,15 @@ function UpcomingCard({ m }: { m: UpcomingMatch }) {
       ) : (
         <p className="mt-3 text-sm text-white/45">Brak predykcji.</p>
       )}
+    </>
+  )
+
+  return hasEvent ? (
+    <Link href={`/mecz/${m.event_id}`} className={className}>
+      {inner}
     </Link>
+  ) : (
+    <div className={className}>{inner}</div>
   )
 }
 
@@ -160,8 +175,8 @@ export function TeamPage({ team, upcoming }: { team: TeamSeason; upcoming: Upcom
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {upcoming.map((m) => (
-            <UpcomingCard key={String(m.event_id)} m={m} />
+          {upcoming.map((m, i) => (
+            <UpcomingCard key={`${m.event_id}-${i}`} m={m} teamName={team.name} />
           ))}
         </div>
       )}

@@ -118,9 +118,9 @@ export default function TypyPage({
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Calendar value={date} days={calendar} onSelect={selectDate} />
-          {selectedDay && selectedDay.tips > 0 && (
+          {selectedDay && (selectedDay.tips > 0 || selectedDay.matches > 0) && (
             <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-center text-sm text-white/70">
-              <span className="font-semibold text-[color:var(--accent)]">{selectedDay.tips}</span> typów ·{" "}
+              <span className="font-semibold text-[color:var(--accent)]">{Math.max(selectedDay.tips, 0)}</span> typów ·{" "}
               {selectedDay.matches} meczów · {selectedDay.leagues} lig
             </p>
           )}
