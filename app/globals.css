@@ -26,6 +26,18 @@
   --glow-2: rgba(16, 185, 129, 0.28);
 }
 
+/* ===== Tokeny semantyczne (wspólne dla motywów) ===== */
+:root {
+  --success: #34d399; /* emerald-400 */
+  --warning: #fbbf24; /* amber-400 */
+  --danger: #fb7185; /* rose-400 */
+  /* skala pewności (czerwony→bursztyn→zielony) — patrz lib/design.ts scaleColor */
+  --prob-low: #fb7185;
+  --prob-mid: #fbbf24;
+  --prob-high: #34d399;
+  --radius-card: 1.8rem;
+}
+
 html {
   scroll-behavior: smooth;
 }

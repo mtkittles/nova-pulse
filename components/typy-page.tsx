@@ -7,16 +7,14 @@ import { BET_TYPE_SHORT } from "@/lib/labels"
 import { AlertTriangle, CalendarOff } from "lucide-react"
 import TipCard from "./tip-card"
 import { Calendar } from "./calendar"
+import { AnimatedTabs } from "./ui/tabs"
+import { StaggerGrid, StaggerItem } from "./ui/stagger"
+import { TipGridSkeleton } from "./ui/skeletons"
 
 type Sort = "q" | "date" | "odds"
 
-const MODES: { key: "ALL" | BetType; label: string }[] = [
-  { key: "ALL", label: "Wszystkie" },
-  { key: "BTTS", label: BET_TYPE_SHORT.BTTS },
-  { key: "OVER_1_5", label: BET_TYPE_SHORT.OVER_1_5 },
-  { key: "MIX", label: BET_TYPE_SHORT.MIX },
-  { key: "THRILLER", label: BET_TYPE_SHORT.THRILLER },
-]
+const MODE_KEYS: ("ALL" | BetType)[] = ["ALL", "BTTS", "OVER_1_5", "MIX", "THRILLER"]
+const modeLabel = (k: "ALL" | BetType) => (k === "ALL" ? "Wszystkie" : BET_TYPE_SHORT[k])
 
 function dateLabel(d: string): string {
   return new Intl.DateTimeFormat("pl-PL", {
@@ -129,22 +127,17 @@ export default function TypyPage({
         <div>
           <h2 className="sr-only">Typy na wybrany dzień</h2>
           {/* tryby */}
-          <div className="mb-4 flex flex-wrap gap-2">
-            {MODES.map((m) => (
-              <button
-                key={m.key}
-                type="button"
-                onClick={() => setMode(m.key)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                  mode === m.key
-                    ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
-                    : "border-white/12 bg-white/[0.05] text-white/60 hover:bg-white/10"
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
+          <AnimatedTabs
+            groupId="typy-modes"
+            className="mb-4"
+            value={mode}
+            onChange={(k) => setMode(k as "ALL" | BetType)}
+            items={MODE_KEYS.map((k) => ({
+              key: k,
+              label: modeLabel(k),
+              count: k === "ALL" ? tips.length : tips.filter((t) => t.bet_type === k).length,
+            }))}
+          />
 
           {/* filtry + sort */}
           <div className="mb-6 flex flex-wrap items-center gap-2">
@@ -189,11 +182,7 @@ export default function TypyPage({
           )}
 
           {loading ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-72 animate-pulse rounded-[1.8rem] border border-white/12 bg-white/[0.04]" />
-              ))}
-            </div>
+            <TipGridSkeleton />
           ) : tips.length === 0 ? (
             <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-12 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-white/12 bg-white/[0.05] text-white/60">
@@ -221,16 +210,17 @@ export default function TypyPage({
                 Pokazano <span className="font-semibold text-white/80">{visible.length}</span> z {tips.length}{" "}
                 typów.
               </p>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <StaggerGrid key={`${date}-${mode}-${league}-${sort}`} className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {visible.map((tip) => (
-                  <TipCard
-                    key={String(tip.event_id)}
-                    tip={tip}
-                    href={loggedIn ? `/mecz/${tip.event_id}` : undefined}
-                    locked={!loggedIn}
-                  />
+                  <StaggerItem key={String(tip.event_id)}>
+                    <TipCard
+                      tip={tip}
+                      href={loggedIn ? `/mecz/${tip.event_id}` : undefined}
+                      locked={!loggedIn}
+                    />
+                  </StaggerItem>
                 ))}
-              </div>
+              </StaggerGrid>
             </>
           )}
         </div>

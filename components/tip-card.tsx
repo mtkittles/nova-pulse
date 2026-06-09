@@ -1,25 +1,10 @@
 import Link from "next/link"
-import type { BetType, Tip } from "@/lib/types"
-import { BET_TYPE_PL, BET_TYPE_SHORT, statusInfo } from "@/lib/labels"
+import type { Tip } from "@/lib/types"
+import { statusInfo } from "@/lib/labels"
+import { MODE_META, flagForLeague, scaleColor } from "@/lib/design"
+import { QRing } from "./ui/q-ring"
+import { TeamCrest } from "./ui/team-crest"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
-
-const MARKET_BADGE: Record<BetType, string> = {
-  BTTS: "border-cyan-300/30 bg-cyan-300/10 text-cyan-200",
-  OVER_1_5: "border-violet-300/30 bg-violet-300/10 text-violet-200",
-  MIX: "border-emerald-300/30 bg-emerald-300/10 text-emerald-200",
-  THRILLER: "border-amber-300/30 bg-amber-300/10 text-amber-200",
-}
-
-function qScoreColor(q: number): string {
-  if (q < 50) return "text-rose-300"
-  if (q < 75) return "text-amber-300"
-  return "text-emerald-300"
-}
-function qScoreBar(q: number): string {
-  if (q < 50) return "bg-rose-400"
-  if (q < 75) return "bg-amber-400"
-  return "bg-emerald-400"
-}
 
 function formatKickoff(iso: string): string {
   const d = new Date(iso)
@@ -32,6 +17,28 @@ function formatKickoff(iso: string): string {
     minute: "2-digit",
     timeZone: "Europe/Warsaw",
   }).format(d)
+}
+
+function LeagueRow({ league, kickoff }: { league: string; kickoff: string }) {
+  const flag = flagForLeague(league)
+  return (
+    <div className="relative flex items-center justify-between gap-2">
+      <span className="flex min-w-0 items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-white/60">
+        {flag && <span className="text-sm leading-none">{flag}</span>}
+        <span className="truncate">{league}</span>
+      </span>
+      <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(kickoff)}</span>
+    </div>
+  )
+}
+
+function TeamRow({ name }: { name: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <TeamCrest name={name} size={32} />
+      <span className="truncate text-base font-semibold leading-tight">{name}</span>
+    </div>
+  )
 }
 
 export default function TipCard({
@@ -52,7 +59,7 @@ export default function TipCard({
   // defensywnie: niekompletny rekord → komunikat zamiast crasha
   if (!tip.home || !tip.away) {
     return (
-      <article className="grid min-h-[12rem] place-items-center rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-6 text-center text-sm text-white/60">
+      <article className="grid min-h-[12rem] place-items-center rounded-[var(--radius-card)] border border-white/12 bg-white/[0.04] p-6 text-center text-sm text-white/60">
         Dane niepełne
       </article>
     )
@@ -61,15 +68,13 @@ export default function TipCard({
   // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem
   if (locked) {
     return (
-      <article className="relative flex flex-col overflow-hidden rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
+      <article className="relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
         <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
-        <div className="relative flex items-center justify-between">
-          <span className="truncate text-xs uppercase tracking-[0.18em] text-white/60">{tip.league}</span>
-          <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
+        <LeagueRow league={tip.league} kickoff={tip.kickoff_utc} />
+        <div className="relative mt-4 space-y-2">
+          <TeamRow name={tip.home} />
+          <TeamRow name={tip.away} />
         </div>
-        <h3 className="relative mt-4 text-lg font-semibold leading-6">
-          {tip.home} <span className="text-white/55">vs</span> {tip.away}
-        </h3>
         <div className="relative mt-5 grid place-items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-center">
           <Lock className="h-6 w-6 text-[color:var(--accent)]" />
           <p className="text-sm text-white/60">Zaloguj, aby zobaczyć typ, kurs i Q-Score</p>
@@ -85,26 +90,31 @@ export default function TipCard({
   }
 
   const prob = Math.round(tip.model_prob * 100)
-  const edgePct = (tip.edge * 100).toFixed(1)
+  const probColor = scaleColor(tip.model_prob)
   const status = statusInfo(tip.actual_result)
+  const mode = MODE_META[tip.bet_type]
   const isThriller = tip.bet_type === "THRILLER"
+  const edgePct = (tip.edge * 100).toFixed(1)
 
   const inner = (
     <>
       <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
 
-      <div className="relative flex items-center justify-between">
-        <span className="truncate text-xs uppercase tracking-[0.18em] text-white/60">{tip.league}</span>
-        <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
+      <LeagueRow league={tip.league} kickoff={tip.kickoff_utc} />
+
+      {/* drużyny + pierścień Q-Score */}
+      <div className="relative mt-4 flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-2">
+          <TeamRow name={tip.home} />
+          <TeamRow name={tip.away} />
+        </div>
+        <QRing value={tip.q_score} />
       </div>
 
-      <h3 className="relative mt-4 text-lg font-semibold leading-6">
-        {tip.home} <span className="text-white/55">vs</span> {tip.away}
-      </h3>
-
+      {/* badge'y: tryb + status + ryzyko */}
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${MARKET_BADGE[tip.bet_type]}`}>
-          {BET_TYPE_SHORT[tip.bet_type]}
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${mode.badge}`}>
+          {mode.short}
         </span>
         <span className={`rounded-full border px-3 py-1 text-xs font-medium ${status.classes}`}>
           {status.label}
@@ -117,17 +127,20 @@ export default function TipCard({
       </div>
 
       <p className="relative mt-3 text-sm text-white/65">
-        {BET_TYPE_PL[tip.bet_type]} — <span className="font-medium text-white/85">{tip.bet_side}</span>
+        {mode.full} — <span className="font-medium text-white/85">{tip.bet_side}</span>
       </p>
 
+      {/* metryki — kurs wyróżniony */}
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <p className="text-xs text-white/60">Prawd.</p>
-          <p className="mt-1 text-xl font-semibold">{prob}%</p>
+          <p className="mt-1 text-xl font-semibold" style={{ color: probColor }}>
+            {prob}%
+          </p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/60">Kurs</p>
-          <p className="mt-1 text-xl font-semibold">{tip.odds.toFixed(2)}</p>
+        <div className="rounded-2xl border border-[color:var(--accent)]/40 bg-[var(--accent)]/10 p-3">
+          <p className="text-xs text-white/70">Kurs</p>
+          <p className="mt-1 text-2xl font-bold text-[color:var(--accent)]">{tip.odds.toFixed(2)}</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <p className="text-xs text-white/60">Edge</p>
@@ -138,19 +151,28 @@ export default function TipCard({
         </div>
       </div>
 
+      {/* pasek pewności (gradient wg prawdopodobieństwa) */}
       <div className="relative mt-4">
         <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="text-white/60">Q-Score</span>
-          <span className={`font-semibold ${qScoreColor(tip.q_score)}`}>{tip.q_score}/100</span>
+          <span className="text-white/60">Pewność modelu</span>
+          <span className="font-semibold" style={{ color: probColor }}>
+            {prob}%
+          </span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-white/10">
-          <div className={`h-full rounded-full ${qScoreBar(tip.q_score)}`} style={{ width: `${tip.q_score}%` }} />
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${prob}%`,
+              background: `linear-gradient(90deg, ${scaleColor(Math.max(0, tip.model_prob - 0.25))}, ${probColor})`,
+            }}
+          />
         </div>
       </div>
     </>
   )
 
-  const cardClass = `group relative flex flex-col overflow-hidden rounded-[1.8rem] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085] ${
+  const cardClass = `group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-black/40 ${
     selected ? "border-[color:var(--accent)]/60" : "border-white/12"
   }`
 

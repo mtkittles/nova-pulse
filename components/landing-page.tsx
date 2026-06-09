@@ -27,6 +27,9 @@ import { BET_TYPE_SHORT } from "@/lib/labels"
 import { Brand } from "./brand"
 import { ThemeToggle } from "./theme-toggle"
 import { Faq } from "./faq"
+import { CountUp } from "./ui/count-up"
+import { AnimatedTabs } from "./ui/tabs"
+import { StaggerGrid, StaggerItem } from "./ui/stagger"
 import TipCard from "./tip-card"
 
 type LandingProps = {
@@ -105,41 +108,6 @@ const howItWorks = [
 ]
 
 // Licznik z animacją od 0. SSR i pierwszy render klienta = 0 → brak rozjazdu hydratacji.
-function CountUp({
-  to,
-  decimals = 0,
-  prefix = "",
-  suffix = "",
-  duration = 1200,
-}: {
-  to: number
-  decimals?: number
-  prefix?: string
-  suffix?: string
-  duration?: number
-}) {
-  const [val, setVal] = useState(0)
-  useEffect(() => {
-    let raf = 0
-    const start = performance.now()
-    const ease = (p: number) => 1 - Math.pow(1 - p, 3)
-    const tick = (now: number) => {
-      const p = Math.min(1, (now - start) / duration)
-      setVal(to * ease(p))
-      if (p < 1) raf = requestAnimationFrame(tick)
-    }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [to, duration])
-  return (
-    <>
-      {prefix}
-      {val.toFixed(decimals)}
-      {suffix}
-    </>
-  )
-}
-
 function Reveal({
   children,
   delay = 0,
@@ -419,11 +387,13 @@ export default function LandingPage({
           </div>
 
           {topTips.length > 0 ? (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <StaggerGrid className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {topTips.map((tip) => (
-                <TipCard key={String(tip.event_id)} tip={tip} href={tipHref(tip)} />
+                <StaggerItem key={String(tip.event_id)}>
+                  <TipCard tip={tip} href={tipHref(tip)} />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerGrid>
           ) : (
             <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-10 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-white/12 bg-white/[0.05] text-[color:var(--accent)]">
@@ -520,13 +490,13 @@ export default function LandingPage({
         </Reveal>
 
         {wcLive ? (
-          <Reveal>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {wcTips.slice(0, 6).map((tip) => (
-                <TipCard key={String(tip.event_id)} tip={tip} href={tipHref(tip)} />
-              ))}
-            </div>
-          </Reveal>
+          <StaggerGrid className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {wcTips.slice(0, 6).map((tip) => (
+              <StaggerItem key={String(tip.event_id)}>
+                <TipCard tip={tip} href={tipHref(tip)} />
+              </StaggerItem>
+            ))}
+          </StaggerGrid>
         ) : (
           <Reveal>
             <div className="overflow-hidden rounded-[2rem] border border-white/12 bg-gradient-to-br from-[var(--accent)]/10 via-white/[0.04] to-transparent p-8 backdrop-blur md:p-12">
@@ -555,37 +525,24 @@ export default function LandingPage({
           </h2>
         </Reveal>
 
-        <Reveal className="mb-6 flex flex-wrap gap-2">
-          {MODES.map((m) => {
-            const count = modeCounts[m.key] ?? 0
-            const active = mode === m.key
-            return (
-              <button
-                key={m.key}
-                type="button"
-                onClick={() => setMode(m.key)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                  active
-                    ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
-                    : "border-white/12 bg-white/[0.05] text-white/60 hover:bg-white/10"
-                }`}
-              >
-                {m.label}
-                <span className={`ml-2 text-xs ${active ? "text-[color:var(--accent)]" : "text-white/55"}`}>
-                  {count}
-                </span>
-              </button>
-            )
-          })}
+        <Reveal className="mb-6">
+          <AnimatedTabs
+            groupId="home-modes"
+            value={mode}
+            onChange={(k) => setMode(k as "ALL" | BetType)}
+            items={MODES.map((m) => ({ key: m.key, label: m.label, count: modeCounts[m.key] ?? 0 }))}
+          />
         </Reveal>
 
         {visibleTips.length > 0 ? (
           <Reveal>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <StaggerGrid key={mode} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {visibleTips.map((tip) => (
-                <TipCard key={String(tip.event_id)} tip={tip} href={tipHref(tip)} />
+                <StaggerItem key={String(tip.event_id)}>
+                  <TipCard tip={tip} href={tipHref(tip)} />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerGrid>
             <div className="mt-8 text-center">
               <Link
                 href="/typy"

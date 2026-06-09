@@ -6,6 +6,8 @@ import type { StatsResponse } from "@/lib/stats-types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
 import { CheckCircle2, Hourglass, Percent, Target, TrendingUp } from "lucide-react"
 import StatsCharts from "./stats-charts"
+import { AnimatedTabs } from "./ui/tabs"
+import { CountUp } from "./ui/count-up"
 
 const PERIODS = [
   { k: "7", l: "7 dni" },
@@ -73,13 +75,16 @@ export function StatsView({ initial, initialPeriod }: { initial: StatsResponse; 
   const empty = s.total_tips === 0
 
   const kpis = [
-    { icon: Target, label: "Typy", value: `${s.total_tips}`, tone: "text-[color:var(--accent)]" },
-    { icon: CheckCircle2, label: "Trafione", value: `${s.wins}`, tone: "text-emerald-300" },
-    { icon: Percent, label: "Skuteczność", value: `${(s.win_rate * 100).toFixed(1)}%`, tone: "text-violet-300" },
+    { icon: Target, label: "Typy", to: s.total_tips, dec: 0, prefix: "", suffix: "", tone: "text-[color:var(--accent)]" },
+    { icon: CheckCircle2, label: "Trafione", to: s.wins, dec: 0, prefix: "", suffix: "", tone: "text-emerald-300" },
+    { icon: Percent, label: "Skuteczność", to: s.win_rate * 100, dec: 1, prefix: "", suffix: "%", tone: "text-violet-300" },
     {
       icon: TrendingUp,
       label: "ROI",
-      value: `${s.roi >= 0 ? "+" : ""}${(s.roi * 100).toFixed(1)}%`,
+      to: s.roi * 100,
+      dec: 1,
+      prefix: s.roi >= 0 ? "+" : "",
+      suffix: "%",
       tone: s.roi >= 0 ? "text-emerald-300" : "text-rose-300",
     },
   ]
@@ -93,24 +98,32 @@ export function StatsView({ initial, initialPeriod }: { initial: StatsResponse; 
 
   return (
     <div>
-      <div className="mb-6 flex justify-end gap-2">
-        {PERIODS.map((p) => (
-          <button key={p.k} type="button" onClick={() => pick(p.k)} className={chip(period === p.k)}>
-            {p.l}
-          </button>
-        ))}
+      <div className="mb-6 flex justify-end">
+        <AnimatedTabs
+          groupId="stats-period"
+          size="sm"
+          value={period}
+          onChange={pick}
+          items={PERIODS.map((p) => ({ key: p.k, label: p.l }))}
+        />
       </div>
 
       <div className={`mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4 ${loading ? "opacity-50" : ""}`}>
         {kpis.map((kpi) => {
           const Icon = kpi.icon
           return (
-            <div key={kpi.label} className="rounded-[1.6rem] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur">
+            <div key={kpi.label} className="rounded-[1.6rem] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.08]">
               <div className="mb-4 grid h-10 w-10 place-items-center rounded-2xl bg-white/10 text-white/70">
                 <Icon className="h-5 w-5" />
               </div>
               <p className="text-sm text-white/60">{kpi.label}</p>
-              <p className={`mt-1 text-3xl font-semibold ${kpi.tone}`}>{kpi.value}</p>
+              <CountUp
+                to={kpi.to}
+                decimals={kpi.dec}
+                prefix={kpi.prefix}
+                suffix={kpi.suffix}
+                className={`mt-1 block text-3xl font-semibold ${kpi.tone}`}
+              />
             </div>
           )
         })}
@@ -133,11 +146,13 @@ export function StatsView({ initial, initialPeriod }: { initial: StatsResponse; 
           <div className="mb-6 space-y-3 rounded-[1.4rem] border border-white/12 bg-white/[0.04] p-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-sm text-white/60">Tryb:</span>
-              {MODES.map((m) => (
-                <button key={m} type="button" onClick={() => setMode(m)} className={chip(mode === m)}>
-                  {m === "ALL" ? "Wszystkie" : BET_TYPE_SHORT[m]}
-                </button>
-              ))}
+              <AnimatedTabs
+                groupId="stats-mode"
+                size="sm"
+                value={mode}
+                onChange={(k) => setMode(k as "ALL" | BetType)}
+                items={MODES.map((m) => ({ key: m, label: m === "ALL" ? "Wszystkie" : BET_TYPE_SHORT[m] }))}
+              />
               <label className="ml-auto flex items-center gap-2 text-sm text-white/60">
                 Min. Q-Score: <span className="font-semibold text-[color:var(--accent)]">{minQ}</span>
                 <input type="range" min={0} max={100} step={10} value={minQ} onChange={(e) => setMinQ(Number(e.target.value))} className="accent-[var(--accent)]" />
