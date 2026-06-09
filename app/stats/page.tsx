@@ -5,6 +5,9 @@ import { StatsTabs } from "@/components/stats-tabs"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = { title: "Statystyki", description: "Skuteczność typów bota i Twoich kuponów: ROI, trafialność, kalibracja Q-Score." }
+
+
 export default async function StatsPage() {
   const [data, session] = await Promise.all([getStats("30"), getSession()])
   return (

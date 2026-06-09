@@ -8,6 +8,9 @@ import { TeamPage } from "@/components/team-page"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = { title: "Drużyna", description: "Profil drużyny: statystyki sezonu, forma, strzelcy, najbliższe mecze." }
+
+
 export default async function Page({ params }: { params: Promise<{ team_id: string }> }) {
   const { team_id } = await params
   const session = await getSession()

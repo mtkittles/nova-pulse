@@ -6,6 +6,9 @@ import { ComingSoon } from "@/components/coming-soon"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = { title: "Newsy", description: "Aktualności i analizy meczów." }
+
+
 export default async function Page() {
   const session = await getSession()
   if (!session) redirect("/login")

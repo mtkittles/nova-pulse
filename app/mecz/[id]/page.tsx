@@ -10,6 +10,9 @@ import { MatchDetail } from "@/components/match-detail"
 
 export const dynamic = "force-dynamic"
 
+export const metadata = { title: "Szczegóły meczu", description: "Predykcje, forma, H2H i rozkład wyników dla meczu." }
+
+
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim()
 
 // /match nie zwraca team_id — pobieramy go ze standings ligi (po nazwie drużyny).
