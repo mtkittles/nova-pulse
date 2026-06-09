@@ -8,7 +8,7 @@ const SQ: Record<FormResult, { label: string; cls: string }> = {
 }
 
 export function FormSquares({ results, size = "md" }: { results: FormResult[]; size?: "sm" | "md" }) {
-  if (results.length === 0) return <span className="text-sm text-white/35">brak</span>
+  if (results.length === 0) return <span className="text-sm text-white/55">brak</span>
   const dim = size === "sm" ? "h-6 w-6 text-xs" : "h-8 w-8 text-sm"
   return (
     <div className="flex flex-wrap gap-1">

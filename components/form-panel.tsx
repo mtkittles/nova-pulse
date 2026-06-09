@@ -46,7 +46,7 @@ export function FormPanel({ teamId, teamName }: { teamId: string | number | null
       <h4 className="mb-4 font-semibold">{teamName}</h4>
 
       {teamId == null ? (
-        <p className="text-sm text-white/45">Brak danych o formie tej drużyny.</p>
+        <p className="text-sm text-white/60">Brak danych o formie tej drużyny.</p>
       ) : (
         <>
           <div className="mb-4 flex flex-wrap gap-2">
@@ -96,22 +96,22 @@ export function FormPanel({ teamId, teamName }: { teamId: string | number | null
                 )
               })
             ) : (
-              <p className="text-sm text-white/45">{loading ? "Ładowanie…" : "Brak danych o formie."}</p>
+              <p className="text-sm text-white/60">{loading ? "Ładowanie…" : "Brak danych o formie."}</p>
             )}
           </div>
 
           {form && (form.btts_pct != null || form.avg_gf != null || form.avg_ga != null) && (
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2">
-                <p className="text-[11px] text-white/40">BTTS</p>
+                <p className="text-[11px] text-white/60">BTTS</p>
                 <p className="mt-0.5 font-semibold">{form.btts_pct != null ? `${form.btts_pct}%` : "—"}</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2">
-                <p className="text-[11px] text-white/40">Śr. strzel.</p>
+                <p className="text-[11px] text-white/60">Śr. strzel.</p>
                 <p className="mt-0.5 font-semibold">{form.avg_gf != null ? form.avg_gf.toFixed(2) : "—"}</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2">
-                <p className="text-[11px] text-white/40">Śr. strac.</p>
+                <p className="text-[11px] text-white/60">Śr. strac.</p>
                 <p className="mt-0.5 font-semibold">{form.avg_ga != null ? form.avg_ga.toFixed(2) : "—"}</p>
               </div>
             </div>

@@ -64,7 +64,7 @@ function ChartCard({
   return (
     <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
       <h3 className="text-lg font-semibold">{title}</h3>
-      {subtitle && <p className="mt-1 text-sm text-white/45">{subtitle}</p>}
+      {subtitle && <p className="mt-1 text-sm text-white/60">{subtitle}</p>}
       <div className="mt-5 h-72 w-full">{children}</div>
     </div>
   )

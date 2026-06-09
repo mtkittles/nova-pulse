@@ -102,7 +102,7 @@ export function MyPicks() {
             { l: "Bilans", v: `${(stats.ret - stats.stake).toFixed(0)} zł` },
           ].map((k) => (
             <div key={k.l} className="rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-3">
-              <p className="text-xs text-white/45">{k.l}</p>
+              <p className="text-xs text-white/60">{k.l}</p>
               <p className="mt-0.5 text-xl font-semibold text-[color:var(--accent)]">{k.v}</p>
             </div>
           ))}
@@ -180,16 +180,16 @@ export function MyPicks() {
           <div className="overflow-hidden rounded-[1.6rem] border border-white/12 bg-white/[0.04]">
             {(picks ?? []).map((p) => (
               <div key={String(p.id)} className="flex flex-wrap items-center gap-3 border-b border-white/5 px-5 py-3 text-sm last:border-0">
-                <span className="w-20 shrink-0 text-white/45">{p.date.slice(0, 10)}</span>
+                <span className="w-20 shrink-0 text-white/60">{p.date.slice(0, 10)}</span>
                 <span className="min-w-[10rem] flex-1 truncate">
-                  {p.home} <span className="text-white/35">vs</span> {p.away}
+                  {p.home} <span className="text-white/55">vs</span> {p.away}
                 </span>
                 <span className="text-white/70">{BET_TYPE_SHORT[p.bet_type]} · {p.bet_side}</span>
                 <span className="text-white/55">@ {p.odds.toFixed(2)}</span>
                 <span className="text-white/55">{p.stake} zł</span>
                 <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${statusBadge(p.status)}`}>{statusLabel(p.status)}</span>
                 {p.status === "pending" && (
-                  <button type="button" onClick={() => remove(p.id)} aria-label="Usuń" className="text-white/40 hover:text-rose-300">
+                  <button type="button" onClick={() => remove(p.id)} aria-label="Usuń" className="text-white/60 hover:text-rose-300">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 )}
@@ -265,7 +265,7 @@ function PickModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
       <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-[1.8rem] border border-white/12 bg-[var(--bg-soft)] shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <h3 className="font-semibold">Postaw kupon {date && <span className="text-white/45">· {date}</span>}</h3>
+          <h3 className="font-semibold">Postaw kupon {date && <span className="text-white/60">· {date}</span>}</h3>
           <button type="button" onClick={onClose} aria-label="Zamknij">
             <X className="h-5 w-5 text-white/50 hover:text-white" />
           </button>
@@ -295,8 +295,8 @@ function PickModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
                     }`}
                   >
                     <span className="min-w-0 flex-1 truncate">
-                      {t.home} <span className="text-white/35">vs</span> {t.away}
-                      <span className="ml-2 text-white/45">{BET_TYPE_SHORT[t.bet_type]} {t.bet_side}</span>
+                      {t.home} <span className="text-white/55">vs</span> {t.away}
+                      <span className="ml-2 text-white/60">{BET_TYPE_SHORT[t.bet_type]} {t.bet_side}</span>
                     </span>
                     <span className="shrink-0 font-semibold">{t.odds.toFixed(2)}</span>
                   </button>

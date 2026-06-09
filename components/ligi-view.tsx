@@ -71,7 +71,7 @@ export function LigiView() {
     return arr
   }, [formRows, formSort])
 
-  const th = "px-3 py-2 text-left text-xs uppercase tracking-wide text-white/40"
+  const th = "px-3 py-2 text-left text-xs uppercase tracking-wide text-white/60"
   const td = "px-3 py-2.5"
   const teamLink = "font-medium text-white transition hover:text-[color:var(--accent)] hover:underline"
 
@@ -94,6 +94,7 @@ export function LigiView() {
         <select
           value={code}
           onChange={(e) => setCode(e.target.value)}
+          aria-label="Wybierz ligę"
           className="rounded-full border border-white/12 bg-[var(--bg-soft)] px-4 py-2 text-sm text-white/80 outline-none focus:border-[color:var(--accent)]/40"
         >
           {LEAGUES.map((l) => (
@@ -139,6 +140,7 @@ export function LigiView() {
             <select
               value={formSort}
               onChange={(e) => setFormSort(e.target.value as "best" | "worst")}
+              aria-label="Sortowanie formy"
               className="rounded-full border border-white/12 bg-[var(--bg-soft)] px-4 py-2 text-sm text-white/80 outline-none"
             >
               <option value="best">Najlepsza forma</option>

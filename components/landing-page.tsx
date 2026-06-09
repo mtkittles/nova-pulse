@@ -308,7 +308,7 @@ export default function LandingPage({
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             className="absolute -left-4 top-8 z-20 hidden rounded-3xl border border-white/15 bg-[var(--bg-soft)]/85 p-4 shadow-2xl shadow-black/35 backdrop-blur-xl sm:block"
           >
-            <p className="text-xs uppercase tracking-[0.2em] text-white/40">Q-Score</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-white/60">Q-Score</p>
             <p className="mt-1 text-sm font-semibold text-[color:var(--accent)]">82 / 100</p>
           </motion.div>
 
@@ -316,7 +316,7 @@ export default function LandingPage({
             <div className="relative rounded-[1.9rem] border border-white/10 bg-[var(--bg)]/90 p-5">
               <div className="mb-5 flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-white/45">Przykładowy typ</p>
+                  <p className="text-sm text-white/60">Przykładowy typ</p>
                   <h2 className="mt-1 text-2xl font-semibold">Arsenal vs Chelsea</h2>
                 </div>
                 <span className="rounded-2xl bg-[var(--accent)]/10 px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
@@ -331,7 +331,7 @@ export default function LandingPage({
                   ["Edge", "+8%"],
                 ].map(([k, v]) => (
                   <div key={k} className="rounded-2xl border border-white/10 bg-white/[0.05] p-3">
-                    <p className="text-xs text-white/40">{k}</p>
+                    <p className="text-xs text-white/60">{k}</p>
                     <p className="mt-1 text-xl font-semibold">{v}</p>
                   </div>
                 ))}
@@ -339,7 +339,7 @@ export default function LandingPage({
 
               <div className="mt-5">
                 <div className="mb-1.5 flex justify-between text-xs">
-                  <span className="text-white/45">Q-Score</span>
+                  <span className="text-white/60">Q-Score</span>
                   <span className="font-semibold text-[color:var(--accent)]">82 / 100</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-white/10">
@@ -579,7 +579,7 @@ export default function LandingPage({
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col justify-between gap-5 border-t border-white/10 pt-8 text-sm text-white/45 md:flex-row md:items-center">
+        <div className="mt-8 flex flex-col justify-between gap-5 border-t border-white/10 pt-8 text-sm text-white/60 md:flex-row md:items-center">
           <div className="flex items-center gap-3">
             <Brand />
           </div>
@@ -598,7 +598,7 @@ export default function LandingPage({
             </Link>
           </div>
         </div>
-        <p className="mt-6 text-xs text-white/30">
+        <p className="mt-6 text-xs text-white/55">
           © 2026 LUPUS BETS. Interfejs nad silnikiem Lupus Bot. Predykcje piłkarskie
           oparte na modelu Dixon-Coles.
         </p>

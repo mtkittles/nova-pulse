@@ -48,7 +48,7 @@ export default async function LoginPage() {
 
           <DeepLinkLogin token={token} redirectTo="/stats" />
 
-          <div className="my-6 flex items-center gap-3 text-xs text-white/35">
+          <div className="my-6 flex items-center gap-3 text-xs text-white/55">
             <span className="h-px flex-1 bg-white/10" />
             email wkrótce
             <span className="h-px flex-1 bg-white/10" />
@@ -61,7 +61,7 @@ export default async function LoginPage() {
                 type="email"
                 disabled
                 placeholder="twoj@email.com"
-                className="rounded-2xl border border-white/10 bg-[var(--bg)]/70 px-4 py-3 text-white outline-none placeholder:text-white/30"
+                className="rounded-2xl border border-white/10 bg-[var(--bg)]/70 px-4 py-3 text-white outline-none placeholder:text-white/55"
               />
             </label>
             <button
@@ -75,7 +75,7 @@ export default async function LoginPage() {
           </div>
         </div>
 
-        <p className="mt-5 text-center text-xs text-white/30">
+        <p className="mt-5 text-center text-xs text-white/55">
           Logując się, akceptujesz, że typy to predykcje statystyczne, a nie
           gwarancja wygranej. 18+ · graj odpowiedzialnie.
         </p>
