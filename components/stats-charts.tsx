@@ -173,6 +173,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 stroke={COLORS.cyan}
                 strokeWidth={2}
                 fill="url(#roiFill)"
+                isAnimationActive
+                animationDuration={900}
               />
               <Line
                 yAxisId="left"
@@ -181,6 +183,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 stroke={COLORS.violet}
                 strokeWidth={2}
                 dot={false}
+                isAnimationActive
+                animationDuration={900}
               />
             </ComposedChart>
           </ResponsiveContainer>

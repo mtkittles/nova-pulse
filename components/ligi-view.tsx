@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { Activity, Goal, Table2 } from "lucide-react"
 import type { LeagueFormRow, Scorer, StandingRow } from "@/lib/extra-types"
 import { LEAGUES } from "@/lib/leagues"
 import { FormSquares, formPoints } from "./form-squares"
+import { AnimatedTabs } from "./ui/tabs"
 
 type Tab = "standings" | "scorers" | "form"
 
@@ -104,22 +106,16 @@ export function LigiView() {
           ))}
         </select>
 
-        <div className="flex gap-2">
-          {(["standings", "scorers", "form"] as Tab[]).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                tab === t
-                  ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
-                  : "border-white/12 bg-white/[0.05] text-white/60 hover:bg-white/10"
-              }`}
-            >
-              {t === "standings" ? "Tabela" : t === "scorers" ? "Strzelcy" : "Forma"}
-            </button>
-          ))}
-        </div>
+        <AnimatedTabs
+          groupId="ligi-tabs"
+          value={tab}
+          onChange={(k) => setTab(k as Tab)}
+          items={[
+            { key: "standings", label: "Tabela", icon: Table2 },
+            { key: "scorers", label: "Strzelcy", icon: Goal },
+            { key: "form", label: "Forma", icon: Activity },
+          ]}
+        />
 
         {tab === "form" && (
           <div className="flex flex-wrap gap-2">
