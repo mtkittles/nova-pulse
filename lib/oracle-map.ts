@@ -1,4 +1,5 @@
 import "server-only"
+import { getLeagueName } from "./leagues"
 import type { BetType, Tip, TipsResponse } from "./types"
 import type {
   LeagueStat,
@@ -105,7 +106,8 @@ export function adaptTip(raw: unknown): Tip {
 
   return {
     event_id: (t.event_id as string | number) ?? "",
-    league: String(t.league ?? "—"),
+    league: getLeagueName(String(t.league ?? "")),
+    leagueCode: String(t.league ?? ""),
     home: String(t.home ?? t.home_team ?? ""),
     away: String(t.away ?? t.away_team ?? ""),
     kickoff_utc: normalizeIso(t.kickoff_utc ?? t.match_date),
@@ -278,7 +280,8 @@ export function adaptMatch(raw: unknown): MatchInfo {
     event_id: (r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
     home: String(m.home_team ?? m.home ?? "—"),
     away: String(m.away_team ?? m.away ?? "—"),
-    league: String(m.league ?? "—"),
+    league: getLeagueName(String(m.league ?? "")),
+    leagueCode: String(m.league ?? ""),
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
     // ID nie ma w /match — ustawiane później ze standings (po team_id).
     home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
@@ -461,7 +464,8 @@ export function adaptUpcoming(raw: unknown): UpcomingMatch[] {
       home: o.home_team != null || o.home != null ? String(o.home_team ?? o.home) : "",
       away: o.away_team != null || o.away != null ? String(o.away_team ?? o.away) : "",
       opponent: o.opponent != null ? String(o.opponent) : "",
-      league: String(o.league ?? "—"),
+      league: getLeagueName(String(o.league ?? "")),
+      leagueCode: String(o.league ?? ""),
       kickoff_utc: normalizeIso(o.match_date ?? o.kickoff_utc ?? o.date),
       predictions: preds.map(adaptPrediction),
     }
@@ -600,11 +604,35 @@ function h2hSummaryFrom(rawH2h: unknown[], homeName: string): H2HSummary {
   }
 }
 
-function mapStatus(raw: unknown): MatchStatus {
-  const s = String(raw ?? "").toLowerCase()
-  if (s.includes("live") || s.includes("play") || s.includes("1h") || s.includes("2h")) return "live"
-  if (s.includes("fin") || s.includes("ft") || s.includes("end") || s.includes("zak")) return "finished"
-  return "pending"
+// Mapuje status z Oracle (API-Football status_short) na nasz stan.
+// Kolejność istotna: postponed/cancelled, finished (przed live, bo "AET"⊃"et"),
+// halftime, live, upcoming. Fallback timezone-aware z kickoff_utc.
+function mapStatus(raw: unknown, kickoffUtc?: string): MatchStatus {
+  const s = String(raw ?? "").toLowerCase().trim()
+  const has = (...codes: string[]) => codes.some((c) => s === c || s.includes(c))
+
+  if (s) {
+    if (has("postponed", "pst", "przełoż")) return "postponed"
+    if (has("cancel", "canc", "abandon", "abd", "susp", "int", "odwoł")) return "cancelled"
+    if (s === "ht" || has("halftime", "half-time", "przerwa")) return "halftime"
+    if (has("aet", "ft", "pen", "awd", "wo", "finished", "fin", "end", "zak", "full")) return "finished"
+    if (s === "p" || has("1h", "2h", "et", "bt", "live", "in_play", "in-play", "inplay", "1st", "2nd"))
+      return "live"
+    if (has("ns", "tbd", "sched", "not started", "upcoming")) return "upcoming"
+  }
+
+  // Status nieznany/„scheduled" → wnioskuj z czasu rozpoczęcia.
+  if (kickoffUtc) {
+    const kickoff = new Date(kickoffUtc).getTime()
+    if (Number.isFinite(kickoff)) {
+      const minutesSince = (Date.now() - kickoff) / 60000
+      if (minutesSince < 0) return "upcoming"
+      if (minutesSince < 130) return "live"
+      return "finished"
+    }
+  }
+
+  return s ? "unknown" : "upcoming"
 }
 
 export function adaptMatchDetailed(raw: unknown): MatchDetailed {
@@ -636,10 +664,11 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     event_id: (r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
     home,
     away,
-    league: String(m.league ?? "—"),
+    league: getLeagueName(String(m.league ?? "")),
+    leagueCode: String(m.league ?? ""),
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
     stadium: m.stadium != null ? String(m.stadium) : m.venue != null ? String(m.venue) : null,
-    status: mapStatus(m.status ?? r.status),
+    status: mapStatus(m.status ?? r.status, normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date)),
     home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
     away_id: pickId(m, ["away_id", "away_team_id", "awayId"]),
     predictions: (preds as unknown[]).map(adaptPrediction),

@@ -32,6 +32,7 @@ export interface MatchInfo {
   home: string
   away: string
   league: string
+  leagueCode?: string
   kickoff_utc: string
   home_id: string | number | null
   away_id: string | number | null
@@ -104,6 +105,7 @@ export interface UpcomingMatch {
   away: string
   opponent: string // dla /team/{id}/upcoming (przeciwnik względem drużyny)
   league: string
+  leagueCode?: string
   kickoff_utc: string
   predictions: MatchPrediction[]
 }
@@ -153,7 +155,14 @@ export interface ScoreDist {
   count: number
 }
 
-export type MatchStatus = "pending" | "live" | "finished"
+export type MatchStatus =
+  | "upcoming"
+  | "live"
+  | "halftime"
+  | "finished"
+  | "postponed"
+  | "cancelled"
+  | "unknown"
 
 export interface MatchDetailed {
   found: boolean
@@ -161,6 +170,7 @@ export interface MatchDetailed {
   home: string
   away: string
   league: string
+  leagueCode?: string
   kickoff_utc: string
   stadium: string | null
   status: MatchStatus

@@ -65,3 +65,45 @@ export function leagueCodeByName(name: string): string | null {
   if (!name) return null
   return NAME_TO_CODE[norm(name)] ?? null
 }
+
+// — Nazwy lig (kod → czytelna nazwa) —
+// Lokalny słownik (z LEAGUES) + cache zasilany z Oracle (/api/leagues-names, 141 lig).
+const NAME_BY_CODE: Record<string, string> = (() => {
+  const m: Record<string, string> = {}
+  for (const l of LEAGUES) m[l.code] = l.name
+  return m
+})()
+
+// Cache nazw z Oracle — zasilany przez primeLeagueNames (route /api/leagues-names).
+const fetchedNames: Record<string, { name: string; country?: string }> = {}
+
+export function primeLeagueNames(
+  dict: Record<string, { name?: string; country?: string } | string>,
+): void {
+  for (const [code, v] of Object.entries(dict || {})) {
+    if (typeof v === "string") fetchedNames[code] = { name: v }
+    else if (v && v.name) fetchedNames[code] = { name: v.name, country: v.country }
+  }
+}
+
+// Fallback: rozbij kod po _ , krótkie tokeny zostają wielkimi literami (BSA, BRA),
+// dłuższe → Ucfirst. Np. "BRA_SERIE" → "BRA Serie", "BSA" → "BSA".
+function prettifyCode(code: string): string {
+  return code
+    .split(/[_\s]+/)
+    .filter(Boolean)
+    .map((w) => (w.length <= 3 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1).toLowerCase()))
+    .join(" ")
+}
+
+// NIGDY nie zwraca surowego, brzydkiego kodu — zawsze czytelna nazwa lub prettify.
+export function getLeagueName(code: string): string {
+  const c = (code || "").trim()
+  if (!c) return "—"
+  return NAME_BY_CODE[c] ?? fetchedNames[c]?.name ?? prettifyCode(c)
+}
+
+export function getLeagueCountry(code: string): string | undefined {
+  const c = (code || "").trim()
+  return LEAGUES.find((l) => l.code === c)?.country ?? fetchedNames[c]?.country
+}

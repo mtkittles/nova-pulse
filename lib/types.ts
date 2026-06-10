@@ -7,6 +7,8 @@ export type BetType = "BTTS" | "OVER_1_5" | "MIX" | "THRILLER"
 export interface Tip {
   event_id: string | number
   league: string
+  /** surowy kod ligi z Oracle (do filtrowania); `league` to nazwa czytelna */
+  leagueCode?: string
   home: string
   away: string
   /** ISO 8601, czas UTC rozpoczęcia meczu */

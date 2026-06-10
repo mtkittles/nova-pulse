@@ -1,6 +1,6 @@
 import "server-only"
 import type { TeamSeason, UpcomingMatch } from "./extra-types"
-import { isOracleConfigured, oracleFetch } from "./oracle"
+import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptTeam, adaptUpcoming } from "./oracle-map"
 
 function mockTeam(id: string): TeamSeason {
@@ -77,6 +77,7 @@ export async function getTeam(id: string): Promise<TeamSeason | null> {
 export async function getTeamUpcoming(id: string): Promise<UpcomingMatch[]> {
   if (!isOracleConfigured()) return mockUpcoming()
   try {
+    await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/team/${encodeURIComponent(id)}/upcoming`)
     console.log(`[oracle] /team/${id}/upcoming raw:`, JSON.stringify(data).slice(0, 500))
     return adaptUpcoming(data)
