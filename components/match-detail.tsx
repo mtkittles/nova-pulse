@@ -5,7 +5,8 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { CalendarDays, Clock, MapPin, RotateCw } from "lucide-react"
 import type { MatchDetailed, MatchPrediction, MatchStatus } from "@/lib/extra-types"
-import { MODE_META, flagForLeague } from "@/lib/design"
+import { MODE_META } from "@/lib/design"
+import { getLeagueDisplayName } from "@/lib/leagues"
 import { findLive, mapLiveStatus, useLiveMatches, type LiveMatch } from "@/hooks/use-live-matches"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
@@ -30,7 +31,7 @@ function fmtDate(iso: string): string {
     month: "long",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Europe/Warsaw",
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   }).format(d)
 }
 
@@ -230,7 +231,7 @@ function PredictionCard({ p, best }: { p: MatchPrediction; best: boolean }) {
 export function MatchDetail({ match }: { match: MatchDetailed }) {
   const hasThriller = match.predictions.some((p) => p.bet_type === "THRILLER")
   const s = match.h2h_summary
-  const flag = flagForLeague(match.league)
+  const leagueText = match.leagueCode ? getLeagueDisplayName(match.leagueCode) : match.league
 
   // dane live — wynik na żywo + status nadpisuje stan z renderu serwera
   const { liveMatches } = useLiveMatches()
@@ -267,10 +268,7 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
         className="mb-10 overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.05] p-6 backdrop-blur md:p-8"
       >
         <div className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/60">
-            {flag && <span className="text-sm">{flag}</span>}
-            {match.league}
-          </span>
+          <span className="text-xs uppercase tracking-[0.18em] text-white/60">{leagueText}</span>
           <StatusBadge status={effectiveStatus} kickoff={match.kickoff_utc} live={live} />
         </div>
 

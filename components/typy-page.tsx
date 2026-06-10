@@ -10,18 +10,12 @@ import { Calendar } from "./calendar"
 import { AnimatedTabs } from "./ui/tabs"
 import { StaggerGrid, StaggerItem } from "./ui/stagger"
 import { TipGridSkeleton } from "./ui/skeletons"
+import { plMatches, plTips } from "@/lib/i18n"
 
 type Sort = "q" | "date" | "odds"
 
 const MODE_KEYS: ("ALL" | BetType)[] = ["ALL", "BTTS", "OVER_1_5", "MIX", "THRILLER"]
 const modeLabel = (k: "ALL" | BetType) => (k === "ALL" ? "Wszystkie" : BET_TYPE_SHORT[k])
-
-function plMatches(n: number): string {
-  if (n === 1) return "mecz"
-  const last = n % 10
-  const teen = n % 100
-  return last >= 2 && last <= 4 && !(teen >= 12 && teen <= 14) ? "mecze" : "meczów"
-}
 
 // 3 stany pustego dnia: brak meczów / analiza niewykonana / przeanalizowane bez typów.
 function emptyDayMessage(day?: CalendarDay): { title: string; desc: string } {
@@ -48,7 +42,7 @@ function dateLabel(d: string): string {
     day: "numeric",
     month: "long",
     year: "numeric",
-    timeZone: "Europe/Warsaw",
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   }).format(new Date(`${d}T12:00:00Z`))
 }
 
@@ -144,8 +138,9 @@ export default function TypyPage({
           <Calendar value={date} days={calendar} onSelect={selectDate} />
           {selectedDay && (selectedDay.tips > 0 || selectedDay.matches > 0) && (
             <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-center text-sm text-white/70">
-              <span className="font-semibold text-[color:var(--accent)]">{Math.max(selectedDay.tips, 0)}</span> typów ·{" "}
-              {selectedDay.matches} meczów · {selectedDay.leagues} lig
+              <span className="font-semibold text-[color:var(--accent)]">{Math.max(selectedDay.tips, 0)}</span>{" "}
+              {plTips(Math.max(selectedDay.tips, 0))} · {selectedDay.matches} {plMatches(selectedDay.matches)} ·{" "}
+              {selectedDay.leagues} lig
             </p>
           )}
         </aside>

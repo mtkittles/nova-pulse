@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import type { Tip } from "@/lib/types"
-import { MODE_META, flagForLeague, scaleColor } from "@/lib/design"
+import { MODE_META, scaleColor } from "@/lib/design"
+import { getLeagueDisplayName } from "@/lib/leagues"
 import { settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
 
-// Godzina rozpoczęcia (Europe/Warsaw). Pusty string gdy brak/niepoprawna data.
+// Godzina rozpoczęcia w strefie urządzenia. Pusty string gdy brak/niepoprawna data.
 function formatKickoff(iso: string): string {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ""
@@ -20,21 +21,22 @@ function formatKickoff(iso: string): string {
     month: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Europe/Warsaw",
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   }).format(d)
 }
 
-function LeagueRow({ league, right }: { league: string; right: React.ReactNode }) {
-  const flag = flagForLeague(league)
+function LeagueRow({ leagueText, right }: { leagueText: string; right: React.ReactNode }) {
   return (
     <div className="relative flex items-center justify-between gap-2">
-      <span className="flex min-w-0 items-center gap-1.5 text-xs uppercase tracking-[0.16em] text-white/60">
-        {flag && <span className="text-sm leading-none">{flag}</span>}
-        <span className="truncate">{league}</span>
-      </span>
+      <span className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-white/60">{leagueText}</span>
       <span className="shrink-0 text-sm font-medium text-white/55">{right}</span>
     </div>
   )
+}
+
+// Czytelna liga: preferuj kod (flaga+kraj+nazwa), w razie braku — gotową nazwę z adaptera.
+function leagueLabel(tip: Tip): string {
+  return tip.leagueCode ? getLeagueDisplayName(tip.leagueCode) : tip.league
 }
 
 function TeamRow({ name }: { name: string }) {
@@ -99,7 +101,7 @@ export default function TipCard({
     return (
       <article className="relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
         <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
-        <LeagueRow league={tip.league} right={lockedRight} />
+        <LeagueRow leagueText={leagueLabel(tip)} right={lockedRight} />
         <div className="relative mt-4 space-y-2">
           <TeamRow name={tip.home} />
           <TeamRow name={tip.away} />
@@ -141,7 +143,7 @@ export default function TipCard({
     <>
       <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
 
-      <LeagueRow league={tip.league} right={rightNode} />
+      <LeagueRow leagueText={leagueLabel(tip)} right={rightNode} />
 
       {/* drużyny + pierścień Q-Score */}
       <div className="relative mt-4 flex items-start justify-between gap-3">

@@ -27,7 +27,9 @@ export default async function Home() {
 
   const tips = today.tips
   const byQ = [...tips].sort((a, b) => b.q_score - a.q_score)
-  const topTips: Tip[] = byQ.slice(0, 3)
+  // Rekomendacje value: tylko dodatni Edge, maks. 2 (nie promujemy ujemnego Edge).
+  const valueTips = byQ.filter((t) => (t.edge ?? 0) > 0)
+  const topTips: Tip[] = valueTips.slice(0, 2)
   const wcTips: Tip[] = tips.filter((t) => isWorldCup(t.league))
   const matchesToday = new Set(tips.map((t) => String(t.event_id))).size
   const leaguesCount =

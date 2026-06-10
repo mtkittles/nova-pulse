@@ -30,6 +30,7 @@ import { Faq } from "./faq"
 import { CountUp } from "./ui/count-up"
 import { AnimatedTabs } from "./ui/tabs"
 import { StaggerGrid, StaggerItem } from "./ui/stagger"
+import { plMatches } from "@/lib/i18n"
 import TipCard from "./tip-card"
 
 type LandingProps = {
@@ -328,7 +329,7 @@ export default function LandingPage({
                 {wcLive ? (
                   <>
                     Dziś <span className="text-[color:var(--accent)]">{wcMatches}</span>{" "}
-                    {wcMatches === 1 ? "mecz" : "meczów"} Mundialu
+                    {plMatches(wcMatches)} Mundialu
                   </>
                 ) : (
                   "Mundial startuje już wkrótce"
@@ -374,7 +375,7 @@ export default function LandingPage({
               </p>
               <h2 className="mt-1 text-2xl font-semibold">
                 {matchesToday > 0
-                  ? `${matchesToday} ${matchesToday === 1 ? "mecz" : "meczów"} w analizie`
+                  ? `${matchesToday} ${plMatches(matchesToday)} w analizie`
                   : "Najwyższy Q-Score"}
               </h2>
             </div>
@@ -399,13 +400,16 @@ export default function LandingPage({
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-white/12 bg-white/[0.05] text-[color:var(--accent)]">
                 <Target className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-semibold">Dziś typy jeszcze się liczą</h3>
-              <p className="mt-2 text-white/60">Sprawdź kalendarz — pokażemy najbliższy dzień z typami.</p>
+              <h3 className="text-xl font-semibold">Dziś brak rekomendacji value</h3>
+              <p className="mt-2 text-white/60">
+                Dziś brak rekomendacji value powyżej progu jakości. Sprawdź pozostałe mecze do
+                obserwacji.
+              </p>
               <Link
                 href="/typy"
                 className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
               >
-                Otwórz kalendarz typów <ArrowRight className="h-4 w-4" />
+                Zobacz mecze do obserwacji <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           )}

@@ -75,15 +75,23 @@ const NAME_BY_CODE: Record<string, string> = (() => {
 })()
 
 // Cache nazw z Oracle — zasilany przez primeLeagueNames (route /api/leagues-names).
-const fetchedNames: Record<string, { name: string; country?: string }> = {}
+const fetchedNames: Record<string, { name: string; country?: string; flag?: string }> = {}
 
 export function primeLeagueNames(
-  dict: Record<string, { name?: string; country?: string } | string>,
+  dict: Record<string, { name?: string; country?: string; flag?: string } | string>,
 ): void {
   for (const [code, v] of Object.entries(dict || {})) {
     if (typeof v === "string") fetchedNames[code] = { name: v }
-    else if (v && v.name) fetchedNames[code] = { name: v.name, country: v.country }
+    else if (v && v.name) fetchedNames[code] = { name: v.name, country: v.country, flag: v.flag }
   }
+}
+
+// Flagi krajów lig (self-contained — bez importu z design.ts, by uniknąć cyklu).
+const COUNTRY_FLAG: Record<string, string> = {
+  Anglia: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", Szkocja: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", Hiszpania: "🇪🇸", Włochy: "🇮🇹", Niemcy: "🇩🇪",
+  Portugalia: "🇵🇹", Japonia: "🇯🇵", Argentyna: "🇦🇷", Brazylia: "🇧🇷", USA: "🇺🇸",
+  Meksyk: "🇲🇽", Turcja: "🇹🇷", Rumunia: "🇷🇴", Francja: "🇫🇷", Szwecja: "🇸🇪",
+  Austria: "🇦🇹", Holandia: "🇳🇱", Kolumbia: "🇨🇴", Algieria: "🇩🇿", Europa: "🇪🇺",
 }
 
 // Fallback: rozbij kod po _ , krótkie tokeny zostają wielkimi literami (BSA, BRA),
@@ -106,4 +114,16 @@ export function getLeagueName(code: string): string {
 export function getLeagueCountry(code: string): string | undefined {
   const c = (code || "").trim()
   return LEAGUES.find((l) => l.code === c)?.country ?? fetchedNames[c]?.country
+}
+
+// Czytelna nazwa do UI: "🇧🇷 Brazylia — Série B". Bez kraju → sama nazwa. NIGDY surowy kod.
+export function getLeagueDisplayName(code: string): string {
+  const c = (code || "").trim()
+  if (!c) return "—"
+  const name = getLeagueName(c)
+  const country = getLeagueCountry(c)
+  const flag = fetchedNames[c]?.flag ?? (country ? COUNTRY_FLAG[country] : "") ?? ""
+  if (flag && country) return `${flag} ${country} — ${name}`
+  if (country) return `${country} — ${name}`
+  return name
 }
