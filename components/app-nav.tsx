@@ -2,15 +2,19 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Newspaper, Shield, Target, Ticket, Trophy } from "lucide-react"
+import { BarChart3, Medal, Newspaper, Shield, Target, Ticket, Trophy } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { Brand } from "./brand"
 import { ThemeToggle } from "./theme-toggle"
 import { LogoutButton } from "./logout-button"
 
-const NAV = [
+type NavItem = { href: string; label: string; icon: LucideIcon; highlight?: boolean }
+
+const NAV: NavItem[] = [
+  { href: "/mundial", label: "Mundial", icon: Trophy, highlight: true },
   { href: "/typy", label: "Typy", icon: Target },
   { href: "/stats", label: "Statystyki", icon: BarChart3 },
-  { href: "/ligi", label: "Ligi", icon: Trophy },
+  { href: "/ligi", label: "Ligi", icon: Medal },
   { href: "/newsy", label: "Newsy", icon: Newspaper },
   { href: "/kupony", label: "Kupony", icon: Ticket },
 ]
@@ -18,7 +22,7 @@ const NAV = [
 export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdmin?: boolean }) {
   const path = usePathname()
   const isActive = (href: string) => path === href || path.startsWith(`${href}/`)
-  const items = isAdmin ? [...NAV, { href: "/admin", label: "Admin", icon: Shield }] : NAV
+  const items: NavItem[] = isAdmin ? [...NAV, { href: "/admin", label: "Admin", icon: Shield }] : NAV
 
   return (
     <>
@@ -35,10 +39,14 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
                   key={item.href}
                   href={item.href}
                   className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
-                    active ? "bg-[var(--accent)]/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
+                    active
+                      ? "bg-[var(--accent)]/15 text-white"
+                      : item.highlight
+                        ? "text-[color:var(--accent)] hover:bg-[var(--accent)]/10"
+                        : "text-white/60 hover:bg-white/10 hover:text-white"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${active ? "text-[color:var(--accent)]" : ""}`} />
+                  <Icon className={`h-4 w-4 ${active || item.highlight ? "text-[color:var(--accent)]" : ""}`} />
                   {item.label}
                 </Link>
               )
@@ -77,7 +85,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-1 py-2.5 text-[11px] transition ${
-                  active ? "text-[color:var(--accent)]" : "text-white/55"
+                  active ? "text-[color:var(--accent)]" : item.highlight ? "text-[color:var(--accent)]/80" : "text-white/55"
                 }`}
               >
                 <Icon className="h-5 w-5" />
