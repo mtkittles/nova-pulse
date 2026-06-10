@@ -1,17 +1,19 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import type { Tip } from "@/lib/types"
-import { statusInfo } from "@/lib/labels"
 import { MODE_META, flagForLeague, scaleColor } from "@/lib/design"
+import { settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
 
+// Godzina rozpoczęcia (Europe/Warsaw). Pusty string gdy brak/niepoprawna data.
 function formatKickoff(iso: string): string {
   const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return "termin nieznany"
+  if (Number.isNaN(d.getTime())) return ""
   return new Intl.DateTimeFormat("pl-PL", {
     weekday: "short",
     day: "numeric",
@@ -22,7 +24,7 @@ function formatKickoff(iso: string): string {
   }).format(d)
 }
 
-function LeagueRow({ league, kickoff }: { league: string; kickoff: string }) {
+function LeagueRow({ league, right }: { league: string; right: React.ReactNode }) {
   const flag = flagForLeague(league)
   return (
     <div className="relative flex items-center justify-between gap-2">
@@ -30,7 +32,7 @@ function LeagueRow({ league, kickoff }: { league: string; kickoff: string }) {
         {flag && <span className="text-sm leading-none">{flag}</span>}
         <span className="truncate">{league}</span>
       </span>
-      <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(kickoff)}</span>
+      <span className="shrink-0 text-sm font-medium text-white/55">{right}</span>
     </div>
   )
 }
@@ -61,9 +63,26 @@ export default function TipCard({
 }) {
   // live (hook na górze — przed wczesnymi returnami, zgodnie z zasadami hooków)
   const { liveMatches } = useLiveMatches()
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 60000)
+    return () => clearInterval(id)
+  }, [])
+
   const live = findLive(liveMatches, tip.event_id)
-  const liveState = live ? mapLiveStatus(live.status_short) : null
-  const liveOn = liveState === "live" || liveState === "halftime"
+  const liveSt = live ? mapLiveStatus(live.status_short) : null
+
+  // Status efektywny: dane live > heurystyka z kickoff_utc (po zamontowaniu).
+  const kSt = now != null ? statusFromKickoff(tip.kickoff_utc, now) : "upcoming"
+  const status: "upcoming" | "live" | "halftime" | "finished" | "unknown" =
+    liveSt === "live" ? "live" : liveSt === "halftime" ? "halftime" : liveSt === "finished" ? "finished" : kSt
+
+  const liveOn = status === "live" || status === "halftime"
+  const finished = status === "finished"
+  const homeScore = live ? live.home_score : null
+  const awayScore = live ? live.away_score : null
+  const settlement: Settlement = finished ? settleTip(tip, homeScore, awayScore) : "pending"
 
   // defensywnie: niekompletny rekord → komunikat zamiast crasha
   if (!tip.home || !tip.away) {
@@ -76,10 +95,11 @@ export default function TipCard({
 
   // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem
   if (locked) {
+    const lockedRight = liveOn && live ? `🔴 ${live.home_score}:${live.away_score}` : formatKickoff(tip.kickoff_utc)
     return (
       <article className="relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
         <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
-        <LeagueRow league={tip.league} kickoff={tip.kickoff_utc} />
+        <LeagueRow league={tip.league} right={lockedRight} />
         <div className="relative mt-4 space-y-2">
           <TeamRow name={tip.home} />
           <TeamRow name={tip.away} />
@@ -100,16 +120,28 @@ export default function TipCard({
 
   const prob = Math.round(tip.model_prob * 100)
   const probColor = scaleColor(tip.model_prob)
-  const status = statusInfo(tip.actual_result)
   const mode = MODE_META[tip.bet_type]
   const isThriller = tip.bet_type === "THRILLER"
   const edgePct = (tip.edge * 100).toFixed(1)
+  const minuteTxt = live?.minute != null ? `${live.minute}'` : ""
+
+  // prawy górny róg: status zależny od stanu meczu
+  const rightNode =
+    status === "live" ? (
+      <span className="font-bold text-rose-300">🔴 {minuteTxt || "LIVE"}</span>
+    ) : status === "halftime" ? (
+      <span className="font-bold text-amber-300">🟡 PRZERWA</span>
+    ) : finished ? (
+      <span className="text-white/55">koniec</span>
+    ) : (
+      formatKickoff(tip.kickoff_utc)
+    )
 
   const inner = (
     <>
       <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
 
-      <LeagueRow league={tip.league} kickoff={tip.kickoff_utc} />
+      <LeagueRow league={tip.league} right={rightNode} />
 
       {/* drużyny + pierścień Q-Score */}
       <div className="relative mt-4 flex items-start justify-between gap-3">
@@ -120,21 +152,38 @@ export default function TipCard({
         <QRing value={tip.q_score} />
       </div>
 
-      {/* badge'y: live + tryb + status + ryzyko */}
+      {/* badge'y: wynik live / rozliczenie + tryb + ryzyko */}
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
         {liveOn && live && (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/40 bg-rose-400/15 px-3 py-1 text-xs font-bold text-rose-200">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
             {live.home_score}:{live.away_score}
-            {liveState === "halftime" ? " HT" : live.minute != null ? ` ${live.minute}'` : ""}
+            {status === "halftime" ? " HT" : minuteTxt ? ` ${minuteTxt}` : ""}
           </span>
         )}
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${mode.badge}`}>
-          {mode.short}
-        </span>
-        <span className={`rounded-full border px-3 py-1 text-xs font-medium ${status.classes}`}>
-          {status.label}
-        </span>
+
+        {finished && live && (
+          <span className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-white/80">
+            {live.home_score}:{live.away_score}
+          </span>
+        )}
+
+        {finished && settlement === "won" && (
+          <span className="rounded-full border border-emerald-400/40 bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-200">
+            🟢 {mode.short} ✓
+          </span>
+        )}
+        {finished && settlement === "lost" && (
+          <span className="rounded-full border border-rose-400/40 bg-rose-400/15 px-3 py-1 text-xs font-bold text-rose-200">
+            🔴 {mode.short} ✗
+          </span>
+        )}
+        {!(finished && settlement !== "pending") && (
+          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${mode.badge}`}>
+            {mode.short}
+          </span>
+        )}
+
         {isThriller && (
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-200">
             <AlertTriangle className="h-3.5 w-3.5" /> wysokie ryzyko
@@ -188,9 +237,17 @@ export default function TipCard({
     </>
   )
 
-  const cardClass = `group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-black/40 ${
-    liveOn ? "border-rose-400/50 ring-1 ring-rose-400/30" : selected ? "border-[color:var(--accent)]/60" : "border-white/12"
-  }`
+  const tint =
+    settlement === "won"
+      ? "border-emerald-400/50 ring-1 ring-emerald-400/25"
+      : settlement === "lost"
+        ? "border-rose-400/50 ring-1 ring-rose-400/20"
+        : liveOn
+          ? "border-rose-400/50 ring-1 ring-rose-400/30"
+          : selected
+            ? "border-[color:var(--accent)]/60"
+            : "border-white/12"
+  const cardClass = `group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-black/40 ${tint}`
 
   if (selectable) {
     return (
