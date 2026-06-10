@@ -1,10 +1,30 @@
 import "server-only"
+import { primeLeagueNames } from "./leagues"
 
 // Warstwa dostępu do API bota na Oracle.
 // Wyłącznie server-side — klucz API nigdy nie trafia do przeglądarki.
 
 export function isOracleConfigured(): boolean {
   return Boolean(process.env.ORACLE_API_URL && process.env.ORACLE_API_KEY)
+}
+
+// Zasila słownik nazw lig (141) z Oracle dla SSR — raz na runtime (fetch ma własny revalidate 1h).
+let _namesPromise: Promise<void> | null = null
+export async function ensureLeagueNames(): Promise<void> {
+  if (!isOracleConfigured()) return
+  if (!_namesPromise) {
+    _namesPromise = oracleFetch<Record<string, { name?: string; country?: string }>>(
+      "/leagues/names",
+      3600,
+    )
+      .then((d) => {
+        if (d && typeof d === "object") primeLeagueNames(d)
+      })
+      .catch(() => {
+        _namesPromise = null // pozwól na ponowną próbę przy kolejnym żądaniu
+      })
+  }
+  return _namesPromise
 }
 
 // Pobiera JSON z Oracle. `path` bez prefiksu (np. "/dates", "/tips?date=...").

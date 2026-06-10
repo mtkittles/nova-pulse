@@ -1,9 +1,12 @@
+"use client"
+
 import Link from "next/link"
 import type { Tip } from "@/lib/types"
 import { statusInfo } from "@/lib/labels"
 import { MODE_META, flagForLeague, scaleColor } from "@/lib/design"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
+import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
 
 function formatKickoff(iso: string): string {
@@ -56,6 +59,12 @@ export default function TipCard({
   onToggle?: () => void
   locked?: boolean
 }) {
+  // live (hook na górze — przed wczesnymi returnami, zgodnie z zasadami hooków)
+  const { liveMatches } = useLiveMatches()
+  const live = findLive(liveMatches, tip.event_id)
+  const liveState = live ? mapLiveStatus(live.status_short) : null
+  const liveOn = liveState === "live" || liveState === "halftime"
+
   // defensywnie: niekompletny rekord → komunikat zamiast crasha
   if (!tip.home || !tip.away) {
     return (
@@ -111,8 +120,15 @@ export default function TipCard({
         <QRing value={tip.q_score} />
       </div>
 
-      {/* badge'y: tryb + status + ryzyko */}
+      {/* badge'y: live + tryb + status + ryzyko */}
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
+        {liveOn && live && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/40 bg-rose-400/15 px-3 py-1 text-xs font-bold text-rose-200">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
+            {live.home_score}:{live.away_score}
+            {liveState === "halftime" ? " HT" : live.minute != null ? ` ${live.minute}'` : ""}
+          </span>
+        )}
         <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${mode.badge}`}>
           {mode.short}
         </span>
@@ -173,7 +189,7 @@ export default function TipCard({
   )
 
   const cardClass = `group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-black/40 ${
-    selected ? "border-[color:var(--accent)]/60" : "border-white/12"
+    liveOn ? "border-rose-400/50 ring-1 ring-rose-400/30" : selected ? "border-[color:var(--accent)]/60" : "border-white/12"
   }`
 
   if (selectable) {

@@ -1,6 +1,6 @@
 import type { TipsResponse } from "./types"
 import { mockTips } from "./mock-tips"
-import { isOracleConfigured, oracleFetch } from "./oracle"
+import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptTips } from "./oracle-map"
 
 function todayWarsaw(): string {
@@ -28,6 +28,7 @@ export async function getTips(date?: string): Promise<TipsResponse> {
   const d = date || todayWarsaw()
   if (!isOracleConfigured()) return { ...mockTips, date: d }
   try {
+    await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/tips?date=${encodeURIComponent(d)}`)
     console.log(`[oracle] /tips?date=${d} raw:`, JSON.stringify(data).slice(0, 500))
     if (!hasTipsArray(data)) {

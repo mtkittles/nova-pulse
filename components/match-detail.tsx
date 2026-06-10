@@ -1,10 +1,12 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { CalendarDays, MapPin } from "lucide-react"
-import type { MatchDetailed, MatchPrediction } from "@/lib/extra-types"
+import { CalendarDays, Clock, MapPin, RotateCw } from "lucide-react"
+import type { MatchDetailed, MatchPrediction, MatchStatus } from "@/lib/extra-types"
 import { MODE_META, flagForLeague } from "@/lib/design"
+import { findLive, mapLiveStatus, useLiveMatches, type LiveMatch } from "@/hooks/use-live-matches"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
 import { CountUp } from "./ui/count-up"
@@ -63,22 +65,85 @@ function Section({
   )
 }
 
-function StatusBadge({ status }: { status: MatchDetailed["status"] }) {
+// Godzina zawsze w strefie przeglądarki.
+function fmtTimeLocal(iso: string): string {
+  if (!iso) return ""
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ""
+  return new Intl.DateTimeFormat("pl-PL", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  }).format(d)
+}
+
+function countdownText(iso: string, nowMs: number): string {
+  const k = new Date(iso).getTime()
+  if (!Number.isFinite(k)) return ""
+  const diff = k - nowMs
+  if (diff <= 0) return "lada chwila"
+  const m = Math.floor(diff / 60000)
+  const d = Math.floor(m / 1440)
+  const h = Math.floor((m % 1440) / 60)
+  const mm = m % 60
+  if (d > 0) return `za ${d}d ${h}h`
+  if (h > 0) return `za ${h}h ${mm}m`
+  return `za ${mm}m`
+}
+
+function StatusBadge({
+  status,
+  kickoff,
+  live,
+}: {
+  status: MatchStatus
+  kickoff: string
+  live?: LiveMatch
+}) {
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(id)
+  }, [])
+
+  const minute = live?.minute != null ? `${live.minute}'` : ""
+
   if (status === "live")
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-300/30 bg-rose-300/10 px-3 py-1 text-xs font-semibold text-rose-200">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" /> LIVE
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/40 bg-rose-400/15 px-3 py-1 text-xs font-bold text-rose-200">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-rose-400" /> 🔴 LIVE {minute}
+      </span>
+    )
+  if (status === "halftime")
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-300/15 px-3 py-1 text-xs font-bold text-amber-200">
+        🟡 PRZERWA
       </span>
     )
   if (status === "finished")
     return (
-      <span className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-medium text-white/60">
-        zakończony
+      <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200/90">
+        ✓ zakończony
       </span>
     )
+  if (status === "postponed")
+    return (
+      <span className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-medium text-white/70">
+        ⏸ przełożony
+      </span>
+    )
+  if (status === "cancelled")
+    return (
+      <span className="rounded-full border border-rose-300/30 bg-rose-300/10 px-3 py-1 text-xs font-medium text-rose-200">
+        ✕ odwołany
+      </span>
+    )
+  // upcoming / unknown
   return (
-    <span className="rounded-full border border-[color:var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-xs font-medium text-white/80">
-      oczekuje
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-xs font-medium text-white/80">
+      <Clock className="h-3.5 w-3.5" /> {fmtTimeLocal(kickoff)}
+      {now != null && <span className="text-white/55">· {countdownText(kickoff, now)}</span>}
     </span>
   )
 }
@@ -167,6 +232,21 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
   const s = match.h2h_summary
   const flag = flagForLeague(match.league)
 
+  // dane live — wynik na żywo + status nadpisuje stan z renderu serwera
+  const { liveMatches } = useLiveMatches()
+  const live = findLive(liveMatches, match.event_id)
+  const liveState = live ? mapLiveStatus(live.status_short) : null
+  const effectiveStatus: MatchStatus =
+    liveState === "live"
+      ? "live"
+      : liveState === "halftime"
+        ? "halftime"
+        : liveState === "finished"
+          ? "finished"
+          : match.status
+  const showScore = !!live && (liveState === "live" || liveState === "halftime" || liveState === "finished")
+  const isLiveNow = effectiveStatus === "live" || effectiveStatus === "halftime"
+
   // rekomendacja = najwyższy Q-Score
   let bestIdx = -1
   let bestQ = -1
@@ -191,12 +271,40 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
             {flag && <span className="text-sm">{flag}</span>}
             {match.league}
           </span>
-          <StatusBadge status={match.status} />
+          <StatusBadge status={effectiveStatus} kickoff={match.kickoff_utc} live={live} />
         </div>
 
         <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <TeamSide name={match.home} id={match.home_id} align="right" />
-          <span className="px-2 text-center text-sm font-medium text-white/45">vs</span>
+          {showScore && live ? (
+            <div className="flex flex-col items-center px-2">
+              <span
+                className={`text-3xl font-extrabold tabular-nums sm:text-4xl ${
+                  isLiveNow
+                    ? "bg-gradient-to-r from-amber-300 to-rose-400 bg-clip-text text-transparent"
+                    : "text-white"
+                }`}
+              >
+                {live.home_score} : {live.away_score}
+              </span>
+              <span className="mt-1 text-[11px] font-medium text-white/55">
+                {effectiveStatus === "halftime"
+                  ? "PRZERWA"
+                  : effectiveStatus === "finished"
+                    ? "koniec"
+                    : live.minute != null
+                      ? `${live.minute}'`
+                      : "LIVE"}
+              </span>
+              {isLiveNow && live.last_live_update && (
+                <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-white/40">
+                  <RotateCw className="h-3 w-3" /> {fmtTimeLocal(live.last_live_update)}
+                </span>
+              )}
+            </div>
+          ) : (
+            <span className="px-2 text-center text-sm font-medium text-white/45">vs</span>
+          )}
           <TeamSide name={match.away} id={match.away_id} align="left" />
         </div>
 
