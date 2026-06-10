@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   applicationName: "LUPUS BETS",
   authors: [{ name: "LUPUS BETS" }],
   icons: {
-    icon: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: "/brand/lupus-bets-mark.png",
+    apple: "/brand/lupus-bets-mark.png",
   },
   openGraph: {
     type: "website",

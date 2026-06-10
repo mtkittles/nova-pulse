@@ -14,7 +14,7 @@ function dayLabel(d: string): string {
   if (!d) return "—"
   const dt = new Date(`${d}T12:00:00Z`)
   if (Number.isNaN(dt.getTime())) return d
-  return new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short", timeZone: "Europe/Warsaw" }).format(dt)
+  return new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "short", timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }).format(dt)
 }
 
 export function MatchesView({ matches }: { matches: WCMatch[] }) {

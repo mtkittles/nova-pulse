@@ -73,6 +73,8 @@ function mapBetSide(raw: unknown): string {
   const low = s.toLowerCase()
   if (low === "yes") return "TAK"
   if (low === "no") return "NIE"
+  if (low === "home") return "Gospodarze"
+  if (low === "away") return "Goście"
   if (low === "32_or_23" || low === "3:2/2:3" || low === "exact_32_23") return "3:2 / 2:3"
   return s
 }
