@@ -143,6 +143,67 @@ export function flagForLeague(league?: string): string {
   return country ? flagForCountry(country) : ""
 }
 
+// === Flagi reprezentacji (MŚ) — klucze EN i PL ===
+const NATION_FLAG: Record<string, string> = {
+  argentina: "🇦🇷", argentyna: "🇦🇷",
+  brazil: "🇧🇷", brazylia: "🇧🇷",
+  france: "🇫🇷", francja: "🇫🇷",
+  england: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", anglia: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  spain: "🇪🇸", hiszpania: "🇪🇸",
+  germany: "🇩🇪", niemcy: "🇩🇪",
+  portugal: "🇵🇹", portugalia: "🇵🇹",
+  netherlands: "🇳🇱", holandia: "🇳🇱",
+  italy: "🇮🇹", włochy: "🇮🇹", wlochy: "🇮🇹",
+  belgium: "🇧🇪", belgia: "🇧🇪",
+  croatia: "🇭🇷", chorwacja: "🇭🇷",
+  mexico: "🇲🇽", meksyk: "🇲🇽",
+  "united states": "🇺🇸", usa: "🇺🇸", "stany zjednoczone": "🇺🇸",
+  canada: "🇨🇦", kanada: "🇨🇦",
+  japan: "🇯🇵", japonia: "🇯🇵",
+  "south korea": "🇰🇷", korea: "🇰🇷", "korea płd": "🇰🇷", "korea południowa": "🇰🇷",
+  morocco: "🇲🇦", maroko: "🇲🇦",
+  senegal: "🇸🇳",
+  ghana: "🇬🇭",
+  nigeria: "🇳🇬",
+  "south africa": "🇿🇦", rpa: "🇿🇦",
+  cameroon: "🇨🇲", kamerun: "🇨🇲",
+  "ivory coast": "🇨🇮", "wybrzeże kości słoniowej": "🇨🇮",
+  egypt: "🇪🇬", egipt: "🇪🇬",
+  algeria: "🇩🇿", algieria: "🇩🇿",
+  tunisia: "🇹🇳", tunezja: "🇹🇳",
+  australia: "🇦🇺",
+  "saudi arabia": "🇸🇦", "arabia saudyjska": "🇸🇦",
+  iran: "🇮🇷",
+  qatar: "🇶🇦", katar: "🇶🇦",
+  uruguay: "🇺🇾", urugwaj: "🇺🇾",
+  colombia: "🇨🇴", kolumbia: "🇨🇴",
+  ecuador: "🇪🇨", ekwador: "🇪🇨",
+  chile: "🇨🇱",
+  peru: "🇵🇪",
+  paraguay: "🇵🇾", paragwaj: "🇵🇾",
+  poland: "🇵🇱", polska: "🇵🇱",
+  denmark: "🇩🇰", dania: "🇩🇰",
+  switzerland: "🇨🇭", szwajcaria: "🇨🇭",
+  serbia: "🇷🇸",
+  austria: "🇦🇹",
+  sweden: "🇸🇪", szwecja: "🇸🇪",
+  norway: "🇳🇴", norwegia: "🇳🇴",
+  turkey: "🇹🇷", turcja: "🇹🇷",
+  ukraine: "🇺🇦", ukraina: "🇺🇦",
+  wales: "🏴󠁧󠁢󠁷󠁬󠁳󠁿", walia: "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
+  scotland: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", szkocja: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  "costa rica": "🇨🇷", kostaryka: "🇨🇷",
+  panama: "🇵🇦",
+  jamaica: "🇯🇲", jamajka: "🇯🇲",
+  "new zealand": "🇳🇿", "nowa zelandia": "🇳🇿",
+}
+
+/** Flaga reprezentacji po nazwie (EN/PL). Nieznana → 🏳️. */
+export function flagForNation(name?: string): string {
+  if (!name) return "🏳️"
+  return NATION_FLAG[name.toLowerCase().trim()] ?? "🏳️"
+}
+
 /** Inicjały drużyny do herbu-zastępnika (gdy brak logo). */
 export function teamInitials(name?: string): string {
   if (!name) return "?"

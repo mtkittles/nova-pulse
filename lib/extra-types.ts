@@ -150,6 +150,76 @@ export interface UserPick {
   status: "pending" | "won" | "lost"
 }
 
+// === Mistrzostwa Świata 2026 (/worldcup/*) ===
+export type WCStatus = "advance" | "playoff" | "out"
+
+export interface WCStanding {
+  position: number
+  team: string
+  team_id?: string | number | null
+  played: number
+  win: number
+  draw: number
+  loss: number
+  gf: number
+  ga: number
+  points: number
+  advance_pct?: number | null
+  status?: WCStatus
+}
+
+export interface WCGroup {
+  name: string // "A".."L"
+  teams: WCStanding[]
+}
+
+export type WCStage = "group" | "R32" | "R16" | "QF" | "SF" | "3RD" | "FINAL"
+
+export interface WCMatch {
+  event_id: string | number
+  home: string
+  away: string
+  home_id?: string | number | null
+  away_id?: string | number | null
+  group?: string | null
+  stage: WCStage
+  stadium?: string | null
+  city?: string | null
+  kickoff_utc: string
+  status: MatchStatus
+  home_score?: number | null
+  away_score?: number | null
+  predicted_home?: number | null
+  predicted_away?: number | null
+  prob_home?: number | null
+  prob_draw?: number | null
+  prob_away?: number | null
+  btts_pct?: number | null
+  over25_pct?: number | null
+  q_score?: number | null
+}
+
+export interface WCTie {
+  stage: WCStage
+  slot?: string
+  event_id?: string | number | null
+  home?: string | null
+  away?: string | null
+  home_id?: string | number | null
+  away_id?: string | number | null
+  home_score?: number | null
+  away_score?: number | null
+  winner?: "home" | "away" | null
+  prob_home?: number | null
+  kickoff_utc?: string | null
+}
+
+export interface WCInfo {
+  phase: string // np. "Faza grupowa"
+  start_utc: string
+  next_match?: WCMatch | null
+}
+
 // — szczegółowy mecz (/match/{id}/detailed) —
 export interface TeamMetrics {
   name: string
