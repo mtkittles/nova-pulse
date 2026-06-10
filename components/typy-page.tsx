@@ -16,6 +16,32 @@ type Sort = "q" | "date" | "odds"
 const MODE_KEYS: ("ALL" | BetType)[] = ["ALL", "BTTS", "OVER_1_5", "MIX", "THRILLER"]
 const modeLabel = (k: "ALL" | BetType) => (k === "ALL" ? "Wszystkie" : BET_TYPE_SHORT[k])
 
+function plMatches(n: number): string {
+  if (n === 1) return "mecz"
+  const last = n % 10
+  const teen = n % 100
+  return last >= 2 && last <= 4 && !(teen >= 12 && teen <= 14) ? "mecze" : "meczów"
+}
+
+// 3 stany pustego dnia: brak meczów / analiza niewykonana / przeanalizowane bez typów.
+function emptyDayMessage(day?: CalendarDay): { title: string; desc: string } {
+  if (!day || (day.matches === 0 && day.analyzed == null && day.tips === 0))
+    return { title: "Brak typów na ten dzień", desc: "Wybierz inny dzień z kalendarza." }
+  if (day.matches === 0)
+    return { title: "Brak meczów tego dnia", desc: "Tego dnia nie zaplanowano żadnych spotkań." }
+  if (day.analyzed == null || day.analyzed === 0)
+    return {
+      title: "Analiza nie została jeszcze wykonana",
+      desc: `${day.matches} ${plMatches(day.matches)} zaplanowanych — predykcje pojawią się po analizie meczów.`,
+    }
+  return {
+    title: "Brak typów powyżej progu jakości",
+    desc: `Przeanalizowano ${day.analyzed} ${plMatches(day.analyzed)} — żaden typ nie przekroczył progu Q ≥ 50${
+      day.below_threshold != null ? ` (${day.below_threshold} poniżej progu)` : ""
+    }.`,
+  }
+}
+
 function dateLabel(d: string): string {
   return new Intl.DateTimeFormat("pl-PL", {
     weekday: "long",
@@ -188,8 +214,8 @@ export default function TypyPage({
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-white/12 bg-white/[0.05] text-white/60">
                 <CalendarOff className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-semibold">Brak typów na ten dzień</h3>
-              <p className="mt-2 text-white/55">Wybierz inny dzień z kalendarza.</p>
+              <h3 className="text-xl font-semibold">{emptyDayMessage(selectedDay).title}</h3>
+              <p className="mt-2 text-white/55">{emptyDayMessage(selectedDay).desc}</p>
               {suggestion && (
                 <button
                   type="button"

@@ -7,6 +7,10 @@ export interface CalendarDay {
   tips: number // -1 = są typy, liczba nieznana
   matches: number
   leagues: number
+  analyzed?: number // ile meczów ma już predykcję
+  below_threshold?: number // ile miało predykcję, ale Q < 50
+  no_data?: number // matches - analyzed
+  has_worldcup?: boolean // czy jest mecz MŚ tego dnia
 }
 
 export interface MatchPrediction {

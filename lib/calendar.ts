@@ -14,12 +14,13 @@ function mockCalendar(): CalendarDay[] {
     return { date: fmt(d), tips, matches, leagues }
   }
   return [
-    day(0, 3, 14, 4),
-    day(1, 9, 38, 7),
-    day(2, 18, 71, 11),
-    day(3, 0, 0, 0),
-    day(4, 6, 24, 5),
-    day(5, 22, 88, 13),
+    { ...day(0, 3, 14, 4), analyzed: 14, below_threshold: 11 },
+    { ...day(1, 9, 38, 7), analyzed: 38, below_threshold: 29, has_worldcup: true },
+    { ...day(2, 18, 71, 11), analyzed: 71, below_threshold: 53 },
+    { ...day(3, 0, 0, 0), analyzed: 0 }, // brak meczów → komunikat A
+    { ...day(4, 0, 24, 5), analyzed: 0, no_data: 24 }, // mecze, analiza niewykonana → B
+    { ...day(5, 0, 18, 4), analyzed: 18, below_threshold: 18 }, // przeanalizowane, brak typów → C
+    { ...day(6, 22, 88, 13), analyzed: 88, below_threshold: 66 },
   ]
 }
 
@@ -31,16 +32,16 @@ function ymd(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
-export async function getCalendar(): Promise<CalendarDay[]> {
+export async function getCalendar(fromArg?: string, toArg?: string): Promise<CalendarDay[]> {
   if (!isOracleConfigured()) return mockCalendar()
 
-  // Oracle wymaga zakresu — pobieramy poprzedni miesiąc … +2 miesiące (pokrywa nawigację).
+  // Oracle wymaga zakresu — domyślnie poprzedni miesiąc … +2 miesiące (pokrywa nawigację).
   const today = new Date()
-  const from = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-  const to = new Date(today.getFullYear(), today.getMonth() + 2, 0)
+  const from = fromArg || ymd(new Date(today.getFullYear(), today.getMonth() - 1, 1))
+  const to = toArg || ymd(new Date(today.getFullYear(), today.getMonth() + 2, 0))
 
   try {
-    const data = await oracleFetch<unknown>(`/calendar?from=${ymd(from)}&to=${ymd(to)}`, 300)
+    const data = await oracleFetch<unknown>(`/calendar?from=${from}&to=${to}`, 300)
     console.log("[oracle] /calendar raw:", JSON.stringify(data).slice(0, 500))
     const days = adaptCalendar(data)
     if (days.length > 0) return days
