@@ -21,18 +21,19 @@ const modeLabel = (k: "ALL" | BetType) => (k === "ALL" ? "Wszystkie" : BET_TYPE_
 function emptyDayMessage(day?: CalendarDay): { title: string; desc: string } {
   if (!day || (day.matches === 0 && day.analyzed == null && day.tips === 0))
     return { title: "Brak typów na ten dzień", desc: "Wybierz inny dzień z kalendarza." }
-  if (day.matches === 0)
+  // A
+  if (!day.matches || day.matches === 0)
     return { title: "Brak meczów tego dnia", desc: "Tego dnia nie zaplanowano żadnych spotkań." }
+  // B
   if (day.analyzed == null || day.analyzed === 0)
     return {
-      title: "Analiza nie została jeszcze wykonana",
-      desc: `${day.matches} ${plMatches(day.matches)} zaplanowanych — predykcje pojawią się po analizie meczów.`,
+      title: "Analiza jeszcze nie wykonana",
+      desc: `Zaplanowano ${day.matches} ${plMatches(day.matches)} — analiza jeszcze nie wykonana.`,
     }
+  // C
   return {
     title: "Brak typów powyżej progu jakości",
-    desc: `Przeanalizowano ${day.analyzed} ${plMatches(day.analyzed)} — żaden typ nie przekroczył progu Q ≥ 50${
-      day.below_threshold != null ? ` (${day.below_threshold} poniżej progu)` : ""
-    }.`,
+    desc: `Przeanalizowano ${day.analyzed} ${plMatches(day.analyzed)} — żaden nie przekroczył progu jakości (Q ≥ 50).`,
   }
 }
 

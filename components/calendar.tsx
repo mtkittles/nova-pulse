@@ -68,6 +68,17 @@ export function Calendar({
   const today = todayWarsaw()
   const startDow = (new Date(view.y, view.m, 1).getDay() + 6) % 7 // poniedziałek = 0
 
+  // Limit nawigacji: bieżący miesiąc ±2.
+  const nowD = new Date()
+  const curIdx = nowD.getFullYear() * 12 + nowD.getMonth()
+  const viewIdx = view.y * 12 + view.m
+  const canPrev = viewIdx > curIdx - 2
+  const canNext = viewIdx < curIdx + 2
+  const navBtn = (enabled: boolean) =>
+    `grid h-9 w-9 place-items-center rounded-xl border border-white/12 bg-white/[0.05] transition ${
+      enabled ? "hover:bg-white/10" : "cursor-not-allowed opacity-30"
+    }`
+
   const cells: (number | null)[] = []
   for (let i = 0; i < startDow; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
@@ -78,8 +89,9 @@ export function Calendar({
         <button
           type="button"
           aria-label="Poprzedni miesiąc"
-          onClick={() => setView((v) => (v.m === 0 ? { y: v.y - 1, m: 11 } : { y: v.y, m: v.m - 1 }))}
-          className="grid h-9 w-9 place-items-center rounded-xl border border-white/12 bg-white/[0.05] transition hover:bg-white/10"
+          disabled={!canPrev}
+          onClick={() => canPrev && setView((v) => (v.m === 0 ? { y: v.y - 1, m: 11 } : { y: v.y, m: v.m - 1 }))}
+          className={navBtn(canPrev)}
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -89,8 +101,9 @@ export function Calendar({
         <button
           type="button"
           aria-label="Następny miesiąc"
-          onClick={() => setView((v) => (v.m === 11 ? { y: v.y + 1, m: 0 } : { y: v.y, m: v.m + 1 }))}
-          className="grid h-9 w-9 place-items-center rounded-xl border border-white/12 bg-white/[0.05] transition hover:bg-white/10"
+          disabled={!canNext}
+          onClick={() => canNext && setView((v) => (v.m === 11 ? { y: v.y + 1, m: 0 } : { y: v.y, m: v.m + 1 }))}
+          className={navBtn(canNext)}
         >
           <ChevronRight className="h-4 w-4" />
         </button>
