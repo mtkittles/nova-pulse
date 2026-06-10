@@ -252,13 +252,19 @@ export function LigiView() {
           (loading ? (
             <Skeleton />
           ) : sortedForm.length === 0 ? (
-            <p className="p-8 text-center text-white/55">Brak danych o formie dla tej ligi.</p>
+            <p className="p-8 text-center text-white/55">
+              Brak danych historycznych dla tej ligi w aktualnym źródle danych.
+            </p>
           ) : (
             <table className="w-full text-sm">
               <thead className="border-b border-white/10">
                 <tr>
                   <th className={th}>Drużyna</th>
-                  <th className={th}>Forma (ostatnie {count})</th>
+                  <th className={th}>Forma ({count})</th>
+                  <th className={`${th} text-center`}>GF</th>
+                  <th className={`${th} text-center`}>GA</th>
+                  <th className={`${th} text-center`}>%BTTS</th>
+                  <th className={`${th} text-center`}>%O1.5</th>
                 </tr>
               </thead>
               <tbody>
@@ -276,6 +282,10 @@ export function LigiView() {
                     <td className={td}>
                       <FormSquares results={r.results} size="sm" />
                     </td>
+                    <td className={`${td} text-center`}>{r.gf ?? "—"}</td>
+                    <td className={`${td} text-center text-white/60`}>{r.ga ?? "—"}</td>
+                    <td className={`${td} text-center`}>{r.btts_pct != null ? `${r.btts_pct}%` : "—"}</td>
+                    <td className={`${td} text-center`}>{r.over15_pct != null ? `${r.over15_pct}%` : "—"}</td>
                   </tr>
                 ))}
               </tbody>

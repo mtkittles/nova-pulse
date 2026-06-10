@@ -3,11 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Activity, BarChart3, CalendarClock, Target } from "lucide-react"
-import type { SideStats, TeamSeason, UpcomingMatch } from "@/lib/extra-types"
+import type { TeamSeason, UpcomingMatch } from "@/lib/extra-types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
 import { TeamCrest } from "./ui/team-crest"
 import { FormSquares } from "./form-squares"
 import { TeamFormTable } from "./team-form-table"
+import { TeamSplitStats } from "./team-split-stats"
 import { AnimatedTabs, TabPanel } from "./ui/tabs"
 
 const TABS = ["stats", "form", "fixtures", "scorers"] as const
@@ -38,33 +39,6 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function pctTxt(v: number | null | undefined): string {
   return v != null ? `${v}%` : "—"
-}
-function avgTxt(v: number | null | undefined): string {
-  return v != null ? v.toFixed(2) : "—"
-}
-
-function SideColumn({ title, s }: { title: string; s: SideStats }) {
-  const rows: [string, string][] = [
-    ["Mecze", s.played != null ? String(s.played) : "—"],
-    ["Śr. gole zdob.", avgTxt(s.gf_avg)],
-    ["Śr. gole strac.", avgTxt(s.ga_avg)],
-    ["% BTTS", pctTxt(s.btts_pct)],
-    ["% Over 1.5", pctTxt(s.over15_pct)],
-    ["Czyste konta", pctTxt(s.clean_sheets_pct)],
-  ]
-  return (
-    <div className="rounded-[1.4rem] border border-white/12 bg-white/[0.04] p-5">
-      <h4 className="mb-3 font-semibold">{title}</h4>
-      <div className="space-y-1.5 text-sm">
-        {rows.map(([k, v]) => (
-          <div key={k} className="flex items-center justify-between">
-            <span className="text-white/60">{k}</span>
-            <span className="font-medium">{v}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
 }
 
 // Akcent terminarza wg progów szans.
@@ -200,16 +174,11 @@ export function TeamPage({ team, upcoming }: { team: TeamSeason; upcoming: Upcom
             </div>
 
             <h3 className="mb-3 text-lg font-semibold">Dom vs Wyjazd</h3>
-            {team.home_stats || team.away_stats ? (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <SideColumn title="🏠 Dom" s={team.home_stats ?? {}} />
-                <SideColumn title="✈️ Wyjazd" s={team.away_stats ?? {}} />
-              </div>
-            ) : (
-              <p className="rounded-[1.4rem] border border-white/12 bg-white/[0.04] p-6 text-white/60">
-                Statystyki dom/wyjazd niedostępne w aktualnym źródle danych.
-              </p>
-            )}
+            <TeamSplitStats
+              teamId={team.team_id}
+              fallbackHome={team.home_stats}
+              fallbackAway={team.away_stats}
+            />
           </div>
         )}
 
