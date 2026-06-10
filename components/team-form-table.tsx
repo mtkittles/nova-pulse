@@ -118,7 +118,7 @@ export function TeamFormTable({ teamId, teamName }: { teamId: string | number | 
         <>
           {n < count && (
             <p className="mb-3 rounded-xl border border-amber-300/25 bg-amber-300/[0.07] px-4 py-2 text-sm text-amber-100/85">
-              Dane formy: tylko {n} {n === 1 ? "mecz" : "meczów"} dostępnych (brak danych za poprzedni sezon).
+              Dane formy: dostępnych {n} {n === 1 ? "mecz" : "meczów"} (brak danych za poprzedni sezon).
             </p>
           )}
           <div className="overflow-x-auto rounded-[1.4rem] border border-white/12 bg-white/[0.04]">

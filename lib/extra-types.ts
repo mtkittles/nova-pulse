@@ -133,6 +133,10 @@ export interface LeagueFormRow {
   team_id: string | number | null
   team: string
   results: FormResult[]
+  gf?: number
+  ga?: number
+  btts_pct?: number | null
+  over15_pct?: number | null
 }
 
 // — kupony użytkownika (/user/{telegram_id}/picks) —
