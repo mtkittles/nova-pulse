@@ -54,6 +54,9 @@ export interface FormMatch {
   opponent?: string
   score?: string
   date?: string
+  gf?: number // gole TEJ drużyny
+  ga?: number // gole przeciwnika
+  home?: boolean
 }
 
 export interface TeamForm {
@@ -84,12 +87,22 @@ export interface Scorer {
 
 export type FormResult = "W" | "D" | "L"
 
+export interface SideStats {
+  played?: number
+  gf_avg?: number | null
+  ga_avg?: number | null
+  btts_pct?: number | null
+  over15_pct?: number | null
+  clean_sheets_pct?: number | null
+}
+
 export interface TeamSeason {
   team_id: string | number
   name: string
   league: string
   country: string
   logo: string | null
+  position?: number
   played: number
   wins: number
   draws: number
@@ -99,6 +112,8 @@ export interface TeamSeason {
   btts_pct: number | null
   over15_pct: number | null
   over25_pct: number | null
+  home_stats?: SideStats | null
+  away_stats?: SideStats | null
   form: FormResult[]
   scorers: Scorer[]
 }

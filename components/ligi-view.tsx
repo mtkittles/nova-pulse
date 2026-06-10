@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Activity, Goal, Table2 } from "lucide-react"
+import { Activity, BarChart3, Goal, Table2 } from "lucide-react"
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import type { LeagueFormRow, Scorer, StandingRow } from "@/lib/extra-types"
 import { LEAGUES } from "@/lib/leagues"
 import { FormSquares, formPoints } from "./form-squares"
 import { AnimatedTabs } from "./ui/tabs"
 
-type Tab = "standings" | "scorers" | "form"
+type Tab = "standings" | "scorers" | "form" | "stats"
 
 function norm(s: string): string {
   return s.toLowerCase().replace(/\s+/g, " ").trim()
@@ -24,6 +25,8 @@ export function LigiView() {
   const [scorers, setScorers] = useState<Scorer[]>([])
   const [formRows, setFormRows] = useState<LeagueFormRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   // standings — zawsze (także do mapy nazwa→id dla strzelców)
   useEffect(() => {
@@ -73,6 +76,21 @@ export function LigiView() {
     return arr
   }, [formRows, formSort])
 
+  // statystyki ligi liczone z tabeli (jedyne pełne dane, jakie mamy)
+  const leagueStats = useMemo(() => {
+    const teams = standings.length
+    const totalPlayed = standings.reduce((a, r) => a + r.played, 0)
+    const totalGoals = standings.reduce((a, r) => a + r.gf, 0)
+    const matches = Math.round(totalPlayed / 2)
+    const avgGoals = totalPlayed > 0 ? (2 * totalGoals) / totalPlayed : 0
+    const topScoring = [...standings]
+      .sort((a, b) => b.gf - a.gf)
+      .slice(0, 5)
+      .map((r) => ({ team: r.team.length > 14 ? r.team.slice(0, 13) + "…" : r.team, gf: r.gf }))
+    const bestDefense = [...standings].sort((a, b) => a.ga - b.ga).slice(0, 5)
+    return { teams, matches, avgGoals, topScoring, bestDefense }
+  }, [standings])
+
   const th = "px-3 py-2 text-left text-xs uppercase tracking-wide text-white/60"
   const td = "px-3 py-2.5"
   const teamLink = "font-medium text-white transition hover:text-[color:var(--accent)] hover:underline"
@@ -114,6 +132,7 @@ export function LigiView() {
             { key: "standings", label: "Tabela", icon: Table2 },
             { key: "scorers", label: "Strzelcy", icon: Goal },
             { key: "form", label: "Forma", icon: Activity },
+            { key: "stats", label: "Statystyki", icon: BarChart3 },
           ]}
         />
 
@@ -261,6 +280,69 @@ export function LigiView() {
                 ))}
               </tbody>
             </table>
+          ))}
+
+        {/* STATYSTYKI */}
+        {tab === "stats" &&
+          (standings.length === 0 ? (
+            <p className="p-8 text-center text-white/55">
+              Brak danych historycznych dla tej ligi w aktualnym źródle danych.
+            </p>
+          ) : (
+            <div className="space-y-5 p-5">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
+                  <p className="text-xs text-white/60">Śr. goli / mecz</p>
+                  <p className="mt-1 text-2xl font-semibold text-[color:var(--accent)]">
+                    {leagueStats.avgGoals.toFixed(2)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
+                  <p className="text-xs text-white/60">Drużyny</p>
+                  <p className="mt-1 text-2xl font-semibold">{leagueStats.teams}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
+                  <p className="text-xs text-white/60">Rozegrane mecze</p>
+                  <p className="mt-1 text-2xl font-semibold">{leagueStats.matches}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-3 text-sm text-white/60">Top 5 drużyn — gole zdobyte</p>
+                <div className="h-56 w-full">
+                  {mounted && (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={leagueStats.topScoring} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
+                        <CartesianGrid stroke="rgba(255,255,255,0.08)" horizontal={false} />
+                        <XAxis type="number" stroke="rgba(255,255,255,0.45)" tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <YAxis type="category" dataKey="team" stroke="rgba(255,255,255,0.45)" tick={{ fontSize: 11 }} width={110} />
+                        <Tooltip
+                          cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                          contentStyle={{ background: "#10111d", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "0.75rem", color: "#fff" }}
+                        />
+                        <Bar dataKey="gf" name="Gole" fill="#67e8f9" radius={[0, 6, 6, 0]} isAnimationActive animationDuration={700} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm text-white/60">Najlepsza obrona</p>
+                <div className="flex flex-wrap gap-2">
+                  {leagueStats.bestDefense.map((r) => (
+                    <span key={r.team} className="rounded-full border border-white/12 bg-white/[0.05] px-3 py-1.5 text-sm">
+                      {r.team} <span className="text-white/55">· {r.ga}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/55">
+                Statystyki rynkowe per drużyna (%BTTS, %Team O1.5, %O2.5) nie są dostępne w
+                aktualnym źródle danych ligi — pojawią się, gdy Oracle udostępni agregaty rynkowe.
+              </p>
+            </div>
           ))}
       </div>
     </div>
