@@ -54,6 +54,20 @@ export function settleTip(
   return resolveTip(tip.bet_type, tip.bet_side, homeScore, awayScore)
 }
 
+// Rynki rozliczone z perspektywy DANEJ drużyny (gf = jej gole, ga = przeciwnika).
+export interface FormMarkets {
+  btts: boolean
+  teamOver15: boolean // TA drużyna strzeliła ≥2 (nie suma!)
+  over15: boolean
+  over25: boolean
+}
+
+export function formMarkets(gf: number | null | undefined, ga: number | null | undefined): FormMarkets | null {
+  if (gf == null || ga == null || !Number.isFinite(gf) || !Number.isFinite(ga)) return null
+  const total = gf + ga
+  return { btts: gf > 0 && ga > 0, teamOver15: gf >= 2, over15: total >= 2, over25: total >= 3 }
+}
+
 export type KickoffStatus = "upcoming" | "live" | "finished" | "unknown"
 
 // Status z czasu rozpoczęcia (gdy brak danych live ze statusem).

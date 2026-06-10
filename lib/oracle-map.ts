@@ -20,6 +20,7 @@ import type {
   MatchStatus,
   Scorer,
   ScoreDist,
+  SideStats,
   StandingRow,
   TeamForm,
   TeamMetrics,
@@ -317,14 +318,21 @@ export function adaptForm(raw: unknown): TeamForm {
   const list = Array.isArray(r.form) ? r.form : Array.isArray(r.matches) ? r.matches : []
   const matches: FormMatch[] = (list as unknown[]).map((mm) => {
     const m = rec(mm)
-    const gf = m.goals_for
-    const ga = m.goals_against
-    const score = gf != null && ga != null ? `${num(gf)}:${num(ga)}` : m.score != null ? String(m.score) : undefined
+    const gfRaw = m.goals_for ?? m.gf ?? m.scored
+    const gaRaw = m.goals_against ?? m.ga ?? m.conceded
+    const gf = gfRaw != null ? num(gfRaw) : undefined
+    const ga = gaRaw != null ? num(gaRaw) : undefined
+    const score = gf != null && ga != null ? `${gf}:${ga}` : m.score != null ? String(m.score) : undefined
+    const venue = String(m.venue ?? m.location ?? "").toLowerCase()
+    const home = m.home != null ? Boolean(m.home) : venue ? venue.startsWith("h") || venue.includes("dom") : undefined
     return {
       result: formResult(m),
       opponent: m.opponent != null ? String(m.opponent) : undefined,
       score,
       date: m.date != null ? String(m.date) : undefined,
+      gf,
+      ga,
+      home,
     }
   })
   return {
@@ -447,12 +455,30 @@ export function adaptTeam(raw: unknown): TeamSeason | null {
     losses: num(t.losses ?? t.lost ?? t.l),
     gf: num(t.gf ?? t.goals_for ?? t.scored),
     ga: num(t.ga ?? t.goals_against ?? t.conceded),
+    position: t.position != null ? num(t.position) : t.rank != null ? num(t.rank) : undefined,
     btts_pct: pct(t.btts_pct ?? t.btts),
     over15_pct: pct(t.over_1_5_pct ?? t.over15_pct ?? t.over_1_5),
     over25_pct: pct(t.over_2_5_pct ?? t.over25_pct ?? t.over_2_5),
+    home_stats: sideStats(t.home_stats ?? t.home),
+    away_stats: sideStats(t.away_stats ?? t.away),
     form: resultsFromForm(t.form ?? t.recent_form ?? r.form),
     scorers: adaptScorers(t.scorers ?? t.top_scorers ?? r.scorers ?? r.top_scorers),
   }
+}
+
+function sideStats(raw: unknown): SideStats | null {
+  if (!raw || typeof raw !== "object") return null
+  const o = rec(raw)
+  const s: SideStats = {
+    played: o.played != null ? num(o.played) : undefined,
+    gf_avg: numOrNull(o.gf_avg ?? o.avg_gf ?? o.avg_goals_for),
+    ga_avg: numOrNull(o.ga_avg ?? o.avg_ga ?? o.avg_goals_against),
+    btts_pct: pct(o.btts_pct ?? o.btts),
+    over15_pct: pct(o.over_1_5_pct ?? o.over15_pct ?? o.over_1_5),
+    clean_sheets_pct: pct(o.clean_sheets_pct ?? o.clean_sheets ?? o.cs_pct),
+  }
+  const hasAny = Object.values(s).some((v) => v != null)
+  return hasAny ? s : null
 }
 
 export function adaptUpcoming(raw: unknown): UpcomingMatch[] {

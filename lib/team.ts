@@ -16,9 +16,12 @@ function mockTeam(id: string): TeamSeason {
     losses: 8,
     gf: 58,
     ga: 31,
+    position: 3,
     btts_pct: 54,
     over15_pct: 82,
     over25_pct: 55,
+    home_stats: { played: 19, gf_avg: 1.9, ga_avg: 0.6, btts_pct: 47, over15_pct: 89, clean_sheets_pct: 53 },
+    away_stats: { played: 19, gf_avg: 1.2, ga_avg: 1.0, btts_pct: 61, over15_pct: 74, clean_sheets_pct: 32 },
     form: ["W", "W", "D", "L", "W", "W", "D", "W", "L", "W"],
     scorers: [
       { player: "Léo Ceará", team: "Kashima", goals: 21, assists: 3 },
