@@ -388,11 +388,21 @@ export function adaptCalendar(raw: unknown): CalendarDay[] {
   return (list as unknown[])
     .map((d) => {
       const o = rec(d)
+      const matches = num(o.matches ?? o.match_count ?? o.matches_count)
+      const hasAnalyzed = o.analyzed != null
+      const analyzed = hasAnalyzed ? num(o.analyzed) : undefined
       return {
         date: String(o.date ?? ""),
         tips: num(o.tips ?? o.count ?? o.total),
-        matches: num(o.matches ?? o.match_count ?? o.matches_count),
+        matches,
         leagues: num(o.leagues ?? o.league_count ?? o.leagues_count),
+        analyzed,
+        below_threshold: o.below_threshold != null ? num(o.below_threshold) : undefined,
+        no_data: o.no_data != null ? num(o.no_data) : analyzed != null ? Math.max(0, matches - analyzed) : undefined,
+        has_worldcup:
+          o.has_worldcup === true ||
+          o.worldcup === true ||
+          /world.?cup|mundial|wc_2026/i.test(String(o.leagues_list ?? o.competitions ?? "")),
       }
     })
     .filter((d) => DATE_RE.test(d.date))

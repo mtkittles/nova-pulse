@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import useSWR from "swr"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { CalendarDay } from "@/lib/extra-types"
 
@@ -26,11 +27,13 @@ function todayWarsaw(): string {
 // skala intensywności heatmapy wg liczby typów
 function bucketClass(tips: number, matches: number): string {
   if (tips < 0) return "bg-[var(--accent)]/25 text-white" // są typy, liczba nieznana
-  if (tips === 0) return matches > 0 ? "bg-white/[0.07] text-white/70" : "text-white/25 line-through"
+  if (tips === 0) return matches > 0 ? "bg-white/[0.07] text-white/70" : "text-white/25"
   if (tips <= 5) return "bg-[var(--accent)]/15 text-white"
   if (tips <= 15) return "bg-[var(--accent)]/35 text-white"
   return "bg-[var(--accent)]/70 font-semibold text-[color:var(--on-accent)]" // 16+
 }
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export function Calendar({
   value,
@@ -44,11 +47,26 @@ export function Calendar({
   const init = value ? new Date(`${value}T12:00:00Z`) : new Date()
   const [view, setView] = useState({ y: init.getUTCFullYear(), m: init.getUTCMonth() })
 
-  const map = new Map(days.map((d) => [d.date, d]))
-  const today = todayWarsaw()
-
-  const startDow = (new Date(view.y, view.m, 1).getDay() + 6) % 7 // poniedziałek = 0
   const daysInMonth = new Date(view.y, view.m + 1, 0).getDate()
+  const from = ymd(view.y, view.m, 1)
+  const to = ymd(view.y, view.m, daysInMonth)
+
+  // Dane dla oglądanego miesiąca — SWR (z zachowaniem poprzednich przy nawigacji).
+  const { data } = useSWR<{ days: CalendarDay[] }>(
+    `/api/calendar?from=${from}&to=${to}`,
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 60000, keepPreviousData: true },
+  )
+
+  // baza = dane z serwera (prop) + nadpisanie świeższymi z SWR
+  const map = useMemo(() => {
+    const m = new Map(days.map((d) => [d.date, d]))
+    for (const d of data?.days ?? []) m.set(d.date, d)
+    return m
+  }, [days, data])
+
+  const today = todayWarsaw()
+  const startDow = (new Date(view.y, view.m, 1).getDay() + 6) % 7 // poniedziałek = 0
 
   const cells: (number | null)[] = []
   for (let i = 0; i < startDow; i++) cells.push(null)
@@ -97,9 +115,11 @@ export function Calendar({
           const tooltip =
             tips < 0
               ? "typy dostępne"
-              : tips > 0 || matches > 0
-                ? `${Math.max(tips, 0)} typów · ${matches} meczów · ${leagues} lig`
-                : "brak meczów"
+              : tips > 0
+                ? `${tips} typów · ${matches} meczów · ${leagues} lig`
+                : matches > 0
+                  ? `${matches} meczów · brak typów`
+                  : "brak meczów"
 
           return (
             <button
@@ -111,6 +131,12 @@ export function Calendar({
               } ${bucketClass(tips, matches)}`}
             >
               {d}
+
+              {info?.has_worldcup && (
+                <span className="absolute left-1 top-0.5 text-[9px] leading-none" title="Mecz MŚ 2026">
+                  🏆
+                </span>
+              )}
 
               {tips > 0 ? (
                 <span className="absolute right-1 top-0.5 text-[9px] font-semibold leading-none text-white/70">
