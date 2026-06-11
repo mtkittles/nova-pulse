@@ -50,6 +50,16 @@ html {
   scroll-behavior: smooth;
 }
 
+/* karuzela: ukryty pasek + momentum scrolling iOS */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   background-color: var(--bg);
