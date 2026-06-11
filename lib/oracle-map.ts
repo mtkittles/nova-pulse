@@ -317,16 +317,37 @@ function formResult(raw: unknown): "W" | "D" | "L" {
 
 export function adaptForm(raw: unknown): TeamForm {
   const r = rec(raw)
-  const list = Array.isArray(r.form) ? r.form : Array.isArray(r.matches) ? r.matches : []
+  // Oracle zwraca formę pod kluczem form_by_market; zachowujemy fallbacki.
+  const list = Array.isArray(r.form_by_market)
+    ? r.form_by_market
+    : Array.isArray(r.form)
+      ? r.form
+      : Array.isArray(r.matches)
+        ? r.matches
+        : Array.isArray(r.recent)
+          ? r.recent
+          : []
   const matches: FormMatch[] = (list as unknown[]).map((mm) => {
     const m = rec(mm)
-    const gfRaw = m.goals_for ?? m.gf ?? m.scored
-    const gaRaw = m.goals_against ?? m.ga ?? m.conceded
-    const gf = gfRaw != null ? num(gfRaw) : undefined
-    const ga = gaRaw != null ? num(gaRaw) : undefined
+    // orientacja: home_away → która strona to nasza drużyna
+    const ha = String(m.home_away ?? m.venue ?? m.location ?? "").toLowerCase()
+    const isHome = m.home != null ? Boolean(m.home) : ha ? ha.startsWith("h") || ha.includes("dom") : undefined
+    const hs = m.home_score != null ? num(m.home_score) : undefined
+    const as = m.away_score != null ? num(m.away_score) : undefined
+
+    let gf: number | undefined
+    let ga: number | undefined
+    if (hs != null && as != null && isHome != null) {
+      gf = isHome ? hs : as
+      ga = isHome ? as : hs
+    } else {
+      const gfRaw = m.goals_for ?? m.gf ?? m.scored
+      const gaRaw = m.goals_against ?? m.ga ?? m.conceded
+      gf = gfRaw != null ? num(gfRaw) : undefined
+      ga = gaRaw != null ? num(gaRaw) : undefined
+    }
+
     const score = gf != null && ga != null ? `${gf}:${ga}` : m.score != null ? String(m.score) : undefined
-    const venue = String(m.venue ?? m.location ?? "").toLowerCase()
-    const home = m.home != null ? Boolean(m.home) : venue ? venue.startsWith("h") || venue.includes("dom") : undefined
     return {
       result: formResult(m),
       opponent: m.opponent != null ? String(m.opponent) : undefined,
@@ -334,7 +355,7 @@ export function adaptForm(raw: unknown): TeamForm {
       date: m.date != null ? String(m.date) : undefined,
       gf,
       ga,
-      home,
+      home: isHome,
     }
   })
   return {
