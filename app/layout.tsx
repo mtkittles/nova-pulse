@@ -44,22 +44,21 @@ export const viewport: Viewport = {
   viewportFit: "cover", // safe-area (notch/home indicator)
 }
 
-// Ustawia motyw z localStorage PRZED pierwszym malowaniem — brak migotania.
+// Ustawia motyw z cookie PRZED pierwszym malowaniem — brak migotania. Domyślny: ciemny.
 const themeScript = `
 try {
-  var t = localStorage.getItem('lupus-theme');
-  if (t !== 'nova' && t !== 'lupus') t = 'nova';
-  document.documentElement.dataset.theme = t;
+  var m = document.cookie.match(/(?:^|; )theme=(dark|light)/);
+  document.documentElement.dataset.theme = m ? m[1] : 'dark';
 } catch (e) {}
 `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pl" data-theme="nova" className={inter.variable}>
+    <html lang="pl" data-theme="dark" className={inter.variable}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="bg-[var(--bg)] text-white antialiased">{children}</body>
+      <body className="bg-[var(--bg)] text-[color:var(--text)] antialiased">{children}</body>
     </html>
   )
 }

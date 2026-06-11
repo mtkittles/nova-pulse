@@ -1,36 +1,44 @@
 @import "tailwindcss";
 
 /* ===== Motywy (zmienne CSS, przełączane przez [data-theme]) ===== */
-/* Domyślny: Nova (cyan + violet) */
+/* Domyślny: ciemny */
 :root,
-[data-theme="nova"] {
+[data-theme="dark"] {
   --bg: #070812;
   --bg-soft: #0d0e1a;
+  --bg-card: #121425;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
   --accent: #67e8f9; /* cyan-300 */
   --accent-2: #c4b5fd; /* violet-300 */
   --accent-strong: #22d3ee; /* cyan-400 */
   --on-accent: #070812;
+  --border: #1e2235;
   --glow-1: rgba(34, 211, 238, 0.3);
   --glow-2: rgba(124, 58, 237, 0.3);
 }
 
-/* Lupus: wilczy granat + neon lime */
-[data-theme="lupus"] {
-  --bg: #07100b;
-  --bg-soft: #0c1510;
-  --accent: #a3e635; /* lime-400 */
-  --accent-2: #34d399; /* emerald-400 */
-  --accent-strong: #84cc16; /* lime-500 */
-  --on-accent: #06120a;
-  --glow-1: rgba(163, 230, 53, 0.26);
-  --glow-2: rgba(16, 185, 129, 0.28);
+/* Alternatywny: jasny */
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg-soft: #ffffff;
+  --bg-card: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --accent: #0891b2; /* cyan-600 */
+  --accent-2: #7c3aed; /* violet-600 */
+  --accent-strong: #0e7490; /* cyan-700 */
+  --on-accent: #ffffff;
+  --border: #e2e8f0;
+  --glow-1: rgba(8, 145, 178, 0.12);
+  --glow-2: rgba(124, 58, 237, 0.1);
 }
 
-/* ===== Tokeny semantyczne (wspólne dla motywów) ===== */
+/* ===== Tokeny semantyczne (status, wspólne dla motywów) ===== */
 :root {
-  --success: #34d399; /* emerald-400 */
-  --warning: #fbbf24; /* amber-400 */
-  --danger: #fb7185; /* rose-400 */
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #fb7185;
   /* skala pewności (czerwony→bursztyn→zielony) — patrz lib/design.ts scaleColor */
   --prob-low: #fb7185;
   --prob-mid: #fbbf24;
@@ -45,6 +53,7 @@ html {
 body {
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   background-color: var(--bg);
+  color: var(--text);
 }
 
 /* widoczny focus dla dostępności (klawiatura) */
@@ -54,7 +63,7 @@ body {
   border-radius: 6px;
 }
 
-/* płynne przejście kolorów przy zmianie motywu */
+/* płynne przejście kolorów przy zmianie motywu (0.3s) */
 body,
 body * {
   transition-property: background-color, border-color, color, fill, stroke;
@@ -62,7 +71,6 @@ body * {
   transition-timing-function: ease;
 }
 
-/* respektuj preferencję ograniczenia animacji */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -72,3 +80,54 @@ body * {
     transition: none !important;
   }
 }
+
+/* ============================================================
+   Warstwa zgodności motywu jasnego.
+   Aplikacja była budowana „dark-first" na utilkach white/…,
+   więc w jasnym motywie remapujemy je na tokeny (atrament na jasnym).
+   Działa TYLKO pod [data-theme="light"] — ciemny nietknięty.
+   ============================================================ */
+[data-theme="light"] .text-white { color: var(--text); }
+[data-theme="light"] .hover\:text-white:hover { color: var(--text); }
+[data-theme="light"] .text-white\/25 { color: color-mix(in srgb, var(--text) 45%, transparent); }
+[data-theme="light"] .text-white\/30 { color: color-mix(in srgb, var(--text) 48%, transparent); }
+[data-theme="light"] .text-white\/35 { color: color-mix(in srgb, var(--text) 52%, transparent); }
+[data-theme="light"] .text-white\/40 { color: color-mix(in srgb, var(--text) 55%, transparent); }
+[data-theme="light"] .text-white\/45 { color: color-mix(in srgb, var(--text) 58%, transparent); }
+[data-theme="light"] .text-white\/50 { color: color-mix(in srgb, var(--text) 62%, transparent); }
+[data-theme="light"] .text-white\/55 { color: color-mix(in srgb, var(--text) 66%, transparent); }
+[data-theme="light"] .text-white\/58 { color: color-mix(in srgb, var(--text) 68%, transparent); }
+[data-theme="light"] .text-white\/60 { color: color-mix(in srgb, var(--text) 70%, transparent); }
+[data-theme="light"] .text-white\/64 { color: color-mix(in srgb, var(--text) 72%, transparent); }
+[data-theme="light"] .text-white\/65 { color: color-mix(in srgb, var(--text) 74%, transparent); }
+[data-theme="light"] .text-white\/70 { color: color-mix(in srgb, var(--text) 78%, transparent); }
+[data-theme="light"] .text-white\/75 { color: color-mix(in srgb, var(--text) 82%, transparent); }
+[data-theme="light"] .text-white\/80 { color: color-mix(in srgb, var(--text) 86%, transparent); }
+[data-theme="light"] .text-white\/85 { color: color-mix(in srgb, var(--text) 90%, transparent); }
+
+/* powierzchnie „szkła" → delikatny atrament na jasnym */
+[data-theme="light"] .bg-white\/5 { background-color: color-mix(in srgb, var(--text) 4%, transparent); }
+[data-theme="light"] .bg-white\/10 { background-color: color-mix(in srgb, var(--text) 6%, transparent); }
+[data-theme="light"] .bg-white\/15 { background-color: color-mix(in srgb, var(--text) 9%, transparent); }
+[data-theme="light"] .bg-white\/20 { background-color: color-mix(in srgb, var(--text) 12%, transparent); }
+[data-theme="light"] .bg-white\/30 { background-color: color-mix(in srgb, var(--text) 16%, transparent); }
+[data-theme="light"] .bg-white\/\[0\.03\] { background-color: color-mix(in srgb, var(--text) 3%, transparent); }
+[data-theme="light"] .bg-white\/\[0\.04\] { background-color: color-mix(in srgb, var(--text) 4%, transparent); }
+[data-theme="light"] .bg-white\/\[0\.05\] { background-color: color-mix(in srgb, var(--text) 5%, transparent); }
+[data-theme="light"] .bg-white\/\[0\.055\] { background-color: color-mix(in srgb, var(--text) 5%, transparent); }
+[data-theme="light"] .bg-white\/\[0\.06\] { background-color: color-mix(in srgb, var(--text) 6%, transparent); }
+[data-theme="light"] .bg-white\/\[0\.07\] { background-color: color-mix(in srgb, var(--text) 6%, transparent); }
+[data-theme="light"] .bg-white\/\[0\.08\] { background-color: color-mix(in srgb, var(--text) 7%, transparent); }
+[data-theme="light"] .bg-white\/\[0\.085\] { background-color: color-mix(in srgb, var(--text) 7%, transparent); }
+
+/* hover-warianty szkła */
+[data-theme="light"] .hover\:bg-white\/10:hover { background-color: color-mix(in srgb, var(--text) 8%, transparent); }
+[data-theme="light"] .hover\:bg-white\/15:hover { background-color: color-mix(in srgb, var(--text) 11%, transparent); }
+[data-theme="light"] .hover\:bg-white\/\[0\.08\]:hover { background-color: color-mix(in srgb, var(--text) 8%, transparent); }
+[data-theme="light"] .hover\:bg-white\/\[0\.085\]:hover { background-color: color-mix(in srgb, var(--text) 8%, transparent); }
+
+/* obramowania */
+[data-theme="light"] .border-white\/5,
+[data-theme="light"] .border-white\/10,
+[data-theme="light"] .border-white\/12,
+[data-theme="light"] .border-white\/15 { border-color: var(--border); }
