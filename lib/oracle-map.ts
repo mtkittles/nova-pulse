@@ -121,6 +121,9 @@ export function adaptTip(raw: unknown): Tip {
     edge,
     q_score: num(t.q_score),
     actual_result: mapResult(t),
+    home_score: t.home_score != null ? num(t.home_score) : null,
+    away_score: t.away_score != null ? num(t.away_score) : null,
+    match_status: t.match_status != null ? String(t.match_status) : undefined,
   }
 }
 

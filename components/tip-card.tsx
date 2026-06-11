@@ -5,7 +5,7 @@ import Link from "next/link"
 import type { Tip } from "@/lib/types"
 import { MODE_META, scaleColor } from "@/lib/design"
 import { getLeagueDisplayName } from "@/lib/leagues"
-import { settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
+import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
@@ -75,15 +75,24 @@ export default function TipCard({
   const live = findLive(liveMatches, tip.event_id)
   const liveSt = live ? mapLiveStatus(live.status_short) : null
 
-  // Status efektywny: dane live > heurystyka z kickoff_utc (po zamontowaniu).
+  // Status efektywny: dane live > match_status z Oracle > heurystyka z kickoff_utc.
+  const oracleSt = mapMatchStatus(tip.match_status)
   const kSt = now != null ? statusFromKickoff(tip.kickoff_utc, now) : "upcoming"
   const status: "upcoming" | "live" | "halftime" | "finished" | "unknown" =
-    liveSt === "live" ? "live" : liveSt === "halftime" ? "halftime" : liveSt === "finished" ? "finished" : kSt
+    liveSt === "live"
+      ? "live"
+      : liveSt === "halftime"
+        ? "halftime"
+        : liveSt === "finished"
+          ? "finished"
+          : (oracleSt ?? kSt)
 
   const liveOn = status === "live" || status === "halftime"
   const finished = status === "finished"
-  const homeScore = live ? live.home_score : null
-  const awayScore = live ? live.away_score : null
+  // wynik: z live, a w razie braku — z pól tipa (home_score/away_score z Oracle)
+  const homeScore = live ? live.home_score : tip.home_score ?? null
+  const awayScore = live ? live.away_score : tip.away_score ?? null
+  const hasScore = homeScore != null && awayScore != null
   const settlement: Settlement = finished ? settleTip(tip, homeScore, awayScore) : "pending"
 
   // defensywnie: niekompletny rekord → komunikat zamiast crasha
@@ -127,14 +136,18 @@ export default function TipCard({
   const edgePct = (tip.edge * 100).toFixed(1)
   const minuteTxt = live?.minute != null ? `${live.minute}'` : ""
 
-  // prawy górny róg: status zależny od stanu meczu
+  const scoreTxt = hasScore ? `${homeScore} : ${awayScore}` : null
+
+  // prawy górny róg: status + wynik zależnie od stanu meczu
   const rightNode =
     status === "live" ? (
-      <span className="font-bold text-rose-300">🔴 {minuteTxt || "LIVE"}</span>
+      <span className="font-bold text-rose-300">🔴 LIVE {minuteTxt}</span>
     ) : status === "halftime" ? (
       <span className="font-bold text-amber-300">🟡 PRZERWA</span>
     ) : finished ? (
       <span className="text-white/55">koniec</span>
+    ) : status === "upcoming" ? (
+      <span className="text-white/55">Nadchodzący · {formatKickoff(tip.kickoff_utc)}</span>
     ) : (
       formatKickoff(tip.kickoff_utc)
     )
@@ -145,46 +158,64 @@ export default function TipCard({
 
       <LeagueRow leagueText={leagueLabel(tip)} right={rightNode} />
 
-      {/* drużyny + pierścień Q-Score */}
+      {/* drużyny + (wynik dla live/finished) + pierścień Q-Score */}
       <div className="relative mt-4 flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
           <TeamRow name={tip.home} />
           <TeamRow name={tip.away} />
         </div>
-        <QRing value={tip.q_score} />
+        {(liveOn || finished) && scoreTxt ? (
+          <div className="flex flex-col items-center">
+            <span
+              className={`text-2xl font-extrabold tabular-nums ${
+                liveOn
+                  ? "bg-gradient-to-r from-amber-300 to-rose-400 bg-clip-text text-transparent"
+                  : "text-[color:var(--text)]"
+              }`}
+            >
+              {scoreTxt}
+            </span>
+            <span className="mt-0.5 text-[10px] uppercase tracking-wider text-white/55">
+              {status === "halftime" ? "przerwa" : liveOn ? minuteTxt || "live" : "koniec"}
+            </span>
+          </div>
+        ) : (
+          <QRing value={tip.q_score} />
+        )}
       </div>
 
-      {/* badge'y: wynik live / rozliczenie + tryb + ryzyko */}
+      {/* badge'y: rozliczenie + tryb + status + ryzyko */}
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
-        {liveOn && live && (
+        {liveOn && (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/40 bg-rose-400/15 px-3 py-1 text-xs font-bold text-rose-200">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
-            {live.home_score}:{live.away_score}
-            {status === "halftime" ? " HT" : minuteTxt ? ` ${minuteTxt}` : ""}
-          </span>
-        )}
-
-        {finished && live && (
-          <span className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-white/80">
-            {live.home_score}:{live.away_score}
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> LIVE
           </span>
         )}
 
         {finished && settlement === "won" && (
           <span className="rounded-full border border-emerald-400/40 bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-200">
-            🟢 {mode.short} ✓
+            ✓ Trafiony
           </span>
         )}
         {finished && settlement === "lost" && (
           <span className="rounded-full border border-rose-400/40 bg-rose-400/15 px-3 py-1 text-xs font-bold text-rose-200">
-            🔴 {mode.short} ✗
+            ✗ Pudło
           </span>
         )}
-        {!(finished && settlement !== "pending") && (
-          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${mode.badge}`}>
-            {mode.short}
+        {finished && settlement === "pending" && (
+          <span className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-medium text-white/60">
+            Oczekuje na weryfikację
           </span>
         )}
+        {status === "upcoming" && (
+          <span className="rounded-full border border-[color:var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-xs font-medium text-white/80">
+            Nadchodzący
+          </span>
+        )}
+
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${mode.badge}`}>
+          {mode.short}
+        </span>
 
         {isThriller && (
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-200">
