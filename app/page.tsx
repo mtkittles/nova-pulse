@@ -48,6 +48,7 @@ export default async function Home() {
       settledTips={stats.summary.settled_tips}
       avgQScore={stats.summary.avg_q_score}
       leaguesCount={leaguesCount}
+      timeline={stats.timeline}
     />
   )
 }

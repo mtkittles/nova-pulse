@@ -34,6 +34,8 @@ import { plMatches } from "@/lib/i18n"
 import TipCard from "./tip-card"
 import { HorizontalCarousel } from "./horizontal-carousel"
 import { MarketRankings } from "./market-rankings"
+import { PerfChart } from "./perf-chart"
+import type { TimelinePoint } from "@/lib/stats-types"
 
 type LandingProps = {
   loggedIn?: boolean
@@ -47,6 +49,7 @@ type LandingProps = {
   settledTips: number
   avgQScore: number // 0..100
   leaguesCount: number
+  timeline: TimelinePoint[]
 }
 
 // Start MŚ 2026 — mecz otwarcia (Meksyk, 11.06.2026). Czas lokalny Meksyku (CST, -06:00).
@@ -191,6 +194,7 @@ export default function LandingPage({
   settledTips,
   avgQScore,
   leaguesCount,
+  timeline,
 }: LandingProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [mode, setMode] = useState<"ALL" | BetType>("ALL")
@@ -479,6 +483,13 @@ export default function LandingPage({
               </Link>
             </div>
           )}
+        </Reveal>
+      </section>
+
+      {/* WYKRES SKUTECZNOŚCI (interaktywny, brush) */}
+      <section className="mx-auto max-w-7xl px-6 py-6">
+        <Reveal>
+          <PerfChart data={timeline} />
         </Reveal>
       </section>
 
