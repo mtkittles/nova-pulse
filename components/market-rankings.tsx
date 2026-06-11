@@ -43,7 +43,7 @@ export function MarketRankings() {
     <div className="space-y-8">
       {btts.length > 0 && (
         <div>
-          <h2 className="mb-4 text-2xl font-semibold">Najwyższa szansa BTTS</h2>
+          <h2 className="mb-4 text-2xl font-semibold">🎯 Najwyższa szansa BTTS</h2>
           <HorizontalCarousel
             items={btts}
             ariaLabel="Ranking drużyn — BTTS"
@@ -54,7 +54,7 @@ export function MarketRankings() {
       )}
       {over15.length > 0 && (
         <div>
-          <h2 className="mb-4 text-2xl font-semibold">Najwyższa szansa Over 1.5</h2>
+          <h2 className="mb-4 text-2xl font-semibold">⚽ Najwyższa szansa Over 1.5</h2>
           <HorizontalCarousel
             items={over15}
             ariaLabel="Ranking drużyn — Over 1.5"
