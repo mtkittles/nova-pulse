@@ -27,7 +27,7 @@ export async function GET() {
       const o = rec(m)
       const code = String(o.league_code ?? "")
       return {
-        event_id: String(o.event_id ?? o.id ?? ""),
+        event_id: String(o.af_fixture_id ?? o.event_id ?? o.id ?? ""),
         home_team: String(o.home_team ?? o.home ?? ""),
         away_team: String(o.away_team ?? o.away ?? ""),
         home_score: num(o.home_score),

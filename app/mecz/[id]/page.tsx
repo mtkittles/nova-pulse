@@ -19,7 +19,7 @@ const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim()
 async function resolveTeamIds(match: Awaited<ReturnType<typeof getMatchDetailed>>) {
   if (!match.found) return
   if (match.home_id != null && match.away_id != null) return
-  const code = leagueCodeByName(match.league)
+  const code = match.leagueCode || leagueCodeByName(match.league)
   if (!code) return
   const standings = await getStandings(code)
   if (standings.length === 0) return

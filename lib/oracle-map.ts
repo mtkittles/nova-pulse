@@ -108,7 +108,7 @@ export function adaptTip(raw: unknown): Tip {
   const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
 
   return {
-    event_id: (t.event_id as string | number) ?? "",
+    event_id: (t.af_fixture_id ?? t.event_id ?? t.id ?? "") as string | number,
     league: getLeagueName(String(t.league ?? "")),
     leagueCode: String(t.league ?? ""),
     home: String(t.home ?? t.home_team ?? ""),
@@ -280,7 +280,7 @@ export function adaptMatch(raw: unknown): MatchInfo {
 
   return {
     found: Boolean(found),
-    event_id: (r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
+    event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
     home: String(m.home_team ?? m.home ?? "—"),
     away: String(m.away_team ?? m.away ?? "—"),
     league: getLeagueName(String(m.league ?? "")),
@@ -354,7 +354,7 @@ export function adaptStandings(raw: unknown): StandingRow[] {
     return {
       position: num(o.position ?? o.pos ?? o.rank ?? i + 1),
       team_id: pickId(o, ["team_id", "teamId", "id"]),
-      team: String(o.team ?? o.name ?? o.team_name ?? "—"),
+      team: pickName(o.team ?? o.name ?? o.team_name) ?? "—",
       played: num(o.played ?? o.mp ?? o.games ?? o.matches),
       points: num(o.points ?? o.pts),
       gf: num(o.gf ?? o.goals_for ?? o.scored),
@@ -369,8 +369,8 @@ export function adaptScorers(raw: unknown): Scorer[] {
   return (list as unknown[]).map((row) => {
     const o = rec(row)
     return {
-      player: String(o.player ?? o.name ?? o.player_name ?? "—"),
-      team: String(o.team ?? o.team_name ?? "—"),
+      player: pickName(o.player ?? o.name ?? o.player_name) ?? "—",
+      team: pickName(o.team ?? o.team_name) ?? "—",
       goals: num(o.goals ?? o.g),
       assists: num(o.assists ?? o.a),
       appearances: o.appearances != null ? num(o.appearances) : undefined,
@@ -440,30 +440,58 @@ export function adaptScorerList(raw: unknown): Scorer[] {
   return adaptScorers(raw)
 }
 
+// Nazwa z pola, które może być stringiem albo obiektem {name,...} (Oracle czasem zagnieżdża).
+function pickName(v: unknown): string | null {
+  if (v == null) return null
+  if (typeof v === "string") return v
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>
+    const n = o.name ?? o.label ?? o.title ?? o.full_name
+    return n != null ? String(n) : null
+  }
+  return String(v)
+}
+
 export function adaptTeam(raw: unknown): TeamSeason | null {
   const r = rec(raw)
   const t = rec(r.team ?? r)
   const found = r.found !== false && (t.team_id != null || t.id != null || t.name != null || t.team != null)
   if (!found) return null
+
+  // Statystyki mogą być na wierzchu lub zagnieżdżone (stats/season/...). Wierzch ma priorytet.
+  const st: Record<string, unknown> = {
+    ...rec(t.stats),
+    ...rec(t.season_stats),
+    ...rec(t.current_season),
+    ...rec(t.season),
+    ...t,
+  }
+
+  const leagueName = pickName(t.league ?? st.league) ?? "—"
+  const leagueCountry =
+    pickName(t.country ?? st.country) ??
+    (typeof t.league === "object" ? pickName((t.league as Record<string, unknown>).country) : null) ??
+    "—"
+
   return {
     team_id: (t.team_id ?? t.id ?? "") as string | number,
-    name: String(t.name ?? t.team_name ?? t.team ?? "—"),
-    league: String(t.league ?? "—"),
-    country: String(t.country ?? "—"),
+    name: pickName(t.name ?? t.team_name ?? t.team) ?? "—",
+    league: leagueName,
+    country: leagueCountry,
     logo: t.logo != null ? String(t.logo) : t.logo_url != null ? String(t.logo_url) : t.crest != null ? String(t.crest) : null,
-    played: num(t.played ?? t.mp ?? t.games),
-    wins: num(t.wins ?? t.won ?? t.w),
-    draws: num(t.draws ?? t.draw ?? t.d),
-    losses: num(t.losses ?? t.lost ?? t.l),
-    gf: num(t.gf ?? t.goals_for ?? t.scored),
-    ga: num(t.ga ?? t.goals_against ?? t.conceded),
-    position: t.position != null ? num(t.position) : t.rank != null ? num(t.rank) : undefined,
-    btts_pct: pct(t.btts_pct ?? t.btts),
-    over15_pct: pct(t.over_1_5_pct ?? t.over15_pct ?? t.over_1_5),
-    over25_pct: pct(t.over_2_5_pct ?? t.over25_pct ?? t.over_2_5),
-    home_stats: sideStats(t.home_stats ?? t.home),
-    away_stats: sideStats(t.away_stats ?? t.away),
-    form: resultsFromForm(t.form ?? t.recent_form ?? r.form),
+    played: num(st.played ?? st.mp ?? st.games ?? st.matches ?? st.total_matches ?? st.matches_played ?? st.games_played ?? st.appearances),
+    wins: num(st.wins ?? st.won ?? st.win ?? st.w),
+    draws: num(st.draws ?? st.draw ?? st.drawn ?? st.d),
+    losses: num(st.losses ?? st.lost ?? st.loss ?? st.l),
+    gf: num(st.gf ?? st.goals_for ?? st.scored ?? st.goals_scored),
+    ga: num(st.ga ?? st.goals_against ?? st.conceded ?? st.goals_conceded),
+    position: st.position != null ? num(st.position) : st.rank != null ? num(st.rank) : undefined,
+    btts_pct: pct(st.btts_pct ?? st.btts ?? st.btts_percentage),
+    over15_pct: pct(st.over_1_5_pct ?? st.over15_pct ?? st.over_1_5 ?? st.over_1_5_percentage),
+    over25_pct: pct(st.over_2_5_pct ?? st.over25_pct ?? st.over_2_5 ?? st.over_2_5_percentage),
+    home_stats: sideStats(t.home_stats ?? t.home ?? st.home_stats),
+    away_stats: sideStats(t.away_stats ?? t.away ?? st.away_stats),
+    form: resultsFromForm(t.form ?? t.recent_form ?? st.form ?? r.form),
     scorers: adaptScorers(t.scorers ?? t.top_scorers ?? r.scorers ?? r.top_scorers),
   }
 }
@@ -498,7 +526,7 @@ export function adaptUpcoming(raw: unknown): UpcomingMatch[] {
     const o = rec(m)
     const preds = Array.isArray(o.predictions) ? (o.predictions as unknown[]) : []
     return {
-      event_id: (o.event_id ?? o.id ?? "") as string | number,
+      event_id: (o.af_fixture_id ?? o.event_id ?? o.id ?? "") as string | number,
       home: o.home_team != null || o.home != null ? String(o.home_team ?? o.home) : "",
       away: o.away_team != null || o.away != null ? String(o.away_team ?? o.away) : "",
       opponent: o.opponent != null ? String(o.opponent) : "",
@@ -699,7 +727,7 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
 
   return {
     found: Boolean(found),
-    event_id: (r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
+    event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
     home,
     away,
     league: getLeagueName(String(m.league ?? "")),
@@ -757,7 +785,7 @@ export function adaptUserPicks(raw: unknown): UserPick[] {
     const o = rec(p)
     return {
       id: (o.id ?? o.pick_id ?? `${o.event_id ?? i}`) as string | number,
-      event_id: (o.event_id ?? "") as string | number,
+      event_id: (o.af_fixture_id ?? o.event_id ?? "") as string | number,
       date: normalizeIso(o.kickoff_utc ?? o.match_date ?? o.date ?? o.created_at),
       home: String(o.home ?? o.home_team ?? "—"),
       away: String(o.away ?? o.away_team ?? "—"),
