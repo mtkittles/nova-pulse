@@ -108,7 +108,7 @@ export function adaptTip(raw: unknown): Tip {
   const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
 
   return {
-    event_id: (t.af_fixture_id ?? t.event_id ?? t.id ?? "") as string | number,
+    event_id: (t.af_fixture_id ?? t.event_id ?? t.fixture_id ?? t.match_id ?? t.id ?? "") as string | number,
     league: getLeagueName(String(t.league ?? "")),
     leagueCode: String(t.league ?? ""),
     home: String(t.home ?? t.home_team ?? ""),
@@ -280,7 +280,7 @@ export function adaptMatch(raw: unknown): MatchInfo {
 
   return {
     found: Boolean(found),
-    event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
+    event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.fixture_id ?? m.match_id ?? m.id ?? "") as string | number,
     home: String(m.home_team ?? m.home ?? "—"),
     away: String(m.away_team ?? m.away ?? "—"),
     league: getLeagueName(String(m.league ?? "")),
@@ -547,7 +547,7 @@ export function adaptUpcoming(raw: unknown): UpcomingMatch[] {
     const o = rec(m)
     const preds = Array.isArray(o.predictions) ? (o.predictions as unknown[]) : []
     return {
-      event_id: (o.af_fixture_id ?? o.event_id ?? o.id ?? "") as string | number,
+      event_id: (o.af_fixture_id ?? o.event_id ?? o.fixture_id ?? o.match_id ?? o.id ?? "") as string | number,
       home: o.home_team != null || o.home != null ? String(o.home_team ?? o.home) : "",
       away: o.away_team != null || o.away != null ? String(o.away_team ?? o.away) : "",
       opponent: o.opponent != null ? String(o.opponent) : "",
@@ -748,7 +748,7 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
 
   return {
     found: Boolean(found),
-    event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
+    event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.fixture_id ?? m.match_id ?? m.id ?? "") as string | number,
     home,
     away,
     league: getLeagueName(String(m.league ?? "")),
@@ -806,7 +806,7 @@ export function adaptUserPicks(raw: unknown): UserPick[] {
     const o = rec(p)
     return {
       id: (o.id ?? o.pick_id ?? `${o.event_id ?? i}`) as string | number,
-      event_id: (o.af_fixture_id ?? o.event_id ?? "") as string | number,
+      event_id: (o.af_fixture_id ?? o.event_id ?? o.fixture_id ?? o.match_id ?? "") as string | number,
       date: normalizeIso(o.kickoff_utc ?? o.match_date ?? o.date ?? o.created_at),
       home: String(o.home ?? o.home_team ?? "—"),
       away: String(o.away ?? o.away_team ?? "—"),
