@@ -33,6 +33,7 @@ import { StaggerGrid, StaggerItem } from "./ui/stagger"
 import { plMatches } from "@/lib/i18n"
 import TipCard from "./tip-card"
 import { HorizontalCarousel } from "./horizontal-carousel"
+import { MarketRankings } from "./market-rankings"
 
 type LandingProps = {
   loggedIn?: boolean
@@ -203,16 +204,6 @@ export default function LandingPage({
     for (const t of todayTips) c[t.bet_type] = (c[t.bet_type] ?? 0) + 1
     return c
   }, [todayTips])
-
-  // Rankingi dnia wg szansy modelu (z dzisiejszych typów danego rynku).
-  const bttsTop = useMemo(
-    () => todayTips.filter((t) => t.bet_type === "BTTS").sort((a, b) => b.model_prob - a.model_prob).slice(0, 10),
-    [todayTips],
-  )
-  const o15Top = useMemo(
-    () => todayTips.filter((t) => t.bet_type === "OVER_1_5").sort((a, b) => b.model_prob - a.model_prob).slice(0, 10),
-    [todayTips],
-  )
 
   const visibleTips = useMemo(() => {
     const list = mode === "ALL" ? todayTips : todayTips.filter((t) => t.bet_type === mode)
@@ -426,33 +417,10 @@ export default function LandingPage({
         </motion.div>
       </section>
 
-      {/* RANKINGI: karuzele BTTS / Over 1.5 */}
-      {(bttsTop.length > 0 || o15Top.length > 0) && (
-        <section className="mx-auto max-w-7xl px-6 py-6">
-          {bttsTop.length > 0 && (
-            <Reveal className="mb-8">
-              <h2 className="mb-4 text-2xl font-semibold">Najwyższa szansa BTTS</h2>
-              <HorizontalCarousel
-                items={bttsTop}
-                ariaLabel="Drużyny z najwyższą szansą BTTS"
-                getKey={(t) => `btts-${t.event_id}`}
-                renderItem={(t) => <TipCard tip={t} href={tipHref(t)} />}
-              />
-            </Reveal>
-          )}
-          {o15Top.length > 0 && (
-            <Reveal>
-              <h2 className="mb-4 text-2xl font-semibold">Najwyższa szansa Over 1.5</h2>
-              <HorizontalCarousel
-                items={o15Top}
-                ariaLabel="Drużyny z najwyższą szansą Over 1.5"
-                getKey={(t) => `o15-${t.event_id}`}
-                renderItem={(t) => <TipCard tip={t} href={tipHref(t)} />}
-              />
-            </Reveal>
-          )}
-        </section>
-      )}
+      {/* RANKINGI: karuzele BTTS / Over 1.5 (z /api/rankings) */}
+      <section className="mx-auto max-w-7xl px-6 py-6">
+        <MarketRankings />
+      </section>
 
       {/* PASEK STATYSTYK (social proof) */}
       <section id="performance" className="mx-auto max-w-7xl px-6 py-10">

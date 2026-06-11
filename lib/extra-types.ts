@@ -154,6 +154,30 @@ export interface UserPick {
   status: "pending" | "won" | "lost"
 }
 
+// === Rankingi rynkowe drużyn (/rankings/markets) ===
+export interface RankingNextMatch {
+  event_id: string | number | null
+  opponent: string
+  date: string
+  home_away: string // "home" | "away" | ""
+  predicted_prob: number | null // predicted_btts_prob / predicted_over_15_prob (0..1 lub %)
+  q_score: number | null
+}
+
+export interface RankingTeam {
+  team_id: string | number
+  team_name: string
+  league: string
+  league_code: string
+  pct_last10: number // btts_pct_last10 / over_15_pct_last10
+  next_match: RankingNextMatch | null
+}
+
+export interface MarketRankings {
+  btts: RankingTeam[]
+  over_15: RankingTeam[]
+}
+
 // === Mistrzostwa Świata 2026 (/worldcup/*) ===
 export type WCStatus = "advance" | "playoff" | "out"
 
