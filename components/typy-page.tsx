@@ -237,7 +237,7 @@ export default function TypyPage({
                   <StaggerItem key={String(tip.event_id)}>
                     <TipCard
                       tip={tip}
-                      href={loggedIn ? `/mecz/${tip.event_id}` : undefined}
+                      href={loggedIn && tip.event_id ? `/mecz/${tip.event_id}` : undefined}
                       locked={!loggedIn}
                     />
                   </StaggerItem>

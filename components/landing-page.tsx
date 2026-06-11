@@ -214,7 +214,7 @@ export default function LandingPage({
     return [...list].sort((a, b) => b.q_score - a.q_score).slice(0, 6)
   }, [todayTips, mode])
 
-  const tipHref = (t: Tip) => (loggedIn ? `/mecz/${t.event_id}` : undefined)
+  const tipHref = (t: Tip) => (loggedIn && t.event_id ? `/mecz/${t.event_id}` : undefined)
 
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--bg)] text-white">
