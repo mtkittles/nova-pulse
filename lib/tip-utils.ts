@@ -68,6 +68,17 @@ export function formMarkets(gf: number | null | undefined, ga: number | null | u
   return { btts: gf > 0 && ga > 0, teamOver15: gf >= 2, over15: total >= 2, over25: total >= 3 }
 }
 
+// Mapuje Oracle match_status ("FINISHED"/"LIVE"/"SCHEDULED") na nasz stan.
+export function mapMatchStatus(raw: string | null | undefined): "finished" | "live" | "upcoming" | null {
+  const s = (raw || "").toLowerCase()
+  if (!s) return null
+  if (s.includes("fin") || s.includes("ft") || s.includes("end")) return "finished"
+  if (s.includes("live") || s.includes("1h") || s.includes("2h") || s.includes("ht") || s.includes("play"))
+    return "live"
+  if (s.includes("sched") || s.includes("ns") || s.includes("upcoming") || s.includes("tbd")) return "upcoming"
+  return null
+}
+
 export type KickoffStatus = "upcoming" | "live" | "finished" | "unknown"
 
 // Status z czasu rozpoczęcia (gdy brak danych live ze statusem).

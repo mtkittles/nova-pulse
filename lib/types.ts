@@ -26,6 +26,11 @@ export interface Tip {
   q_score: number
   /** NULL przed meczem, 1 = trafione, 0 = pudło (weryfikuje live_tracker) */
   actual_result: 0 | 1 | null
+  /** wynik meczu z Oracle (gdy rozegrany) */
+  home_score?: number | null
+  away_score?: number | null
+  /** "FINISHED" | "LIVE" | "SCHEDULED" z Oracle */
+  match_status?: string
 }
 
 export interface TipsResponse {
