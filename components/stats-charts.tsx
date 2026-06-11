@@ -5,6 +5,7 @@ import {
   Area,
   Bar,
   BarChart,
+  Brush,
   CartesianGrid,
   Cell,
   ComposedChart,
@@ -56,16 +57,21 @@ function ChartCard({
   title,
   subtitle,
   children,
+  tall = false,
+  footer,
 }: {
   title: string
   subtitle?: string
   children: React.ReactNode
+  tall?: boolean
+  footer?: React.ReactNode
 }) {
   return (
     <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
       <h3 className="text-lg font-semibold">{title}</h3>
       {subtitle && <p className="mt-1 text-sm text-white/60">{subtitle}</p>}
-      <div className="mt-5 h-72 w-full">{children}</div>
+      <div className={`mt-5 w-full ${tall ? "h-[22rem]" : "h-72"}`}>{children}</div>
+      {footer}
     </div>
   )
 }
@@ -79,6 +85,7 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
   // Recharts (ResponsiveContainer) mierzy rozmiar dopiero w DOM — renderujemy
   // wykresy po zamontowaniu, żeby uniknąć ostrzeżeń SSR i rozjazdu hydratacji.
   const [mounted, setMounted] = useState(false)
+  const [selMarket, setSelMarket] = useState<string | null>(null)
   useEffect(() => setMounted(true), [])
 
   if (!mounted) {
@@ -129,7 +136,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
       <div className="lg:col-span-2">
         <ChartCard
           title="Skuteczność i ROI w czasie"
-          subtitle={`Skumulowane, ostatnie ${data.range_days} dni`}
+          subtitle={`Skumulowane, ostatnie ${data.range_days} dni — przeciągnij dolny pasek, aby przesuwać/zoomować`}
+          tall
         >
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={timeline} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
@@ -186,12 +194,39 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 isAnimationActive
                 animationDuration={900}
               />
+              {timeline.length > 3 && (
+                <Brush
+                  dataKey="date"
+                  height={26}
+                  travellerWidth={14}
+                  stroke={COLORS.cyan}
+                  fill="rgba(255,255,255,0.04)"
+                  tickFormatter={() => ""}
+                />
+              )}
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>
 
-      <ChartCard title="Trafialność per rynek" subtitle="BTTS vs Over 1.5 vs Mix">
+      <ChartCard
+        title="Trafialność per rynek"
+        subtitle="Dotknij słupek po szczegóły (trafione / pudła)"
+        footer={(() => {
+          const m = markets.find((x) => x.key === selMarket)
+          if (!m) return null
+          const wins = Math.round((m.tips * m.wr) / 100)
+          return (
+            <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white/80">
+              <span className="font-semibold" style={{ color: MARKET_COLOR[m.key] ?? COLORS.cyan }}>
+                {m.name}
+              </span>{" "}
+              — {m.tips} typów · <span className="text-emerald-300">{wins} trafionych</span> ·{" "}
+              <span className="text-rose-300">{m.tips - wins} pudeł</span> · {m.wr}% skuteczności
+            </p>
+          )
+        })()}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={markets} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid stroke={COLORS.grid} vertical={false} />
@@ -210,7 +245,12 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 "Trafialność",
               ]}
             />
-            <Bar dataKey="wr" radius={[8, 8, 0, 0]}>
+            <Bar
+              dataKey="wr"
+              radius={[8, 8, 0, 0]}
+              onClick={(_d: unknown, idx: number) => setSelMarket(markets[idx]?.key ?? null)}
+              className="cursor-pointer"
+            >
               {markets.map((m) => (
                 <Cell key={m.key} fill={MARKET_COLOR[m.key] ?? COLORS.cyan} />
               ))}
