@@ -24,7 +24,7 @@ import {
 } from "lucide-react"
 import type { BetType, Tip } from "@/lib/types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
-import { Brand } from "./brand"
+import { Brand, OgarHorizontal } from "./brand"
 import { ThemeToggle } from "./theme-toggle"
 import { Faq } from "./faq"
 import { CountUp } from "./ui/count-up"
@@ -34,7 +34,15 @@ import { plMatches } from "@/lib/i18n"
 import TipCard from "./tip-card"
 import { HorizontalCarousel } from "./horizontal-carousel"
 import { MarketRankings } from "./market-rankings"
-import { PerfChart } from "./perf-chart"
+import dynamic from "next/dynamic"
+
+// Wykres ładowany leniwie (poniżej folda) — mniejszy bundle na starcie.
+const PerfChart = dynamic(() => import("./perf-chart").then((m) => m.PerfChart), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[22rem] animate-pulse rounded-[1.8rem] border border-white/12 bg-white/[0.04]" />
+  ),
+})
 import type { TimelinePoint } from "@/lib/stats-types"
 
 type LandingProps = {
@@ -227,7 +235,9 @@ export default function LandingPage({
 
       {/* header */}
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
-        <Brand />
+        <Link href="/" className="transition hover:scale-[1.02]" aria-label="LUPUS BETS — strona główna">
+          <OgarHorizontal height={52} />
+        </Link>
 
         <nav className="hidden gap-8 text-sm text-white/60 lg:flex">
           {navItems.map((item) => (
@@ -421,11 +431,6 @@ export default function LandingPage({
         </motion.div>
       </section>
 
-      {/* RANKINGI: karuzele BTTS / Over 1.5 (z /api/rankings) */}
-      <section className="mx-auto max-w-7xl px-6 py-6">
-        <MarketRankings />
-      </section>
-
       {/* PASEK STATYSTYK (social proof) */}
       <section id="performance" className="mx-auto max-w-7xl px-6 py-10">
         <Reveal>
@@ -486,11 +491,16 @@ export default function LandingPage({
         </Reveal>
       </section>
 
-      {/* WYKRES SKUTECZNOŚCI (interaktywny, brush) */}
+      {/* WYKRES SKUTECZNOŚCI (interaktywny, brush) — lazy poniżej folda */}
       <section className="mx-auto max-w-7xl px-6 py-6">
         <Reveal>
           <PerfChart data={timeline} />
         </Reveal>
+      </section>
+
+      {/* RANKINGI: karuzele 🎯 BTTS / ⚽ Over 1.5 (z /api/rankings) */}
+      <section className="mx-auto max-w-7xl px-6 py-6">
+        <MarketRankings />
       </section>
 
       {/* SEKCJA MŚ 2026 */}
@@ -584,6 +594,32 @@ export default function LandingPage({
             </div>
           </Reveal>
         )}
+      </section>
+
+      {/* NEWSY */}
+      <section id="newsy" className="mx-auto max-w-7xl px-6 py-16">
+        <Reveal>
+          <div className="overflow-hidden rounded-[2rem] border border-white/12 bg-gradient-to-br from-[var(--accent)]/10 via-white/[0.04] to-transparent p-8 backdrop-blur md:p-12">
+            <div className="flex flex-col items-start justify-between gap-6 lg:flex-row lg:items-center">
+              <div className="max-w-xl">
+                <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent)]/80">📰 Newsy</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+                  Analizy, formy i kontekst meczów
+                </h2>
+                <p className="mt-3 leading-7 text-white/64">
+                  Krótkie omówienia kolejek, formy drużyn i najciekawszych typów. Sekcja w
+                  przygotowaniu — zaglądaj po starcie Mundialu.
+                </p>
+              </div>
+              <Link
+                href="/newsy"
+                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
+              >
+                Przejdź do newsów <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </Reveal>
       </section>
 
       {/* JAK TO DZIAŁA */}
