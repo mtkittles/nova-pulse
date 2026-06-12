@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import { DEMO_MODE } from "@/lib/demo-mode"
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -58,7 +59,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="bg-[var(--bg)] text-[color:var(--text)] antialiased">{children}</body>
+      <body className="bg-[var(--bg)] text-[color:var(--text)] antialiased">
+        {DEMO_MODE && (
+          <div
+            style={{
+              background: "#D6A84B",
+              color: "#0B0F14",
+              textAlign: "center",
+              padding: "8px",
+              fontSize: "13px",
+              fontWeight: 600,
+              position: "sticky",
+              top: 0,
+              zIndex: 9999,
+            }}
+          >
+            🔍 WERSJA AUDYTOWA — Pełna funkcjonalność odblokowana dla testera · Dane produkcyjne
+          </div>
+        )}
+        {children}
+      </body>
     </html>
   )
 }
