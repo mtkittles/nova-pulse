@@ -10,12 +10,12 @@ export function QRing({
   stroke = 5,
   label = "Q",
 }: {
-  value: number // 0..100
+  value: number | null // 0..100
   size?: number
   stroke?: number
   label?: string
 }) {
-  const v = Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0))
+  const v = Math.max(0, Math.min(100, value != null && Number.isFinite(value) ? value : 0))
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const color = qColor(v)

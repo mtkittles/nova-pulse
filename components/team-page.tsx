@@ -90,9 +90,9 @@ function FixtureCard({ m, teamName }: { m: UpcomingMatch; teamName: string }) {
             <div key={i} className="flex items-center gap-3">
               <span className="w-20 shrink-0 text-xs font-medium text-white/70">{BET_TYPE_SHORT[p.bet_type]}</span>
               <span className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
-                <span className="block h-full rounded-full bg-[var(--accent)]" style={{ width: `${p.q_score}%` }} />
+                <span className="block h-full rounded-full bg-[var(--accent)]" style={{ width: `${p.q_score ?? 0}%` }} />
               </span>
-              <span className="w-8 shrink-0 text-right text-xs font-semibold text-white/70">{p.q_score}</span>
+              <span className="w-8 shrink-0 text-right text-xs font-semibold text-white/70">{p.q_score ?? "—"}</span>
             </div>
           ))}
         </div>

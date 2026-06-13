@@ -11,8 +11,8 @@ export interface Tip {
   leagueCode?: string
   home: string
   away: string
-  /** ISO 8601, czas UTC rozpoczęcia meczu */
-  kickoff_utc: string
+  /** ISO 8601, czas UTC rozpoczęcia meczu; null gdy mecz nie ma jeszcze fixture */
+  kickoff_utc: string | null
   bet_type: BetType
   /** np. "YES" / "NO" / "OVER" — strona tylko wyświetla */
   bet_side: string

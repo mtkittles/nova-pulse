@@ -82,7 +82,8 @@ export function mapMatchStatus(raw: string | null | undefined): "finished" | "li
 export type KickoffStatus = "upcoming" | "live" | "finished" | "unknown"
 
 // Status z czasu rozpoczęcia (gdy brak danych live ze statusem).
-export function statusFromKickoff(kickoffUtc: string, nowMs: number): KickoffStatus {
+export function statusFromKickoff(kickoffUtc: string | null | undefined, nowMs: number): KickoffStatus {
+  if (!kickoffUtc) return "unknown"
   const k = Date.parse(kickoffUtc)
   if (!Number.isFinite(k)) return "unknown"
   const minutes = (nowMs - k) / 60000

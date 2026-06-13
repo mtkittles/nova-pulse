@@ -9,21 +9,8 @@ import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
+import { formatKickoff } from "@/lib/time"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
-
-// Godzina rozpoczęcia w strefie urządzenia. Pusty string gdy brak/niepoprawna data.
-function formatKickoff(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ""
-  return new Intl.DateTimeFormat("pl-PL", {
-    weekday: "short",
-    day: "numeric",
-    month: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  }).format(d)
-}
 
 function LeagueRow({ leagueText, right }: { leagueText: string; right: React.ReactNode }) {
   return (
@@ -89,6 +76,8 @@ export default function TipCard({
 
   const liveOn = status === "live" || status === "halftime"
   const finished = status === "finished"
+  // Sierota = typ bez fixture (brak godziny ORAZ statusu) → brak strony /mecz/{id}.
+  const isOrphan = !tip.kickoff_utc && !tip.match_status
   // wynik: z live, a w razie braku — z pól tipa (home_score/away_score z Oracle)
   const homeScore = live ? live.home_score : tip.home_score ?? null
   const awayScore = live ? live.away_score : tip.away_score ?? null
@@ -267,6 +256,11 @@ export default function TipCard({
           />
         </div>
       </div>
+
+      {/* sierota (brak fixture) — brak strony analizy */}
+      {isOrphan && (
+        <p className="relative mt-4 text-center text-xs text-white/45">Szczegóły wkrótce</p>
+      )}
     </>
   )
 
@@ -302,7 +296,8 @@ export default function TipCard({
     )
   }
 
-  if (href) {
+  // Sieroty nie mają strony /mecz/{id} — renderuj jako kartę bez linku.
+  if (href && !isOrphan) {
     return (
       <Link href={href} className={cardClass}>
         {inner}

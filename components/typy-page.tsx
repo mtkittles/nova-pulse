@@ -113,7 +113,10 @@ export default function TypyPage({
     out.sort((a, b) => {
       if (sort === "q") return b.q_score - a.q_score
       if (sort === "odds") return b.odds - a.odds
-      return new Date(a.kickoff_utc).getTime() - new Date(b.kickoff_utc).getTime()
+      // sieroty (brak kickoff) na koniec listy
+      const ta = a.kickoff_utc ? new Date(a.kickoff_utc).getTime() : Infinity
+      const tb = b.kickoff_utc ? new Date(b.kickoff_utc).getTime() : Infinity
+      return ta - tb
     })
     return out
   }, [tips, mode, league, minQ, sort])
@@ -191,6 +194,8 @@ export default function TypyPage({
               />
             </label>
           </div>
+
+          <p className="-mt-3 mb-6 text-xs text-white/50">🕐 Godziny w czasie lokalnym Twojego urządzenia</p>
 
           {mode === "THRILLER" && (
             <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.08] p-4 text-sm text-amber-100/85">
