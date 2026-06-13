@@ -116,7 +116,9 @@ export function adaptTip(raw: unknown): Tip {
     // null gdy mecz nie ma fixture (sierota) — inaczej znormalizowany ISO
     kickoff_utc: t.kickoff_utc != null ? normalizeIso(t.kickoff_utc) : t.match_date != null ? normalizeIso(t.match_date) : null,
     bet_type: mapBetType(t.bet_type),
+    bet_type_raw: t.bet_type != null ? String(t.bet_type) : undefined,
     bet_side: mapBetSide(t.bet_side),
+    bet_side_raw: t.bet_side != null ? String(t.bet_side) : undefined,
     model_prob,
     odds,
     edge,

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import type { Tip } from "@/lib/types"
-import { MODE_META, scaleColor } from "@/lib/design"
+import { scaleColor } from "@/lib/design"
 import { getLeagueDisplayName } from "@/lib/leagues"
+import { getMarketLabel } from "@/lib/market-label"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
@@ -120,8 +121,8 @@ export default function TipCard({
 
   const prob = Math.round(tip.model_prob * 100)
   const probColor = scaleColor(tip.model_prob)
-  const mode = MODE_META[tip.bet_type]
-  const isThriller = tip.bet_type === "THRILLER"
+  const market = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, tip.home, tip.away)
+  const isThriller = market.market === "Thriller"
   const edgePct = (tip.edge * 100).toFixed(1)
   const minuteTxt = live?.minute != null ? `${live.minute}'` : ""
 
@@ -202,8 +203,8 @@ export default function TipCard({
           </span>
         )}
 
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${mode.badge}`}>
-          {mode.short}
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${market.badge}`}>
+          {market.market}
         </span>
 
         {isThriller && (
@@ -213,9 +214,7 @@ export default function TipCard({
         )}
       </div>
 
-      <p className="relative mt-3 text-sm text-white/65">
-        {mode.full} — <span className="font-medium text-white/85">{tip.bet_side}</span>
-      </p>
+      <p className="relative mt-3 text-sm text-white/65">{market.label}</p>
 
       {/* metryki — kurs wyróżniony */}
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
