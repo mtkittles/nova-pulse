@@ -9,6 +9,7 @@ import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
+import { DEMO_MODE } from "@/lib/demo-mode"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
 
 // Godzina rozpoczęcia w strefie urządzenia. Pusty string gdy brak/niepoprawna data.
@@ -105,7 +106,8 @@ export default function TipCard({
   }
 
   // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem
-  if (locked) {
+  // W trybie audytowym (DEMO_MODE) NIGDY nie pokazuj kłódki — pełne dane.
+  if (locked && !DEMO_MODE) {
     const lockedRight = liveOn && live ? `🔴 ${live.home_score}:${live.away_score}` : formatKickoff(tip.kickoff_utc)
     return (
       <article className="relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
