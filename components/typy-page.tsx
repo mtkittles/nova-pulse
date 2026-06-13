@@ -1,11 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import type { BetType, Tip } from "@/lib/types"
+import type { Tip } from "@/lib/types"
 import type { CalendarDay } from "@/lib/extra-types"
-import { BET_TYPE_SHORT } from "@/lib/labels"
+import { getMarketLabel, MARKET_FILTERS, marketGroupOf, type MarketGroup } from "@/lib/market-label"
 import { AlertTriangle, CalendarOff } from "lucide-react"
-import TipCard from "./tip-card"
+import MatchTipCard, { type MatchGroup } from "./match-tip-card"
 import { Calendar } from "./calendar"
 import { AnimatedTabs } from "./ui/tabs"
 import { StaggerGrid, StaggerItem } from "./ui/stagger"
@@ -13,9 +13,39 @@ import { TipGridSkeleton } from "./ui/skeletons"
 import { plMatches, plTips } from "@/lib/i18n"
 
 type Sort = "q" | "date" | "odds"
+type Mode = MarketGroup | "ALL"
 
-const MODE_KEYS: ("ALL" | BetType)[] = ["ALL", "BTTS", "OVER_1_5", "MIX", "THRILLER"]
-const modeLabel = (k: "ALL" | BetType) => (k === "ALL" ? "Wszystkie" : BET_TYPE_SHORT[k])
+// Grupuje typy w mecze (po event_id; sieroty po home|away|kickoff). Zachowuje kolejność.
+function groupByMatch(tips: Tip[]): MatchGroup[] {
+  const order: string[] = []
+  const map = new Map<string, MatchGroup>()
+  for (const t of tips) {
+    const key =
+      t.event_id != null && t.event_id !== ""
+        ? `id:${t.event_id}`
+        : `m:${t.home}|${t.away}|${t.kickoff_utc ?? ""}`
+    let g = map.get(key)
+    if (!g) {
+      g = {
+        key,
+        event_id: t.event_id,
+        home: t.home,
+        away: t.away,
+        league: t.league,
+        leagueCode: t.leagueCode,
+        kickoff_utc: t.kickoff_utc,
+        match_status: t.match_status,
+        home_score: t.home_score,
+        away_score: t.away_score,
+        tips: [],
+      }
+      map.set(key, g)
+      order.push(key)
+    }
+    g.tips.push(t)
+  }
+  return order.map((k) => map.get(k)!)
+}
 
 // 3 stany pustego dnia: brak meczów / analiza niewykonana / przeanalizowane bez typów.
 function emptyDayMessage(day?: CalendarDay): { title: string; desc: string } {
@@ -80,7 +110,7 @@ export default function TypyPage({
   const [date, setDate] = useState(initialDate)
   const [tips, setTips] = useState<Tip[]>(initialTips)
   const [loading, setLoading] = useState(false)
-  const [mode, setMode] = useState<"ALL" | BetType>("ALL")
+  const [mode, setMode] = useState<Mode>("ALL")
   const [league, setLeague] = useState("ALL")
   const [minQ, setMinQ] = useState(0)
   const [sort, setSort] = useState<Sort>("q")
@@ -107,16 +137,27 @@ export default function TypyPage({
 
   const visible = useMemo(() => {
     const out = tips
-      .filter((t) => (mode === "ALL" ? true : t.bet_type === mode))
+      .filter((t) => (mode === "ALL" ? true : marketGroupOf(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side) === mode))
       .filter((t) => (league === "ALL" ? true : t.league === league))
       .filter((t) => t.q_score >= minQ)
     out.sort((a, b) => {
       if (sort === "q") return b.q_score - a.q_score
       if (sort === "odds") return b.odds - a.odds
-      return new Date(a.kickoff_utc).getTime() - new Date(b.kickoff_utc).getTime()
+      // sieroty (brak kickoff) na koniec listy
+      const ta = a.kickoff_utc ? new Date(a.kickoff_utc).getTime() : Infinity
+      const tb = b.kickoff_utc ? new Date(b.kickoff_utc).getTime() : Infinity
+      return ta - tb
     })
     return out
   }, [tips, mode, league, minQ, sort])
+
+  // pogrupowane mecze (jedna karta = jeden mecz z listą rynków)
+  const groups = useMemo(() => groupByMatch(visible), [visible])
+
+  const hasThriller = useMemo(
+    () => visible.some((t) => getMarketLabel(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side).market === "Thriller"),
+    [visible],
+  )
 
   const suggestion = useMemo(() => {
     if (tips.length > 0) return null
@@ -148,16 +189,19 @@ export default function TypyPage({
 
         <div>
           <h2 className="sr-only">Typy na wybrany dzień</h2>
-          {/* tryby */}
+          {/* filtry rynków */}
           <AnimatedTabs
             groupId="typy-modes"
             className="mb-4"
             value={mode}
-            onChange={(k) => setMode(k as "ALL" | BetType)}
-            items={MODE_KEYS.map((k) => ({
-              key: k,
-              label: modeLabel(k),
-              count: k === "ALL" ? tips.length : tips.filter((t) => t.bet_type === k).length,
+            onChange={(k) => setMode(k as Mode)}
+            items={MARKET_FILTERS.map((f) => ({
+              key: f.key,
+              label: f.label,
+              count:
+                f.key === "ALL"
+                  ? tips.length
+                  : tips.filter((t) => marketGroupOf(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side) === f.key).length,
             }))}
           />
 
@@ -192,7 +236,9 @@ export default function TypyPage({
             </label>
           </div>
 
-          {mode === "THRILLER" && (
+          <p className="-mt-3 mb-6 text-xs text-white/50">🕐 Godziny w czasie lokalnym Twojego urządzenia</p>
+
+          {hasThriller && (
             <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.08] p-4 text-sm text-amber-100/85">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
               <p>
@@ -230,14 +276,14 @@ export default function TypyPage({
             <>
               <p className="mb-5 text-sm text-white/60">
                 Pokazano <span className="font-semibold text-white/80">{visible.length}</span> z {tips.length}{" "}
-                typów.
+                typów w <span className="font-semibold text-white/80">{groups.length}</span> {plMatches(groups.length)}.
               </p>
               <StaggerGrid key={`${date}-${mode}-${league}-${sort}`} className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {visible.map((tip) => (
-                  <StaggerItem key={String(tip.event_id)}>
-                    <TipCard
-                      tip={tip}
-                      href={loggedIn && tip.event_id ? `/mecz/${tip.event_id}` : undefined}
+                {groups.map((g) => (
+                  <StaggerItem key={g.key}>
+                    <MatchTipCard
+                      group={g}
+                      href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined}
                       locked={!loggedIn}
                     />
                   </StaggerItem>

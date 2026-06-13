@@ -11,11 +11,15 @@ export interface Tip {
   leagueCode?: string
   home: string
   away: string
-  /** ISO 8601, czas UTC rozpoczęcia meczu */
-  kickoff_utc: string
+  /** ISO 8601, czas UTC rozpoczęcia meczu; null gdy mecz nie ma jeszcze fixture */
+  kickoff_utc: string | null
   bet_type: BetType
+  /** surowy bet_type z Oracle ("1","x","o25","o15"...) — do etykiet rynków */
+  bet_type_raw?: string
   /** np. "YES" / "NO" / "OVER" — strona tylko wyświetla */
   bet_side: string
+  /** surowy bet_side z Oracle ("home"/"away"/"") — do rozróżnienia rynku */
+  bet_side_raw?: string
   /** prawdopodobieństwo modelu, zakres 0..1 */
   model_prob: number
   /** kurs bukmacherski */

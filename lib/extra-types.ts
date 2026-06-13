@@ -16,10 +16,11 @@ export interface CalendarDay {
 export interface MatchPrediction {
   bet_type: BetType
   bet_side: string
-  model_prob: number
-  odds: number
-  q_score: number
-  edge: number
+  /** 0..1; null gdy Oracle nie podał wartości (NIE traktować jak 0) */
+  model_prob: number | null
+  odds: number | null
+  q_score: number | null
+  edge: number | null
   actual_result: 0 | 1 | null
 }
 

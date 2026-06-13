@@ -113,9 +113,12 @@ export function adaptTip(raw: unknown): Tip {
     leagueCode: String(t.league ?? ""),
     home: String(t.home ?? t.home_team ?? ""),
     away: String(t.away ?? t.away_team ?? ""),
-    kickoff_utc: normalizeIso(t.kickoff_utc ?? t.match_date),
+    // null gdy mecz nie ma fixture (sierota) — inaczej znormalizowany ISO
+    kickoff_utc: t.kickoff_utc != null ? normalizeIso(t.kickoff_utc) : t.match_date != null ? normalizeIso(t.match_date) : null,
     bet_type: mapBetType(t.bet_type),
+    bet_type_raw: t.bet_type != null ? String(t.bet_type) : undefined,
     bet_side: mapBetSide(t.bet_side),
+    bet_side_raw: t.bet_side != null ? String(t.bet_side) : undefined,
     model_prob,
     odds,
     edge,
@@ -243,10 +246,14 @@ function numOrNull(x: unknown): number | null {
 
 function adaptPrediction(raw: unknown): MatchPrediction {
   const p = rec(raw)
-  const model_prob = num(p.model_prob)
-  const odds = num(p.odds)
-  const rawEdge = Number(p.edge)
-  const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
+  // Czytaj realne wartości (z fallbackiem na alternatywne nazwy); brak → null, NIGDY 0.
+  const model_prob = numOrNull(p.model_prob ?? p.probability ?? p.prob)
+  const odds = numOrNull(p.odds ?? p.odd)
+  const q_score = numOrNull(p.q_score ?? p.qscore ?? p.q)
+  // Edge: użyj podanego; gdy brak, a mamy prob+odds → policz przewagę nad kursem.
+  const edge =
+    numOrNull(p.edge) ??
+    (model_prob != null && odds != null && odds > 0 ? model_prob - 1 / odds : null)
   // Oracle podaje gotowy market_label (np. "O1.5 Gość") — użyj go, inaczej mapuj bet_side.
   const label = p.market_label != null ? String(p.market_label) : mapBetSide(p.bet_side)
   return {
@@ -254,7 +261,7 @@ function adaptPrediction(raw: unknown): MatchPrediction {
     bet_side: label,
     model_prob,
     odds,
-    q_score: num(p.q_score),
+    q_score,
     edge,
     actual_result: mapResult(p),
   }

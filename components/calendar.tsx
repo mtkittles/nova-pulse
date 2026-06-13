@@ -15,9 +15,10 @@ function ymd(y: number, m: number, d: number): string {
   return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`
 }
 
-function todayWarsaw(): string {
+// "Dziś" w strefie urządzenia użytkownika (bez hardkodu strefy).
+function todayLocal(): string {
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Warsaw",
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -65,7 +66,7 @@ export function Calendar({
     return m
   }, [days, data])
 
-  const today = todayWarsaw()
+  const today = todayLocal()
   const startDow = (new Date(view.y, view.m, 1).getDay() + 6) % 7 // poniedziałek = 0
 
   // Limit nawigacji: bieżący miesiąc ±2.

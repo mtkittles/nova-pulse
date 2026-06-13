@@ -3,27 +3,15 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import type { Tip } from "@/lib/types"
-import { MODE_META, scaleColor } from "@/lib/design"
+import { scaleColor } from "@/lib/design"
 import { getLeagueDisplayName } from "@/lib/leagues"
+import { getMarketLabel } from "@/lib/market-label"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
+import { formatKickoff } from "@/lib/time"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
-
-// Godzina rozpoczęcia w strefie urządzenia. Pusty string gdy brak/niepoprawna data.
-function formatKickoff(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ""
-  return new Intl.DateTimeFormat("pl-PL", {
-    weekday: "short",
-    day: "numeric",
-    month: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  }).format(d)
-}
 
 function LeagueRow({ leagueText, right }: { leagueText: string; right: React.ReactNode }) {
   return (
@@ -89,6 +77,8 @@ export default function TipCard({
 
   const liveOn = status === "live" || status === "halftime"
   const finished = status === "finished"
+  // Sierota = typ bez fixture (brak godziny ORAZ statusu) → brak strony /mecz/{id}.
+  const isOrphan = !tip.kickoff_utc && !tip.match_status
   // wynik: z live, a w razie braku — z pól tipa (home_score/away_score z Oracle)
   const homeScore = live ? live.home_score : tip.home_score ?? null
   const awayScore = live ? live.away_score : tip.away_score ?? null
@@ -131,8 +121,8 @@ export default function TipCard({
 
   const prob = Math.round(tip.model_prob * 100)
   const probColor = scaleColor(tip.model_prob)
-  const mode = MODE_META[tip.bet_type]
-  const isThriller = tip.bet_type === "THRILLER"
+  const market = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, tip.home, tip.away)
+  const isThriller = market.market === "Thriller"
   const edgePct = (tip.edge * 100).toFixed(1)
   const minuteTxt = live?.minute != null ? `${live.minute}'` : ""
 
@@ -213,8 +203,8 @@ export default function TipCard({
           </span>
         )}
 
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${mode.badge}`}>
-          {mode.short}
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${market.badge}`}>
+          {market.market}
         </span>
 
         {isThriller && (
@@ -224,9 +214,7 @@ export default function TipCard({
         )}
       </div>
 
-      <p className="relative mt-3 text-sm text-white/65">
-        {mode.full} — <span className="font-medium text-white/85">{tip.bet_side}</span>
-      </p>
+      <p className="relative mt-3 text-sm text-white/65">{market.label}</p>
 
       {/* metryki — kurs wyróżniony */}
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
@@ -267,6 +255,11 @@ export default function TipCard({
           />
         </div>
       </div>
+
+      {/* sierota (brak fixture) — brak strony analizy */}
+      {isOrphan && (
+        <p className="relative mt-4 text-center text-xs text-white/45">Szczegóły wkrótce</p>
+      )}
     </>
   )
 
@@ -302,7 +295,8 @@ export default function TipCard({
     )
   }
 
-  if (href) {
+  // Sieroty nie mają strony /mecz/{id} — renderuj jako kartę bez linku.
+  if (href && !isOrphan) {
     return (
       <Link href={href} className={cardClass}>
         {inner}

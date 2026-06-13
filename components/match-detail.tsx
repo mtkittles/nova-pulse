@@ -8,6 +8,7 @@ import type { MatchDetailed, MatchPrediction, MatchStatus } from "@/lib/extra-ty
 import { MODE_META } from "@/lib/design"
 import { getLeagueDisplayName } from "@/lib/leagues"
 import { findLive, mapLiveStatus, useLiveMatches, type LiveMatch } from "@/hooks/use-live-matches"
+import { formatKickoff } from "@/lib/time"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
 import { CountUp } from "./ui/count-up"
@@ -21,19 +22,6 @@ import {
   ScoreHeatmap,
 } from "./match-charts"
 
-function fmtDate(iso: string): string {
-  if (!iso) return ""
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ""
-  return new Intl.DateTimeFormat("pl-PL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  }).format(d)
-}
 
 // Sekcja z animacją wejścia na scroll.
 function Section({
@@ -141,10 +129,11 @@ function StatusBadge({
       </span>
     )
   // upcoming / unknown
+  const timeTxt = kickoff ? fmtTimeLocal(kickoff) : ""
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-xs font-medium text-white/80">
-      <Clock className="h-3.5 w-3.5" /> {fmtTimeLocal(kickoff)}
-      {now != null && <span className="text-white/55">· {countdownText(kickoff, now)}</span>}
+      <Clock className="h-3.5 w-3.5" /> {timeTxt || "Godzina wkrótce"}
+      {kickoff && now != null && <span className="text-white/55">· {countdownText(kickoff, now)}</span>}
     </span>
   )
 }
@@ -207,21 +196,33 @@ function PredictionCard({ p, best }: { p: MatchPrediction; best: boolean }) {
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
           <p className="text-[11px] text-white/60">Prawd.</p>
-          <CountUp to={p.model_prob * 100} suffix="%" className="mt-0.5 block font-semibold" />
+          {p.model_prob != null ? (
+            <CountUp to={p.model_prob * 100} suffix="%" className="mt-0.5 block font-semibold" />
+          ) : (
+            <span className="mt-0.5 block font-semibold text-white/40">—</span>
+          )}
         </div>
         <div className="rounded-xl border border-[color:var(--accent)]/40 bg-[var(--accent)]/10 p-2.5">
           <p className="text-[11px] text-white/70">Kurs</p>
-          <CountUp to={p.odds} decimals={2} className="mt-0.5 block text-lg font-bold text-[color:var(--accent)]" />
+          {p.odds != null ? (
+            <CountUp to={p.odds} decimals={2} className="mt-0.5 block text-lg font-bold text-[color:var(--accent)]" />
+          ) : (
+            <span className="mt-0.5 block text-lg font-bold text-white/40">—</span>
+          )}
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
           <p className="text-[11px] text-white/60">Edge</p>
-          <CountUp
-            to={p.edge * 100}
-            decimals={1}
-            prefix={p.edge >= 0 ? "+" : ""}
-            suffix="%"
-            className={`mt-0.5 block font-semibold ${p.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}
-          />
+          {p.edge != null ? (
+            <CountUp
+              to={p.edge * 100}
+              decimals={1}
+              prefix={p.edge >= 0 ? "+" : ""}
+              suffix="%"
+              className={`mt-0.5 block font-semibold ${p.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}
+            />
+          ) : (
+            <span className="mt-0.5 block font-semibold text-white/40">—</span>
+          )}
         </div>
       </div>
     </div>
@@ -252,8 +253,9 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
   let bestIdx = -1
   let bestQ = -1
   match.predictions.forEach((p, i) => {
-    if (p.q_score > bestQ) {
-      bestQ = p.q_score
+    const q = p.q_score ?? -1
+    if (q > bestQ) {
+      bestQ = q
       bestIdx = i
     }
   })
@@ -308,7 +310,7 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-sm text-white/60">
           <span className="flex items-center gap-1.5 capitalize">
-            <CalendarDays className="h-4 w-4 text-[color:var(--accent)]" /> {fmtDate(match.kickoff_utc)}
+            <CalendarDays className="h-4 w-4 text-[color:var(--accent)]" /> {formatKickoff(match.kickoff_utc)}
           </span>
           {match.stadium && (
             <span className="flex items-center gap-1.5">
