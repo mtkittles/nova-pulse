@@ -15,6 +15,9 @@ export interface CalendarDay {
 
 export interface MatchPrediction {
   bet_type: BetType
+  /** surowy bet_type/bet_side z Oracle — do etykiet rynków */
+  bet_type_raw?: string
+  bet_side_raw?: string
   bet_side: string
   /** 0..1; null gdy Oracle nie podał wartości (NIE traktować jak 0) */
   model_prob: number | null

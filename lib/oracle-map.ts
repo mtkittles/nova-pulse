@@ -258,6 +258,8 @@ function adaptPrediction(raw: unknown): MatchPrediction {
   const label = p.market_label != null ? String(p.market_label) : mapBetSide(p.bet_side)
   return {
     bet_type: mapBetType(p.bet_type),
+    bet_type_raw: p.bet_type != null ? String(p.bet_type) : undefined,
+    bet_side_raw: p.bet_side != null ? String(p.bet_side) : undefined,
     bet_side: label,
     model_prob,
     odds,

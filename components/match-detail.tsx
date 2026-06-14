@@ -5,7 +5,8 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { CalendarDays, Clock, MapPin, RotateCw } from "lucide-react"
 import type { MatchDetailed, MatchPrediction, MatchStatus } from "@/lib/extra-types"
-import { MODE_META } from "@/lib/design"
+import { getMarketLabel } from "@/lib/market-label"
+import { MetricLabel, METRIC_HINTS } from "./ui/metric-tooltip"
 import { getLeagueDisplayName } from "@/lib/leagues"
 import { findLive, mapLiveStatus, useLiveMatches, type LiveMatch } from "@/hooks/use-live-matches"
 import { formatKickoff } from "@/lib/time"
@@ -169,8 +170,8 @@ function TeamSide({
   )
 }
 
-function PredictionCard({ p, best }: { p: MatchPrediction; best: boolean }) {
-  const mode = MODE_META[p.bet_type]
+function PredictionCard({ p, best, home, away }: { p: MatchPrediction; best: boolean; home: string; away: string }) {
+  const market = getMarketLabel(p.bet_type_raw ?? p.bet_type, p.bet_side_raw ?? p.bet_side, home, away, p.bet_side)
   return (
     <div
       className={`relative flex flex-col rounded-[1.5rem] border bg-white/[0.05] p-5 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.08] ${
@@ -184,18 +185,17 @@ function PredictionCard({ p, best }: { p: MatchPrediction; best: boolean }) {
       )}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${mode.badge}`}>
-            {mode.short}
+          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${market.badge}`}>
+            {market.short}
           </span>
-          <p className="mt-2 text-sm text-white/60">{mode.full}</p>
-          <p className="mt-0.5 text-sm font-medium text-white/85">Typ: {p.bet_side}</p>
+          <p className="mt-2 text-sm font-medium text-white/85">{market.full}</p>
         </div>
         <QRing value={p.q_score} />
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-          <p className="text-[11px] text-white/60">Prawd.</p>
+          <MetricLabel label="Szansa modelu" hint={METRIC_HINTS.model} className="text-[11px] text-white/60" />
           {p.model_prob != null ? (
             <CountUp to={p.model_prob * 100} suffix="%" className="mt-0.5 block font-semibold" />
           ) : (
@@ -203,7 +203,7 @@ function PredictionCard({ p, best }: { p: MatchPrediction; best: boolean }) {
           )}
         </div>
         <div className="rounded-xl border border-[color:var(--accent)]/40 bg-[var(--accent)]/10 p-2.5">
-          <p className="text-[11px] text-white/70">Kurs</p>
+          <MetricLabel label="Kurs" hint={METRIC_HINTS.odds} className="text-[11px] text-white/70" />
           {p.odds != null ? (
             <CountUp to={p.odds} decimals={2} className="mt-0.5 block text-lg font-bold text-[color:var(--accent)]" />
           ) : (
@@ -211,7 +211,7 @@ function PredictionCard({ p, best }: { p: MatchPrediction; best: boolean }) {
           )}
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-          <p className="text-[11px] text-white/60">Edge</p>
+          <MetricLabel label="Edge" hint={METRIC_HINTS.edge} className="text-[11px] text-white/60" />
           {p.edge != null ? (
             <CountUp
               to={p.edge * 100}
@@ -325,7 +325,7 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
         <Section title="Predykcje" hint="Wszystkie tryby — rekomendacja to najwyższy Q-Score.">
           <div className="grid gap-4 sm:grid-cols-2">
             {match.predictions.map((p, i) => (
-              <PredictionCard key={i} p={p} best={i === bestIdx} />
+              <PredictionCard key={i} p={p} best={i === bestIdx} home={match.home} away={match.away} />
             ))}
           </div>
         </Section>

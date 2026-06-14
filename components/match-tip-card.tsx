@@ -61,14 +61,14 @@ function MarketRow({
       <QRing value={tip.q_score} size={42} stroke={4} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.market}</span>
+          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.short}</span>
           {finished && settleBadge(settlement)}
         </div>
-        <p className="mt-1 truncate text-xs text-white/70">{m.label}</p>
+        <p className="mt-1 truncate text-xs text-white/70">{m.full}</p>
       </div>
       <div className="flex shrink-0 items-center gap-3 text-right">
         <div>
-          <p className="text-[10px] text-white/50">Prawd.</p>
+          <p className="text-[10px] text-white/50">Szansa</p>
           <p className="text-sm font-semibold" style={{ color: m.color }}>{prob}%</p>
         </div>
         <div>
@@ -183,7 +183,7 @@ export default function MatchTipCard({
             const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, group.home, group.away)
             return (
               <div key={i} className="flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
-                <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.market}</span>
+                <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.short}</span>
                 <span className="flex items-center gap-1.5 text-xs text-white/45"><Lock className="h-3.5 w-3.5" /> ukryte</span>
               </div>
             )
