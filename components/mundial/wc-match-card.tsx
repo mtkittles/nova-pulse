@@ -1,6 +1,6 @@
 import Link from "next/link"
 import type { WCMatch, WCStage } from "@/lib/extra-types"
-import { flagForNation, scaleColor } from "@/lib/design"
+import { flagForNation, nationPL, scaleColor } from "@/lib/design"
 import { MapPin } from "lucide-react"
 
 export const STAGE_LABEL: Record<WCStage, string> = {
@@ -48,7 +48,7 @@ export function WCMatchCard({ m }: { m: WCMatch }) {
 
       <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <div className="flex min-w-0 items-center justify-end gap-2 text-right">
-          <span className="truncate font-semibold">{m.home}</span>
+          <span className="truncate font-semibold">{nationPL(m.home)}</span>
           <span className="text-xl leading-none">{flagForNation(m.home)}</span>
         </div>
         <div className="px-1 text-center">
@@ -66,7 +66,7 @@ export function WCMatchCard({ m }: { m: WCMatch }) {
         </div>
         <div className="flex min-w-0 items-center gap-2">
           <span className="text-xl leading-none">{flagForNation(m.away)}</span>
-          <span className="truncate font-semibold">{m.away}</span>
+          <span className="truncate font-semibold">{nationPL(m.away)}</span>
         </div>
       </div>
 

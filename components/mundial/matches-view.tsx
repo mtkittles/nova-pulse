@@ -1,11 +1,13 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import type { WCMatch, WCStage } from "@/lib/extra-types"
-import { WCMatchCard, STAGE_LABEL } from "./wc-match-card"
+import type { WCMatch } from "@/lib/extra-types"
+import { nationPL } from "@/lib/design"
+import { WCMatchCard } from "./wc-match-card"
+import { AnimatedTabs } from "@/components/ui/tabs"
 import { StaggerGrid, StaggerItem } from "@/components/ui/stagger"
 
-const STAGES: WCStage[] = ["group", "R32", "R16", "QF", "SF", "3RD", "FINAL"]
+type Scope = "group" | "knockout" | "ALL"
 
 function dayKey(iso: string): string {
   return (iso || "").slice(0, 10)
@@ -18,10 +20,13 @@ function dayLabel(d: string): string {
 }
 
 export function MatchesView({ matches }: { matches: WCMatch[] }) {
-  const [stage, setStage] = useState<"ALL" | WCStage>("ALL")
+  const [scope, setScope] = useState<Scope>("ALL")
   const [group, setGroup] = useState("ALL")
   const [day, setDay] = useState("ALL")
   const [q, setQ] = useState("")
+
+  const groupCount = useMemo(() => matches.filter((m) => m.stage === "group").length, [matches])
+  const knockoutCount = matches.length - groupCount
 
   const groups = useMemo(
     () => [...new Set(matches.map((m) => m.group).filter(Boolean))].sort() as string[],
@@ -39,14 +44,22 @@ export function MatchesView({ matches }: { matches: WCMatch[] }) {
 
   const visible = useMemo(() => {
     const needle = q.toLowerCase().trim()
+    const inScope = (m: WCMatch) =>
+      scope === "ALL" ? true : scope === "group" ? m.stage === "group" : m.stage !== "group"
+    const hit = (m: WCMatch) =>
+      !needle ||
+      m.home.toLowerCase().includes(needle) ||
+      m.away.toLowerCase().includes(needle) ||
+      nationPL(m.home).toLowerCase().includes(needle) ||
+      nationPL(m.away).toLowerCase().includes(needle)
     return matches.filter(
       (m) =>
-        (stage === "ALL" || m.stage === stage) &&
+        inScope(m) &&
         (group === "ALL" || m.group === group) &&
         (day === "ALL" || dayKey(m.kickoff_utc) === day) &&
-        (!needle || m.home.toLowerCase().includes(needle) || m.away.toLowerCase().includes(needle)),
+        hit(m),
     )
-  }, [matches, stage, group, day, q])
+  }, [matches, scope, group, day, q])
 
   const chip = (active: boolean) =>
     `rounded-full border px-3 py-1.5 text-sm font-medium transition ${
@@ -56,6 +69,19 @@ export function MatchesView({ matches }: { matches: WCMatch[] }) {
 
   return (
     <div>
+      {/* zakres: faza grupowa / pucharowa / wszystkie */}
+      <AnimatedTabs
+        groupId="wc-scope"
+        className="mb-4"
+        value={scope}
+        onChange={(k) => setScope(k as Scope)}
+        items={[
+          { key: "group", label: "Faza grupowa", count: groupCount },
+          { key: "knockout", label: "Pucharowa", count: knockoutCount },
+          { key: "ALL", label: "Wszystkie", count: matches.length },
+        ]}
+      />
+
       {/* kalendarz turnieju */}
       <div className="mb-4 flex gap-1.5 overflow-x-auto pb-2">
         <button type="button" onClick={() => setDay("ALL")} className={`${chip(day === "ALL")} shrink-0`}>
@@ -83,12 +109,6 @@ export function MatchesView({ matches }: { matches: WCMatch[] }) {
 
       {/* filtry */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
-        <select value={stage} onChange={(e) => setStage(e.target.value as "ALL" | WCStage)} className={selectCls} aria-label="Faza">
-          <option value="ALL">Wszystkie fazy</option>
-          {STAGES.map((s) => (
-            <option key={s} value={s}>{STAGE_LABEL[s]}</option>
-          ))}
-        </select>
         <select value={group} onChange={(e) => setGroup(e.target.value)} className={selectCls} aria-label="Grupa">
           <option value="ALL">Wszystkie grupy</option>
           {groups.map((g) => (
@@ -110,7 +130,7 @@ export function MatchesView({ matches }: { matches: WCMatch[] }) {
           Brak meczów dla wybranych filtrów.
         </p>
       ) : (
-        <StaggerGrid key={`${stage}-${group}-${day}-${q}`} className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <StaggerGrid key={`${scope}-${group}-${day}-${q}`} className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((m) => (
             <StaggerItem key={String(m.event_id)}>
               <WCMatchCard m={m} />

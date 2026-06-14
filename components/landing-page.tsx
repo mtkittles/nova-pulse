@@ -44,6 +44,7 @@ const PerfChart = dynamic(() => import("./perf-chart").then((m) => m.PerfChart),
   ),
 })
 import type { TimelinePoint } from "@/lib/stats-types"
+import type { WCPhase } from "@/lib/extra-types"
 
 type LandingProps = {
   loggedIn?: boolean
@@ -58,6 +59,7 @@ type LandingProps = {
   avgQScore: number // 0..100
   leaguesCount: number
   timeline: TimelinePoint[]
+  wcPhase?: WCPhase
 }
 
 // Start MŚ 2026 — mecz otwarcia (Meksyk, 11.06.2026). Czas lokalny Meksyku (CST, -06:00).
@@ -203,13 +205,17 @@ export default function LandingPage({
   avgQScore,
   leaguesCount,
   timeline,
+  wcPhase = "pre",
 }: LandingProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [mode, setMode] = useState<"ALL" | BetType>("ALL")
   const roiSign = roi >= 0 ? "+" : ""
   const hasData = totalTips > 0
   const wcMatches = useMemo(() => new Set(wcTips.map((t) => String(t.event_id))).size, [wcTips])
-  const wcLive = wcMatches > 0
+  // Turniej trwa, gdy Oracle zgłasza fazę group/knockout (albo są dziś mecze MŚ).
+  const wcRunning = wcPhase === "group" || wcPhase === "knockout"
+  const wcFinished = wcPhase === "finished"
+  const wcLive = wcRunning || wcMatches > 0
 
   const modeCounts = useMemo(() => {
     const c: Record<string, number> = { ALL: todayTips.length }
@@ -342,22 +348,28 @@ export default function LandingPage({
                 <Trophy className="h-3.5 w-3.5 text-[color:var(--accent)]" /> Mistrzostwa Świata 2026
               </div>
               <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">
-                {wcLive ? (
+                {wcFinished ? (
+                  "Mundial 2026 zakończony"
+                ) : wcMatches > 0 ? (
                   <>
                     Dziś <span className="text-[color:var(--accent)]">{wcMatches}</span>{" "}
                     {plMatches(wcMatches)} Mundialu
                   </>
+                ) : wcRunning ? (
+                  wcPhase === "knockout" ? "Faza pucharowa Mundialu trwa" : "Faza grupowa Mundialu trwa"
                 ) : (
                   "Mundial startuje już wkrótce"
                 )}
               </h2>
               <p className="mt-2 max-w-md text-sm leading-6 text-white/64">
-                {wcLive
-                  ? "Predykcje na mecze fazy turnieju — z Q-Score i kursem. Wejdź w pełny tryb Mundialu."
-                  : "Mecz otwarcia 11 czerwca. Silnik szykuje typy na każdy mecz turnieju."}
+                {wcFinished
+                  ? "Turniej rozstrzygnięty — zobacz pełne wyniki i statystyki w trybie Mundialu."
+                  : wcLive
+                    ? "Predykcje na mecze turnieju — z Q-Score i kursem. Wejdź w pełny tryb Mundialu."
+                    : "Silnik szykuje typy na każdy mecz turnieju."}
               </p>
             </div>
-            {!wcLive && <Countdown target={WC_START} />}
+            {!wcLive && !wcFinished && <Countdown target={WC_START} />}
           </div>
 
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row">
@@ -509,7 +521,7 @@ export default function LandingPage({
           <div>
             <p className="text-sm uppercase tracking-[0.3em] text-[color:var(--accent)]/80">Mundial 2026</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-              {wcLive ? "Mecze Mistrzostw Świata" : "Tryb Mundialu — w przygotowaniu"}
+              {wcFinished ? "Mundial 2026 — zakończony" : wcLive ? "Mecze Mistrzostw Świata" : "Mundial 2026 — wkrótce"}
             </h2>
           </div>
           <Link
@@ -534,13 +546,16 @@ export default function LandingPage({
               <div className="flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:justify-between">
                 <div className="max-w-lg">
                   <Trophy className="mb-4 h-10 w-10 text-[color:var(--accent)]" />
-                  <h3 className="text-2xl font-semibold">48 drużyn. Jeden silnik gotowy.</h3>
+                  <h3 className="text-2xl font-semibold">
+                    {wcFinished ? "Mundial 2026 rozstrzygnięty" : "48 drużyn. Jeden silnik gotowy."}
+                  </h3>
                   <p className="mt-3 leading-7 text-white/64">
-                    Gdy ruszy turniej, mecze Mundialu pojawią się tutaj z predykcją i Q-Score —
-                    kolory kart pokażą pewność typu. Mecz otwarcia: 11 czerwca 2026.
+                    {wcFinished
+                      ? "Turniej zakończony — pełne wyniki, tabele grup i statystyki w trybie Mundialu."
+                      : "Gdy ruszy turniej, mecze Mundialu pojawią się tutaj z predykcją i Q-Score — kolory kart pokażą pewność typu."}
                   </p>
                 </div>
-                <Countdown target={WC_START} />
+                {!wcFinished && <Countdown target={WC_START} />}
               </div>
             </div>
           </Reveal>

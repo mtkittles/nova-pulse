@@ -1,5 +1,5 @@
 import "server-only"
-import type { WCGroup, WCInfo, WCMatch, WCStage, WCStanding, WCTie, WCStatus } from "./extra-types"
+import type { WCGroup, WCInfo, WCMatch, WCOverview, WCPhase, WCStage, WCStanding, WCTie, WCStatus } from "./extra-types"
 import { isOracleConfigured, oracleFetch } from "./oracle"
 
 export const WC_START = "2026-06-11T18:00:00-06:00"
@@ -34,6 +34,25 @@ function mapWcStatus(played: boolean, position: number): WCStatus {
   if (position <= 2) return "advance"
   if (position === 3) return "playoff"
   return "out"
+}
+// Faza turnieju z pola Oracle "phase".
+function mapPhase(raw: unknown): WCPhase {
+  const v = s(raw).toLowerCase()
+  if (v.includes("finish") || v.includes("complete") || v.includes("ended") || v.includes("zakoń") || v.includes("over"))
+    return "finished"
+  if (v.includes("knock") || v.includes("playoff") || v.includes("puchar") || v.includes("r16") || v.includes("r32") ||
+      (v.includes("final") && !v.includes("pre")))
+    return "knockout"
+  if (v.includes("group") || v.includes("grup"))
+    return "group"
+  return "pre"
+}
+// Procent: akceptuje 0..1 lub 0..100, zwraca 0..100 (1 miejsce po przecinku).
+function pctVal(x: unknown): number | null {
+  if (x == null) return null
+  const v = Number(x)
+  if (!Number.isFinite(v)) return null
+  return Math.round((v <= 1 ? v * 100 : v) * 10) / 10
 }
 
 // ——— MOCK ———
@@ -73,8 +92,10 @@ function mockGroups(): WCGroup[] {
         loss,
         gf,
         ga,
+        gd: gf - ga,
         points: win * 3 + draw,
         advance_pct: [92, 64, 28, 5][ti],
+        champion_pct: [18, 6, 2, 0.5][ti],
         status: mapWcStatus(true, position),
       }
     })
@@ -163,18 +184,23 @@ function mockInfo(): WCInfo {
 function adaptStanding(raw: unknown, i: number): WCStanding {
   const o = rec(raw)
   const position = n(o.position ?? o.pos ?? o.rank ?? i + 1)
+  const gf = n(o.gf ?? o.goals_for ?? o.scored)
+  const ga = n(o.ga ?? o.goals_against ?? o.conceded)
+  const gd = o.gd != null || o.goal_diff != null ? n(o.gd ?? o.goal_diff) : gf - ga
   return {
     position,
     team: s(o.team ?? o.name ?? o.team_name) || "—",
     team_id: (o.team_id ?? o.id ?? null) as string | number | null,
-    played: n(o.played ?? o.mp ?? o.games),
-    win: n(o.win ?? o.wins ?? o.w),
+    played: n(o.played ?? o.mp ?? o.games ?? o.matches_played),
+    win: n(o.win ?? o.wins ?? o.won ?? o.w),
     draw: n(o.draw ?? o.draws ?? o.d),
-    loss: n(o.loss ?? o.losses ?? o.l),
-    gf: n(o.gf ?? o.goals_for ?? o.scored),
-    ga: n(o.ga ?? o.goals_against ?? o.conceded),
+    loss: n(o.loss ?? o.losses ?? o.lost ?? o.l),
+    gf,
+    ga,
+    gd,
     points: n(o.points ?? o.pts),
-    advance_pct: nOrNull(o.advance_pct ?? o.qualify_pct ?? o.advance_probability),
+    advance_pct: pctVal(o.advance_pct ?? o.qualify_chance ?? o.qualify_pct ?? o.advance_probability),
+    champion_pct: pctVal(o.champion_chance ?? o.champion_pct ?? o.win_tournament_pct),
     status: (s(o.status) as WCStatus) || mapWcStatus(true, position),
   }
 }
@@ -253,6 +279,8 @@ export async function getWCBracket(): Promise<WCTie[]> {
       event_id: (o.event_id ?? o.id ?? null) as string | number | null,
       home: o.home != null || o.home_team != null ? s(o.home ?? o.home_team) : null,
       away: o.away != null || o.away_team != null ? s(o.away ?? o.away_team) : null,
+      home_label: o.home_label != null || o.home_placeholder != null ? s(o.home_label ?? o.home_placeholder) : null,
+      away_label: o.away_label != null || o.away_placeholder != null ? s(o.away_label ?? o.away_placeholder) : null,
       home_id: (o.home_id ?? null) as string | number | null,
       away_id: (o.away_id ?? null) as string | number | null,
       home_score: nOrNull(o.home_score),
@@ -272,6 +300,41 @@ export async function getWCInfo(): Promise<WCInfo> {
   const next = r.next_match ? adaptMatch(r.next_match) : null
   return {
     phase: s(r.phase ?? r.stage) || "Mistrzostwa Świata 2026",
+    start_utc: s(r.start_utc ?? r.start) || WC_START,
+    next_match: next,
+  }
+}
+
+// Stan turnieju (state machine /mundial). Źródło: /worldcup/overview.
+function mockOverview(): WCOverview {
+  return {
+    phase: "group",
+    total_matches: 104,
+    group_matches: 72,
+    knockout_matches: 32,
+    groups: GROUPS.map((name) => ({ name, matches_played: 1 })),
+    champion: null,
+    start_utc: WC_START,
+    next_match: null,
+  }
+}
+
+export async function getWCOverview(): Promise<WCOverview> {
+  const data = await tryOracle("/worldcup/overview", 120)
+  if (!data) return mockOverview()
+  const r = rec(data)
+  const groupsArr = Array.isArray(r.groups) ? (r.groups as unknown[]) : []
+  const next = r.next_match ? adaptMatch(r.next_match) : null
+  return {
+    phase: mapPhase(r.phase ?? r.stage ?? r.state),
+    total_matches: n(r.total_matches ?? r.matches_total) || 104,
+    group_matches: n(r.group_matches ?? r.group_stage_matches) || 72,
+    knockout_matches: n(r.knockout_matches ?? r.knockout_stage_matches) || 32,
+    groups: groupsArr.map((g) => {
+      const o = rec(g)
+      return { name: s(o.name ?? o.group) || "?", matches_played: n(o.matches_played ?? o.played) }
+    }),
+    champion: r.champion != null || r.winner != null ? s(r.champion ?? r.winner) : null,
     start_utc: s(r.start_utc ?? r.start) || WC_START,
     next_match: next,
   }

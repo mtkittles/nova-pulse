@@ -192,8 +192,10 @@ export interface WCStanding {
   loss: number
   gf: number
   ga: number
+  gd: number
   points: number
   advance_pct?: number | null
+  champion_pct?: number | null
   status?: WCStatus
 }
 
@@ -234,6 +236,9 @@ export interface WCTie {
   event_id?: string | number | null
   home?: string | null
   away?: string | null
+  /** etykieta-placeholder gdy drużyna nieznana, np. "1A", "3C/D/E/F" */
+  home_label?: string | null
+  away_label?: string | null
   home_id?: string | number | null
   away_id?: string | number | null
   home_score?: number | null
@@ -245,6 +250,26 @@ export interface WCTie {
 
 export interface WCInfo {
   phase: string // np. "Faza grupowa"
+  start_utc: string
+  next_match?: WCMatch | null
+}
+
+// Faza turnieju ze stanu Oracle (state machine /mundial).
+export type WCPhase = "pre" | "group" | "knockout" | "finished"
+
+export interface WCOverviewGroup {
+  name: string
+  matches_played: number
+}
+
+export interface WCOverview {
+  phase: WCPhase
+  total_matches: number
+  group_matches: number
+  knockout_matches: number
+  groups: WCOverviewGroup[]
+  /** mistrz (faza "finished") jeśli znany */
+  champion?: string | null
   start_utc: string
   next_match?: WCMatch | null
 }

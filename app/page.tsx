@@ -2,6 +2,7 @@ import LandingPage from "@/components/landing-page"
 import { getStats } from "@/lib/stats"
 import { getTodayTips } from "@/lib/tips"
 import { getSession } from "@/lib/auth"
+import { getWCOverview } from "@/lib/worldcup"
 import type { Tip } from "@/lib/types"
 
 // Strona zależy od danych na żywo i sesji — renderuj per żądanie (nie prerender).
@@ -19,10 +20,11 @@ function isWorldCup(league: string): boolean {
 }
 
 export default async function Home() {
-  const [stats, today, session] = await Promise.all([
+  const [stats, today, session, wcOverview] = await Promise.all([
     getStats(),
     getTodayTips(),
     getSession(),
+    getWCOverview(),
   ])
 
   const tips = today.tips
@@ -49,6 +51,7 @@ export default async function Home() {
       avgQScore={stats.summary.avg_q_score}
       leaguesCount={leaguesCount}
       timeline={stats.timeline}
+      wcPhase={wcOverview.phase}
     />
   )
 }
