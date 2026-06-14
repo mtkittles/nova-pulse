@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import type { WCGroup, WCStatus } from "@/lib/extra-types"
-import { flagForNation } from "@/lib/design"
+import { flagForNation, nationPL } from "@/lib/design"
 import { AnimatedTabs, TabPanel } from "@/components/ui/tabs"
 
 const STATUS_DOT: Record<WCStatus, string> = {
@@ -27,13 +27,15 @@ function GroupTable({ group }: { group: WCGroup }) {
           <tr>
             <th className="px-3 py-2.5 text-left">#</th>
             <th className="px-2 py-2.5 text-left">Drużyna</th>
-            <th className="px-2 py-2.5 text-center">M</th>
-            <th className="px-2 py-2.5 text-center">W</th>
-            <th className="px-2 py-2.5 text-center">R</th>
-            <th className="px-2 py-2.5 text-center">P</th>
-            <th className="px-2 py-2.5 text-center">Br.</th>
+            <th className="px-2 py-2.5 text-center" title="Mecze">M</th>
+            <th className="px-2 py-2.5 text-center" title="Wygrane">W</th>
+            <th className="px-2 py-2.5 text-center" title="Remisy">R</th>
+            <th className="px-2 py-2.5 text-center" title="Porażki">P</th>
+            <th className="px-2 py-2.5 text-center" title="Gole strzelone">GF</th>
+            <th className="px-2 py-2.5 text-center" title="Gole stracone">GA</th>
+            <th className="px-2 py-2.5 text-center" title="Różnica bramek">GD</th>
             <th className="px-2 py-2.5 text-center">Pkt</th>
-            <th className="px-2 py-2.5 text-center">% awansu</th>
+            <th className="px-2 py-2.5 text-center" title="Szansa awansu (model)">% awansu</th>
           </tr>
         </thead>
         <tbody>
@@ -50,17 +52,21 @@ function GroupTable({ group }: { group: WCGroup }) {
                 <span className="mr-1.5">{flagForNation(t.team)}</span>
                 {t.team_id != null ? (
                   <Link href={`/druzyna/${t.team_id}`} className="font-medium transition hover:text-[color:var(--accent)] hover:underline">
-                    {t.team}
+                    {nationPL(t.team)}
                   </Link>
                 ) : (
-                  <span className="font-medium">{t.team}</span>
+                  <span className="font-medium">{nationPL(t.team)}</span>
                 )}
               </td>
               <td className="px-2 py-2.5 text-center">{t.played}</td>
               <td className="px-2 py-2.5 text-center">{t.win}</td>
               <td className="px-2 py-2.5 text-center">{t.draw}</td>
               <td className="px-2 py-2.5 text-center">{t.loss}</td>
-              <td className="px-2 py-2.5 text-center text-white/60">{t.gf}:{t.ga}</td>
+              <td className="px-2 py-2.5 text-center text-white/70">{t.gf}</td>
+              <td className="px-2 py-2.5 text-center text-white/70">{t.ga}</td>
+              <td className={`px-2 py-2.5 text-center font-medium ${t.gd > 0 ? "text-emerald-300" : t.gd < 0 ? "text-rose-300" : "text-white/60"}`}>
+                {t.gd > 0 ? "+" : ""}{t.gd}
+              </td>
               <td className="px-2 py-2.5 text-center font-semibold text-[color:var(--accent)]">{t.points}</td>
               <td className="px-2 py-2.5 text-center font-medium">{t.advance_pct != null ? `${t.advance_pct}%` : "—"}</td>
             </tr>

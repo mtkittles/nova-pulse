@@ -204,6 +204,46 @@ export function flagForNation(name?: string): string {
   return NATION_FLAG[name.toLowerCase().trim()] ?? "🏳️"
 }
 
+// === Polskie nazwy reprezentacji (P1-03) — mapa EN → PL ===
+const NATION_PL: Record<string, string> = {
+  "south korea": "Korea Południowa", "korea republic": "Korea Południowa", "republic of korea": "Korea Południowa",
+  "north korea": "Korea Północna",
+  "bosnia and herzegovina": "Bośnia i Hercegowina", bosnia: "Bośnia i Hercegowina",
+  "czech republic": "Czechy", czechia: "Czechy",
+  "united states": "USA", usa: "USA",
+  "ivory coast": "Wybrzeże Kości Słoniowej", "côte d'ivoire": "Wybrzeże Kości Słoniowej", "cote d'ivoire": "Wybrzeże Kości Słoniowej",
+  "saudi arabia": "Arabia Saudyjska",
+  "south africa": "RPA",
+  "new zealand": "Nowa Zelandia",
+  "costa rica": "Kostaryka",
+  "cape verde": "Republika Zielonego Przylądka",
+  "dr congo": "DR Konga", "democratic republic of the congo": "DR Konga",
+  brazil: "Brazylia", argentina: "Argentyna", france: "Francja", england: "Anglia",
+  spain: "Hiszpania", germany: "Niemcy", portugal: "Portugalia", netherlands: "Holandia",
+  italy: "Włochy", belgium: "Belgia", croatia: "Chorwacja", mexico: "Meksyk",
+  canada: "Kanada", japan: "Japonia", morocco: "Maroko", senegal: "Senegal",
+  ghana: "Ghana", nigeria: "Nigeria", cameroon: "Kamerun", egypt: "Egipt",
+  algeria: "Algieria", tunisia: "Tunezja", australia: "Australia", iran: "Iran",
+  qatar: "Katar", uruguay: "Urugwaj", colombia: "Kolumbia", ecuador: "Ekwador",
+  chile: "Chile", peru: "Peru", paraguay: "Paragwaj", poland: "Polska",
+  denmark: "Dania", switzerland: "Szwajcaria", serbia: "Serbia", austria: "Austria",
+  sweden: "Szwecja", norway: "Norwegia", turkey: "Turcja", ukraine: "Ukraina",
+  wales: "Walia", scotland: "Szkocja", panama: "Panama", jamaica: "Jamajka",
+  honduras: "Honduras", "united arab emirates": "Zjednoczone Emiraty Arabskie",
+  jordan: "Jordania", uzbekistan: "Uzbekistan", iraq: "Irak", "new caledonia": "Nowa Kaledonia",
+  curacao: "Curaçao", "curaçao": "Curaçao", suriname: "Surinam", venezuela: "Wenezuela",
+  bolivia: "Boliwia", greece: "Grecja", romania: "Rumunia", "republic of ireland": "Irlandia",
+  ireland: "Irlandia", finland: "Finlandia", slovakia: "Słowacja", slovenia: "Słowenia",
+  hungary: "Węgry", russia: "Rosja", angola: "Angola", "burkina faso": "Burkina Faso",
+  mali: "Mali", gabon: "Gabon", "equatorial guinea": "Gwinea Równikowa",
+}
+
+/** Polska nazwa reprezentacji; gdy brak w mapie — oryginał. */
+export function nationPL(name?: string): string {
+  if (!name) return ""
+  return NATION_PL[name.toLowerCase().trim()] ?? name
+}
+
 /** Inicjały drużyny do herbu-zastępnika (gdy brak logo). */
 export function teamInitials(name?: string): string {
   if (!name) return "?"
