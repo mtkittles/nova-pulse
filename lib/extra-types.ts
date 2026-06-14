@@ -304,6 +304,19 @@ export interface ScoreDist {
   count: number
 }
 
+// Kursy rynków do siatki na /mecz/{id}. null = brak rynku (front pokaże „—").
+export interface OddsMarkets {
+  btts_yes: number | null
+  btts_no: number | null
+  home_win: number | null
+  draw: number | null
+  away_win: number | null
+  over25: number | null
+  over35: number | null
+  cs_32: number | null
+  cs_23: number | null
+}
+
 export type MatchStatus =
   | "upcoming"
   | "live"
@@ -328,6 +341,7 @@ export interface MatchDetailed {
   home_id: string | number | null
   away_id: string | number | null
   predictions: MatchPrediction[]
+  odds_markets: OddsMarkets | null
   home_metrics: TeamMetrics | null
   away_metrics: TeamMetrics | null
   h2h_matches: H2HMatch[]
