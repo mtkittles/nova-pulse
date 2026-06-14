@@ -10,11 +10,13 @@ const SCOPES: { k: FormScope; l: string }[] = [
 ]
 const COUNTS = [5, 10, 15]
 
-// W = wygrana (zielony), R = remis (szary), P = porażka (czerwony)
+import { FORM_COLOR } from "@/lib/utils/form-colors"
+
+// W = zielony, R(D) = żółty, P(L) = czerwony — wspólny helper FORM_COLOR.
 const SQUARE: Record<"W" | "D" | "L", { label: string; cls: string }> = {
-  W: { label: "W", cls: "bg-emerald-400/90 text-[#06120a]" },
-  D: { label: "R", cls: "bg-white/20 text-white" },
-  L: { label: "P", cls: "bg-rose-400/90 text-[#1a0606]" },
+  W: { label: FORM_COLOR.W.label, cls: `${FORM_COLOR.W.bg} ${FORM_COLOR.W.text}` },
+  D: { label: FORM_COLOR.D.label, cls: `${FORM_COLOR.D.bg} ${FORM_COLOR.D.text}` },
+  L: { label: FORM_COLOR.L.label, cls: `${FORM_COLOR.L.bg} ${FORM_COLOR.L.text}` },
 }
 
 export function FormPanel({ teamId, teamName }: { teamId: string | number | null; teamName: string }) {
