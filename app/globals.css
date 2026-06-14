@@ -1,53 +1,92 @@
 @import "tailwindcss";
 
-/* ===== Motywy (zmienne CSS, przełączane przez [data-theme]) ===== */
-/* Domyślny: ciemny */
-:root,
-[data-theme="dark"] {
-  --bg: #070812;
-  --bg-soft: #0d0e1a;
-  --bg-card: #121425;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --accent: #67e8f9; /* cyan-300 */
-  --accent-2: #c4b5fd; /* violet-300 */
-  --accent-strong: #22d3ee; /* cyan-400 */
-  --on-accent: #070812;
-  --border: #1e2235;
-  --glow-1: rgba(34, 211, 238, 0.3);
-  --glow-2: rgba(124, 58, 237, 0.3);
-}
-
-/* Alternatywny: jasny */
-[data-theme="light"] {
-  --bg: #f8fafc;
-  --bg-soft: #ffffff;
-  --bg-card: #ffffff;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --accent: #0891b2; /* cyan-600 */
-  --accent-2: #7c3aed; /* violet-600 */
-  --accent-strong: #0e7490; /* cyan-700 */
-  --on-accent: #ffffff;
-  --border: #e2e8f0;
-  --glow-1: rgba(8, 145, 178, 0.12);
-  --glow-2: rgba(124, 58, 237, 0.1);
-}
-
-/* ===== Tokeny semantyczne (status, wspólne dla motywów) ===== */
+/* ============================================================
+   GRAPHITE NIGHT — premium dark analytics (jedyny motyw).
+   Paleta z audytu. Brak motywu jasnego (premium = spójny ciemny).
+   ============================================================ */
 :root {
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #fb7185;
+  /* tła i powierzchnie */
+  --bg-0: #05070b;
+  --bg-1: #080d13;
+  --surface-1: #0c131b;
+  --surface-2: #111b25;
+  --surface-3: #172431;
+
+  /* obramowania */
+  --border-soft: rgba(126, 232, 247, 0.1);
+  --border-strong: rgba(126, 232, 247, 0.22);
+
+  /* tekst */
+  --text-primary: #f5f8fb;
+  --text-secondary: #a4b1be;
+  --text-muted: #71808f;
+
+  /* marka / akcent */
+  --cyan: #58e6f5;
+  --cyan-strong: #2fd8eb;
+  --cyan-soft: rgba(88, 230, 245, 0.12);
+
+  /* semantyka statusów */
+  --success: #42d58a;
+  --warning: #f4b852;
+  --danger: #ff6675;
+  --info: #6ba7ff;
+
+  /* serie wykresów */
+  --chart-1: #58e6f5;
+  --chart-2: #42d58a;
+  --chart-3: #8b7cff;
+  --chart-4: #f4b852;
+  --chart-5: #ff7a90;
+
   /* skala pewności (czerwony→bursztyn→zielony) — patrz lib/design.ts scaleColor */
-  --prob-low: #fb7185;
-  --prob-mid: #fbbf24;
-  --prob-high: #34d399;
-  --radius-card: 1.8rem;
+  --prob-low: #ff6675;
+  --prob-mid: #f4b852;
+  --prob-high: #42d58a;
+
+  /* promień kart: 16px desktop, 14px mobile (patrz @media niżej) */
+  --radius-card: 16px;
+
+  /* fonty */
+  --font-ui: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), system-ui, sans-serif;
+
+  /* ====== Aliasy zgodności (stare nazwy → Graphite Night) ======
+     Komponenty używają var(--bg), var(--accent) itd. — mapujemy je,
+     by cała aplikacja przejęła nową paletę bez przepisywania układu. */
+  --bg: var(--bg-0);
+  --bg-soft: var(--surface-1);
+  --bg-card: var(--surface-2);
+  --text: var(--text-primary);
+  --accent: var(--cyan);
+  --accent-2: var(--chart-3);
+  --accent-strong: var(--cyan-strong);
+  --on-accent: var(--bg-0);
+  --border: var(--border-strong);
+  /* oszczędne efekty świetlne (flat, nie kasyno) */
+  --glow-1: rgba(88, 230, 245, 0.14);
+  --glow-2: rgba(139, 124, 255, 0.12);
 }
 
 html {
   scroll-behavior: smooth;
+  background-color: var(--bg-0);
+}
+
+body {
+  font-family: var(--font-ui);
+  background-color: var(--bg-0);
+  color: var(--text-primary);
+}
+
+/* nagłówki — font display (Space Grotesk) */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* liczby/statystyki — cyfry o równej szerokości */
+.tnum {
+  font-variant-numeric: tabular-nums;
 }
 
 /* karuzela: ukryty pasek + momentum scrolling iOS */
@@ -60,84 +99,30 @@ html {
   display: none;
 }
 
-body {
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-}
-
 /* widoczny focus dla dostępności (klawiatura) */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--cyan);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/* płynne przejście kolorów przy zmianie motywu (0.3s) */
-body,
-body * {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 300ms;
-  transition-timing-function: ease;
+/* mniejszy promień kart na mobile */
+@media (max-width: 640px) {
+  :root {
+    --radius-card: 14px;
+  }
 }
 
+/* szanuj prefers-reduced-motion — wyłącz animacje/przejścia */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
-  body,
-  body * {
-    transition: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
-
-/* ============================================================
-   Warstwa zgodności motywu jasnego.
-   Aplikacja była budowana „dark-first" na utilkach white/…,
-   więc w jasnym motywie remapujemy je na tokeny (atrament na jasnym).
-   Działa TYLKO pod [data-theme="light"] — ciemny nietknięty.
-   ============================================================ */
-[data-theme="light"] .text-white { color: var(--text); }
-[data-theme="light"] .hover\:text-white:hover { color: var(--text); }
-[data-theme="light"] .text-white\/25 { color: color-mix(in srgb, var(--text) 45%, transparent); }
-[data-theme="light"] .text-white\/30 { color: color-mix(in srgb, var(--text) 48%, transparent); }
-[data-theme="light"] .text-white\/35 { color: color-mix(in srgb, var(--text) 52%, transparent); }
-[data-theme="light"] .text-white\/40 { color: color-mix(in srgb, var(--text) 55%, transparent); }
-[data-theme="light"] .text-white\/45 { color: color-mix(in srgb, var(--text) 58%, transparent); }
-[data-theme="light"] .text-white\/50 { color: color-mix(in srgb, var(--text) 62%, transparent); }
-[data-theme="light"] .text-white\/55 { color: color-mix(in srgb, var(--text) 66%, transparent); }
-[data-theme="light"] .text-white\/58 { color: color-mix(in srgb, var(--text) 68%, transparent); }
-[data-theme="light"] .text-white\/60 { color: color-mix(in srgb, var(--text) 70%, transparent); }
-[data-theme="light"] .text-white\/64 { color: color-mix(in srgb, var(--text) 72%, transparent); }
-[data-theme="light"] .text-white\/65 { color: color-mix(in srgb, var(--text) 74%, transparent); }
-[data-theme="light"] .text-white\/70 { color: color-mix(in srgb, var(--text) 78%, transparent); }
-[data-theme="light"] .text-white\/75 { color: color-mix(in srgb, var(--text) 82%, transparent); }
-[data-theme="light"] .text-white\/80 { color: color-mix(in srgb, var(--text) 86%, transparent); }
-[data-theme="light"] .text-white\/85 { color: color-mix(in srgb, var(--text) 90%, transparent); }
-
-/* powierzchnie „szkła" → delikatny atrament na jasnym */
-[data-theme="light"] .bg-white\/5 { background-color: color-mix(in srgb, var(--text) 4%, transparent); }
-[data-theme="light"] .bg-white\/10 { background-color: color-mix(in srgb, var(--text) 6%, transparent); }
-[data-theme="light"] .bg-white\/15 { background-color: color-mix(in srgb, var(--text) 9%, transparent); }
-[data-theme="light"] .bg-white\/20 { background-color: color-mix(in srgb, var(--text) 12%, transparent); }
-[data-theme="light"] .bg-white\/30 { background-color: color-mix(in srgb, var(--text) 16%, transparent); }
-[data-theme="light"] .bg-white\/\[0\.03\] { background-color: color-mix(in srgb, var(--text) 3%, transparent); }
-[data-theme="light"] .bg-white\/\[0\.04\] { background-color: color-mix(in srgb, var(--text) 4%, transparent); }
-[data-theme="light"] .bg-white\/\[0\.05\] { background-color: color-mix(in srgb, var(--text) 5%, transparent); }
-[data-theme="light"] .bg-white\/\[0\.055\] { background-color: color-mix(in srgb, var(--text) 5%, transparent); }
-[data-theme="light"] .bg-white\/\[0\.06\] { background-color: color-mix(in srgb, var(--text) 6%, transparent); }
-[data-theme="light"] .bg-white\/\[0\.07\] { background-color: color-mix(in srgb, var(--text) 6%, transparent); }
-[data-theme="light"] .bg-white\/\[0\.08\] { background-color: color-mix(in srgb, var(--text) 7%, transparent); }
-[data-theme="light"] .bg-white\/\[0\.085\] { background-color: color-mix(in srgb, var(--text) 7%, transparent); }
-
-/* hover-warianty szkła */
-[data-theme="light"] .hover\:bg-white\/10:hover { background-color: color-mix(in srgb, var(--text) 8%, transparent); }
-[data-theme="light"] .hover\:bg-white\/15:hover { background-color: color-mix(in srgb, var(--text) 11%, transparent); }
-[data-theme="light"] .hover\:bg-white\/\[0\.08\]:hover { background-color: color-mix(in srgb, var(--text) 8%, transparent); }
-[data-theme="light"] .hover\:bg-white\/\[0\.085\]:hover { background-color: color-mix(in srgb, var(--text) 8%, transparent); }
-
-/* obramowania */
-[data-theme="light"] .border-white\/5,
-[data-theme="light"] .border-white\/10,
-[data-theme="light"] .border-white\/12,
-[data-theme="light"] .border-white\/15 { border-color: var(--border); }

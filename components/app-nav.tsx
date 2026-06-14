@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation"
 import { BarChart3, Medal, Newspaper, Shield, Target, Ticket, Trophy } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { Brand } from "./brand"
-import { ThemeToggle } from "./theme-toggle"
 import { LogoutButton } from "./logout-button"
 
 type NavItem = { href: string; label: string; icon: LucideIcon; highlight?: boolean }
@@ -26,7 +25,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[var(--bg)]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-[color:var(--border-soft)] bg-[var(--bg-0)]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
           <Brand />
 
@@ -40,10 +39,10 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
                   href={item.href}
                   className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
                     active
-                      ? "bg-[var(--accent)]/15 text-white"
+                      ? "bg-[var(--cyan-soft)] text-[color:var(--text-primary)]"
                       : item.highlight
-                        ? "text-[color:var(--accent)] hover:bg-[var(--accent)]/10"
-                        : "text-white/60 hover:bg-white/10 hover:text-white"
+                        ? "text-[color:var(--cyan)] hover:bg-[var(--cyan-soft)]"
+                        : "text-[color:var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)]"
                   }`}
                 >
                   <Icon className={`h-4 w-4 ${active || item.highlight ? "text-[color:var(--accent)]" : ""}`} />
@@ -54,9 +53,6 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
           </nav>
 
           <div className="flex items-center gap-2">
-            <div className="hidden sm:block">
-              <ThemeToggle />
-            </div>
             {loggedIn ? (
               <LogoutButton />
             ) : (
@@ -72,7 +68,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
       </header>
 
       {/* dolny tab-bar (mobile) */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[var(--bg-soft)]/95 backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[color:var(--border-soft)] bg-[var(--surface-1)]/95 backdrop-blur-xl lg:hidden">
         <div
           className="mx-auto grid max-w-md"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -85,7 +81,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-1 py-2.5 text-[11px] transition ${
-                  active ? "text-[color:var(--accent)]" : item.highlight ? "text-[color:var(--accent)]/80" : "text-white/55"
+                  active ? "text-[color:var(--cyan)]" : item.highlight ? "text-[color:var(--cyan)]/80" : "text-[color:var(--text-secondary)]"
                 }`}
               >
                 <Icon className="h-5 w-5" />

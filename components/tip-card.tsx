@@ -7,6 +7,8 @@ import { scaleColor } from "@/lib/design"
 import { getLeagueDisplayName } from "@/lib/leagues"
 import { getMarketLabel } from "@/lib/market-label"
 import { MetricLabel, METRIC_HINTS } from "./ui/metric-tooltip"
+import { StatusPill } from "./ui/status-pill"
+import { Badge } from "./ui/badge"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { QRing } from "./ui/q-ring"
 import { TeamBadge } from "./team-badge"
@@ -177,45 +179,24 @@ export default function TipCard({
 
       {/* badge'y: rozliczenie + tryb + status + ryzyko */}
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
-        {liveOn && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/40 bg-rose-400/15 px-3 py-1 text-xs font-bold text-rose-200">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" /> LIVE
-          </span>
-        )}
-
-        {finished && settlement === "won" && (
-          <span className="rounded-full border border-emerald-400/40 bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-200">
-            ✓ Trafiony
-          </span>
-        )}
-        {finished && settlement === "lost" && (
-          <span className="rounded-full border border-rose-400/40 bg-rose-400/15 px-3 py-1 text-xs font-bold text-rose-200">
-            ✗ Pudło
-          </span>
-        )}
-        {finished && settlement === "pending" && (
-          <span className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-medium text-white/60">
-            Oczekuje na weryfikację
-          </span>
-        )}
-        {status === "upcoming" && (
-          <span className="rounded-full border border-[color:var(--accent)]/30 bg-[var(--accent)]/10 px-3 py-1 text-xs font-medium text-white/80">
-            Nadchodzący
-          </span>
-        )}
+        {liveOn && <StatusPill status="LIVE" />}
+        {finished && settlement === "won" && <StatusPill status="WON" />}
+        {finished && settlement === "lost" && <StatusPill status="LOST" />}
+        {finished && settlement === "pending" && <StatusPill status="PENDING" />}
+        {status === "upcoming" && <Badge tone="cyan">Nadchodzący</Badge>}
 
         <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${market.badge}`}>
           {market.short}
         </span>
 
         {isThriller && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-200">
+          <Badge tone="warning">
             <AlertTriangle className="h-3.5 w-3.5" /> wysokie ryzyko
-          </span>
+          </Badge>
         )}
       </div>
 
-      <p className="relative mt-3 text-sm text-white/65">{market.full}</p>
+      <p className="relative mt-3 text-sm text-[color:var(--text-secondary)]">{market.full}</p>
 
       {/* metryki — kurs wyróżniony */}
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
@@ -231,7 +212,7 @@ export default function TipCard({
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <MetricLabel label="Edge" hint={METRIC_HINTS.edge} className="text-xs text-white/60" />
-          <p className={`mt-1 text-xl font-semibold ${tip.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+          <p className={`mt-1 text-xl font-semibold ${tip.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
             {tip.edge >= 0 ? "+" : ""}
             {edgePct}%
           </p>

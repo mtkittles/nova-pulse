@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { Inter, Space_Grotesk } from "next/font/google"
 import "./globals.css"
 
+// Tekst UI — Inter; nagłówki/wyświetlanie — Space Grotesk (max 2 rodziny).
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
   display: "swap",
   variable: "--font-inter",
+})
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin", "latin-ext"],
+  display: "swap",
+  variable: "--font-space-grotesk",
 })
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nova-pulse-sage.vercel.app"
@@ -38,27 +45,17 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#070812",
+  themeColor: "#05070b",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover", // safe-area (notch/home indicator)
 }
 
-// Ustawia motyw z cookie PRZED pierwszym malowaniem — brak migotania. Domyślny: ciemny.
-const themeScript = `
-try {
-  var m = document.cookie.match(/(?:^|; )theme=(dark|light)/);
-  document.documentElement.dataset.theme = m ? m[1] : 'dark';
-} catch (e) {}
-`
-
+// Tylko ciemny motyw (Graphite Night) — brak przełącznika, brak migotania.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pl" data-theme="dark" className={inter.variable}>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
-      <body className="bg-[var(--bg)] text-[color:var(--text)] antialiased">{children}</body>
+    <html lang="pl" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body className="bg-[var(--bg-0)] text-[color:var(--text-primary)] antialiased">{children}</body>
     </html>
   )
 }

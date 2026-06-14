@@ -220,7 +220,7 @@ function PredictionCard({ p, best, home, away }: { p: MatchPrediction; best: boo
               decimals={1}
               prefix={p.edge >= 0 ? "+" : ""}
               suffix="%"
-              className={`mt-0.5 block font-semibold ${p.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}
+              className={`mt-0.5 block font-semibold ${p.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}
             />
           ) : (
             <span className="mt-0.5 block font-semibold text-white/40">—</span>
