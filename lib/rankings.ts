@@ -14,6 +14,11 @@ function numOrNull(x: unknown): number | null {
   const n = Number(x)
   return Number.isFinite(n) ? n : null
 }
+function logoOf(x: unknown): string | null {
+  if (x == null) return null
+  const s = String(x).trim()
+  return s && s.toLowerCase() !== "null" ? s : null
+}
 
 // pctKey/probKey różnią się per rynek.
 function adaptRow(raw: unknown, pctKey: string, probKey: string): RankingTeam {
@@ -23,6 +28,7 @@ function adaptRow(raw: unknown, pctKey: string, probKey: string): RankingTeam {
   return {
     team_id: (o.team_id ?? o.id ?? "") as string | number,
     team_name: String(o.team_name ?? o.team ?? o.name ?? "—"),
+    logo: logoOf(o.team_logo ?? o.logo),
     league: String(o.league ?? o.league_name ?? "—"),
     league_code: String(o.league_code ?? o.league ?? ""),
     pct_last10: num(o[pctKey] ?? o.pct_last10 ?? o.pct),

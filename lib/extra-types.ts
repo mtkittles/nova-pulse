@@ -75,6 +75,7 @@ export interface StandingRow {
   position: number
   team_id: string | number | null
   team: string
+  logo?: string | null
   played: number
   points: number
   gf: number
@@ -171,6 +172,7 @@ export interface RankingNextMatch {
 export interface RankingTeam {
   team_id: string | number
   team_name: string
+  logo?: string | null
   league: string
   league_code: string
   pct_last10: number // btts_pct_last10 / over_15_pct_last10
@@ -189,6 +191,7 @@ export interface WCStanding {
   position: number
   team: string
   team_id?: string | number | null
+  logo?: string | null
   played: number
   win: number
   draw: number
@@ -315,6 +318,8 @@ export interface MatchDetailed {
   event_id: string | number
   home: string
   away: string
+  homeLogo?: string | null
+  awayLogo?: string | null
   league: string
   leagueCode?: string
   kickoff_utc: string

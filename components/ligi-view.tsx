@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { Activity, BarChart3, Goal, Table2 } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
@@ -8,6 +9,7 @@ import type { LeagueFormRow, Scorer, StandingRow } from "@/lib/extra-types"
 import { LEAGUES } from "@/lib/leagues"
 import { FormSquares, formPoints } from "./form-squares"
 import { AnimatedTabs } from "./ui/tabs"
+import { TeamBadge } from "./team-badge"
 
 type Tab = "standings" | "scorers" | "form" | "stats"
 
@@ -22,6 +24,7 @@ export function LigiView() {
   const [formSort, setFormSort] = useState<"best" | "worst">("best")
 
   const [standings, setStandings] = useState<StandingRow[]>([])
+  const [leagueLogo, setLeagueLogo] = useState<string | null>(null)
   const [scorers, setScorers] = useState<Scorer[]>([])
   const [formRows, setFormRows] = useState<LeagueFormRow[]>([])
   const [loading, setLoading] = useState(false)
@@ -33,7 +36,11 @@ export function LigiView() {
     let active = true
     fetch(`/api/league/${code}/standings`)
       .then((r) => r.json())
-      .then((d) => active && setStandings(Array.isArray(d?.standings) ? d.standings : []))
+      .then((d) => {
+        if (!active) return
+        setStandings(Array.isArray(d?.standings) ? d.standings : [])
+        setLeagueLogo(typeof d?.league_logo === "string" ? d.league_logo : null)
+      })
       .catch(() => {})
     return () => {
       active = false
@@ -107,7 +114,14 @@ export function LigiView() {
 
   return (
     <div>
-      <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Ligi</h1>
+      <div className="flex items-center gap-3">
+        {leagueLogo && (
+          <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-2xl border border-white/12 bg-white/10">
+            <Image src={leagueLogo} alt="" width={48} height={48} className="h-full w-full object-contain p-1.5" />
+          </span>
+        )}
+        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Ligi</h1>
+      </div>
       <p className="mt-3 mb-6 text-white/55">Tabele, strzelcy i forma drużyn.</p>
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -186,13 +200,16 @@ export function LigiView() {
                   <tr key={`${r.position}-${r.team}`} className="border-b border-white/5 transition last:border-0 hover:bg-white/[0.03]">
                     <td className={`${td} text-white/50`}>{r.position}</td>
                     <td className={td}>
-                      {r.team_id != null ? (
-                        <Link href={`/druzyna/${r.team_id}`} className={teamLink}>
-                          {r.team}
-                        </Link>
-                      ) : (
-                        <span className="font-medium">{r.team}</span>
-                      )}
+                      <span className="flex min-w-0 items-center gap-2">
+                        <TeamBadge teamName={r.team} logoUrl={r.logo} size="sm" />
+                        {r.team_id != null ? (
+                          <Link href={`/druzyna/${r.team_id}`} className={teamLink}>
+                            {r.team}
+                          </Link>
+                        ) : (
+                          <span className="font-medium">{r.team}</span>
+                        )}
+                      </span>
                     </td>
                     <td className={td}>{r.played}</td>
                     <td className={`${td} font-semibold text-[color:var(--accent)]`}>{r.points}</td>

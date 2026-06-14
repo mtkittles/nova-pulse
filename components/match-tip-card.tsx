@@ -8,7 +8,7 @@ import { getMarketLabel } from "@/lib/market-label"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { formatKickoff } from "@/lib/time"
 import { QRing } from "./ui/q-ring"
-import { TeamCrest } from "./ui/team-crest"
+import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { ArrowRight, Lock } from "lucide-react"
 
@@ -19,6 +19,8 @@ export interface MatchGroup {
   event_id: string | number
   home: string
   away: string
+  homeLogo?: string | null
+  awayLogo?: string | null
   league: string
   leagueCode?: string
   kickoff_utc: string | null
@@ -147,11 +149,11 @@ export default function MatchTipCard({
       <div className="relative mt-3 flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
           <div className="flex min-w-0 items-center gap-2.5">
-            <TeamCrest name={group.home} size={30} />
+            <TeamBadge teamName={group.home} logoUrl={group.homeLogo} size="md" />
             <span className="truncate text-base font-semibold leading-tight">{group.home}</span>
           </div>
           <div className="flex min-w-0 items-center gap-2.5">
-            <TeamCrest name={group.away} size={30} />
+            <TeamBadge teamName={group.away} logoUrl={group.awayLogo} size="md" />
             <span className="truncate text-base font-semibold leading-tight">{group.away}</span>
           </div>
         </div>

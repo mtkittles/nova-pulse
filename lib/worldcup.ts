@@ -191,6 +191,12 @@ function adaptStanding(raw: unknown, i: number): WCStanding {
     position,
     team: s(o.team ?? o.name ?? o.team_name) || "—",
     team_id: (o.team_id ?? o.id ?? null) as string | number | null,
+    logo: (() => {
+      const v = o.team_logo ?? o.logo ?? o.flag
+      if (v == null) return null
+      const sv = String(v).trim()
+      return sv && sv.toLowerCase() !== "null" ? sv : null
+    })(),
     played: n(o.played ?? o.mp ?? o.games ?? o.matches_played),
     win: n(o.win ?? o.wins ?? o.won ?? o.w),
     draw: n(o.draw ?? o.draws ?? o.d),

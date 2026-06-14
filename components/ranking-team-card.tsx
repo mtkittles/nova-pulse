@@ -2,7 +2,7 @@ import Link from "next/link"
 import type { RankingTeam } from "@/lib/extra-types"
 import { getLeagueDisplayName } from "@/lib/leagues"
 import { scaleColor } from "@/lib/design"
-import { TeamCrest } from "./ui/team-crest"
+import { TeamBadge } from "./team-badge"
 import { ArrowRight, CalendarDays } from "lucide-react"
 
 function fmtDate(iso: string): string {
@@ -42,7 +42,7 @@ export function RankingTeamCard({ team, market }: { team: RankingTeam; market: s
       <p className="truncate text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">{league}</p>
 
       <div className="mt-3 flex items-center gap-2.5">
-        <TeamCrest name={team.team_name} size={36} />
+        <TeamBadge teamName={team.team_name} logoUrl={team.logo} size="md" />
         <Link
           href={`/druzyna/${team.team_id}`}
           className="truncate text-base font-semibold leading-tight transition hover:text-[color:var(--accent)] hover:underline"
