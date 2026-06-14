@@ -5,6 +5,7 @@ import Link from "next/link"
 import type { WCGroup, WCStatus } from "@/lib/extra-types"
 import { flagForNation, nationPL } from "@/lib/design"
 import { AnimatedTabs, TabPanel } from "@/components/ui/tabs"
+import { TeamBadge } from "@/components/team-badge"
 
 const STATUS_DOT: Record<WCStatus, string> = {
   advance: "bg-emerald-400",
@@ -49,14 +50,20 @@ function GroupTable({ group }: { group: WCGroup }) {
                 {t.position}
               </td>
               <td className="px-2 py-2.5">
-                <span className="mr-1.5">{flagForNation(t.team)}</span>
-                {t.team_id != null ? (
-                  <Link href={`/druzyna/${t.team_id}`} className="font-medium transition hover:text-[color:var(--accent)] hover:underline">
-                    {nationPL(t.team)}
-                  </Link>
-                ) : (
-                  <span className="font-medium">{nationPL(t.team)}</span>
-                )}
+                <span className="flex min-w-0 items-center gap-2">
+                  {t.logo ? (
+                    <TeamBadge teamName={t.team} logoUrl={t.logo} size="sm" />
+                  ) : (
+                    <span className="text-base leading-none">{flagForNation(t.team)}</span>
+                  )}
+                  {t.team_id != null ? (
+                    <Link href={`/druzyna/${t.team_id}`} className="font-medium transition hover:text-[color:var(--accent)] hover:underline">
+                      {nationPL(t.team)}
+                    </Link>
+                  ) : (
+                    <span className="font-medium">{nationPL(t.team)}</span>
+                  )}
+                </span>
               </td>
               <td className="px-2 py-2.5 text-center">{t.played}</td>
               <td className="px-2 py-2.5 text-center">{t.win}</td>

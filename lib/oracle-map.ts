@@ -113,6 +113,8 @@ export function adaptTip(raw: unknown): Tip {
     leagueCode: String(t.league ?? ""),
     home: String(t.home ?? t.home_team ?? ""),
     away: String(t.away ?? t.away_team ?? ""),
+    homeLogo: pickLogo(t.home_team_logo ?? t.home_logo),
+    awayLogo: pickLogo(t.away_team_logo ?? t.away_logo),
     // null gdy mecz nie ma fixture (sierota) — inaczej znormalizowany ISO
     kickoff_utc: t.kickoff_utc != null ? normalizeIso(t.kickoff_utc) : t.match_date != null ? normalizeIso(t.match_date) : null,
     bet_type: mapBetType(t.bet_type),
@@ -220,6 +222,14 @@ export function adaptStats(raw: unknown): StatsResponse {
 
 function rec(x: unknown): Record<string, unknown> {
   return (x ?? {}) as Record<string, unknown>
+}
+
+// URL herbu/logo: zwraca string albo null (puste/„null" traktujemy jak brak).
+function pickLogo(x: unknown): string | null {
+  if (x == null) return null
+  const s = String(x).trim()
+  if (!s || s.toLowerCase() === "null" || s.toLowerCase() === "none") return null
+  return s
 }
 
 function pickId(o: Record<string, unknown>, keys: string[]): string | number | null {
@@ -388,12 +398,20 @@ export function adaptStandings(raw: unknown): StandingRow[] {
       position: num(o.position ?? o.pos ?? o.rank ?? i + 1),
       team_id: pickId(o, ["team_id", "teamId", "id"]),
       team: pickName(o.team ?? o.name ?? o.team_name) ?? "—",
+      logo: pickLogo(o.team_logo ?? o.logo ?? o.crest),
       played: num(o.played ?? o.mp ?? o.games ?? o.matches),
       points: num(o.points ?? o.pts),
       gf: num(o.gf ?? o.goals_for ?? o.scored),
       ga: num(o.ga ?? o.goals_against ?? o.conceded),
     }
   })
+}
+
+// URL logo ligi z nagłówka odpowiedzi /league/{code}/standings (gdy dostępne).
+export function adaptLeagueLogo(raw: unknown): string | null {
+  const r = rec(raw)
+  const league = rec(r.league)
+  return pickLogo(r.league_logo ?? league.logo ?? r.logo)
 }
 
 export function adaptScorers(raw: unknown): Scorer[] {
@@ -511,7 +529,7 @@ export function adaptTeam(raw: unknown): TeamSeason | null {
     name: pickName(t.name ?? t.team_name ?? t.team) ?? "—",
     league: leagueName,
     country: leagueCountry,
-    logo: t.logo != null ? String(t.logo) : t.logo_url != null ? String(t.logo_url) : t.crest != null ? String(t.crest) : null,
+    logo: pickLogo(t.team_logo ?? t.logo ?? t.logo_url ?? t.crest),
     played: num(st.played ?? st.mp ?? st.games ?? st.matches ?? st.total_matches ?? st.matches_played ?? st.games_played ?? st.appearances),
     wins: num(st.wins ?? st.won ?? st.win ?? st.w),
     draws: num(st.draws ?? st.draw ?? st.drawn ?? st.d),
@@ -763,6 +781,8 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.fixture_id ?? m.match_id ?? m.id ?? "") as string | number,
     home,
     away,
+    homeLogo: pickLogo(m.home_team_logo ?? m.home_logo),
+    awayLogo: pickLogo(m.away_team_logo ?? m.away_logo),
     league: getLeagueName(String(m.league ?? "")),
     leagueCode: String(m.league ?? ""),
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),

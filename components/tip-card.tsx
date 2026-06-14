@@ -9,7 +9,7 @@ import { getMarketLabel } from "@/lib/market-label"
 import { MetricLabel, METRIC_HINTS } from "./ui/metric-tooltip"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { QRing } from "./ui/q-ring"
-import { TeamCrest } from "./ui/team-crest"
+import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { formatKickoff } from "@/lib/time"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
@@ -28,10 +28,10 @@ function leagueLabel(tip: Tip): string {
   return tip.leagueCode ? getLeagueDisplayName(tip.leagueCode) : tip.league
 }
 
-function TeamRow({ name }: { name: string }) {
+function TeamRow({ name, logo }: { name: string; logo?: string | null }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <TeamCrest name={name} size={32} />
+      <TeamBadge teamName={name} logoUrl={logo} size="md" />
       <span className="truncate text-base font-semibold leading-tight">{name}</span>
     </div>
   )
@@ -103,8 +103,8 @@ export default function TipCard({
         <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
         <LeagueRow leagueText={leagueLabel(tip)} right={lockedRight} />
         <div className="relative mt-4 space-y-2">
-          <TeamRow name={tip.home} />
-          <TeamRow name={tip.away} />
+          <TeamRow name={tip.home} logo={tip.homeLogo} />
+          <TeamRow name={tip.away} logo={tip.awayLogo} />
         </div>
         <div className="relative mt-5 grid place-items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-center">
           <Lock className="h-6 w-6 text-[color:var(--accent)]" />
@@ -152,8 +152,8 @@ export default function TipCard({
       {/* drużyny + (wynik dla live/finished) + pierścień Q-Score */}
       <div className="relative mt-4 flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
-          <TeamRow name={tip.home} />
-          <TeamRow name={tip.away} />
+          <TeamRow name={tip.home} logo={tip.homeLogo} />
+          <TeamRow name={tip.away} logo={tip.awayLogo} />
         </div>
         {(liveOn || finished) && scoreTxt ? (
           <div className="flex flex-col items-center">

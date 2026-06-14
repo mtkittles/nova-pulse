@@ -11,6 +11,9 @@ export interface Tip {
   leagueCode?: string
   home: string
   away: string
+  /** URL herbów z Oracle (media.api-sports.io); null → fallback inicjały */
+  homeLogo?: string | null
+  awayLogo?: string | null
   /** ISO 8601, czas UTC rozpoczęcia meczu; null gdy mecz nie ma jeszcze fixture */
   kickoff_utc: string | null
   bet_type: BetType

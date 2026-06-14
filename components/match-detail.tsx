@@ -11,7 +11,7 @@ import { getLeagueDisplayName } from "@/lib/leagues"
 import { findLive, mapLiveStatus, useLiveMatches, type LiveMatch } from "@/hooks/use-live-matches"
 import { formatKickoff } from "@/lib/time"
 import { QRing } from "./ui/q-ring"
-import { TeamCrest } from "./ui/team-crest"
+import { TeamBadge } from "./team-badge"
 import { CountUp } from "./ui/count-up"
 import { FormPanel } from "./form-panel"
 import {
@@ -143,10 +143,12 @@ function TeamSide({
   name,
   id,
   align,
+  logo,
 }: {
   name: string
   id: string | number | null
   align: "left" | "right"
+  logo?: string | null
 }) {
   const inner = (
     <span
@@ -154,7 +156,7 @@ function TeamSide({
         align === "right" ? "sm:items-end" : "sm:items-start"
       }`}
     >
-      <TeamCrest name={name} size={56} />
+      <TeamBadge teamName={name} logoUrl={logo} size="lg" />
       <span className="text-center text-lg font-semibold leading-tight sm:text-left">{name}</span>
     </span>
   )
@@ -275,7 +277,7 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
         </div>
 
         <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <TeamSide name={match.home} id={match.home_id} align="right" />
+          <TeamSide name={match.home} id={match.home_id} align="right" logo={match.homeLogo} />
           {showScore && live ? (
             <div className="flex flex-col items-center px-2">
               <span
@@ -305,7 +307,7 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
           ) : (
             <span className="px-2 text-center text-sm font-medium text-white/45">vs</span>
           )}
-          <TeamSide name={match.away} id={match.away_id} align="left" />
+          <TeamSide name={match.away} id={match.away_id} align="left" logo={match.awayLogo} />
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-sm text-white/60">
@@ -447,12 +449,12 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
         <Section title="Strzelcy">
           <div className="grid gap-4 md:grid-cols-2">
             {[
-              { team: match.home, id: match.home_id, list: match.home_scorers },
-              { team: match.away, id: match.away_id, list: match.away_scorers },
+              { team: match.home, id: match.home_id, list: match.home_scorers, logo: match.homeLogo },
+              { team: match.away, id: match.away_id, list: match.away_scorers, logo: match.awayLogo },
             ].map((side, idx) => (
               <div key={idx} className="rounded-[1.5rem] border border-white/12 bg-white/[0.04] p-5">
                 <h3 className="mb-3 flex items-center gap-2 font-semibold">
-                  <TeamCrest name={side.team} size={24} />
+                  <TeamBadge teamName={side.team} logoUrl={side.logo} size="sm" />
                   {side.id != null ? (
                     <Link href={`/druzyna/${side.id}`} className="transition hover:text-[color:var(--accent)] hover:underline">
                       {side.team}

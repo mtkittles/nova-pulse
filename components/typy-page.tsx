@@ -31,6 +31,8 @@ function groupByMatch(tips: Tip[]): MatchGroup[] {
         event_id: t.event_id,
         home: t.home,
         away: t.away,
+        homeLogo: t.homeLogo,
+        awayLogo: t.awayLogo,
         league: t.league,
         leagueCode: t.leagueCode,
         kickoff_utc: t.kickoff_utc,

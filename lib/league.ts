@@ -1,7 +1,7 @@
 import "server-only"
 import type { LeagueFormRow, Scorer, StandingRow } from "./extra-types"
 import { isOracleConfigured, oracleFetch } from "./oracle"
-import { adaptScorers, adaptStandings } from "./oracle-map"
+import { adaptLeagueLogo, adaptScorers, adaptStandings } from "./oracle-map"
 import { getTeamForm } from "./form"
 import { formMarkets } from "./tip-utils"
 
@@ -14,6 +14,20 @@ export async function getStandings(code: string): Promise<StandingRow[]> {
   } catch (err) {
     console.error("getStandings: Oracle niedostępne →", err)
     return []
+  }
+}
+
+// Tabela + logo ligi (gdy Oracle je zwraca w nagłówku).
+export async function getStandingsWithMeta(
+  code: string,
+): Promise<{ standings: StandingRow[]; leagueLogo: string | null }> {
+  if (!isOracleConfigured()) return { standings: [], leagueLogo: null }
+  try {
+    const data = await oracleFetch<unknown>(`/league/${encodeURIComponent(code)}/standings`)
+    return { standings: adaptStandings(data), leagueLogo: adaptLeagueLogo(data) }
+  } catch (err) {
+    console.error("getStandingsWithMeta: Oracle niedostępne →", err)
+    return { standings: [], leagueLogo: null }
   }
 }
 

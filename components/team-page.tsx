@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Activity, BarChart3, CalendarClock, Target } from "lucide-react"
 import type { TeamSeason, UpcomingMatch } from "@/lib/extra-types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
-import { TeamCrest } from "./ui/team-crest"
+import { TeamBadge } from "./team-badge"
 import { FormSquares } from "./form-squares"
 import { TeamFormTable } from "./team-form-table"
 import { TeamSplitStats } from "./team-split-stats"
@@ -127,7 +127,7 @@ export function TeamPage({ team, upcoming }: { team: TeamSeason; upcoming: Upcom
     <div>
       {/* nagłówek */}
       <div className="mb-6 flex items-center gap-4 rounded-[2rem] border border-white/12 bg-white/[0.05] p-6 backdrop-blur">
-        <TeamCrest name={team.name} logo={team.logo} size={64} />
+        <TeamBadge teamName={team.name} logoUrl={team.logo} size="xl" />
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{team.name}</h1>
           <p className="mt-1 text-sm text-white/55">
