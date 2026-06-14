@@ -82,9 +82,18 @@ export function scaleColor(v: number): string {
   return `rgb(${r}, ${g}, ${bl})`
 }
 
-/** Kolor dla Q-Score 0..100. */
+/** Kolor Q-Score wg progów (Graphite Night): <50 szary · 50–70 żółty · 70–85 cyan · 85+ zielony. */
+export function qScoreColor(q: number): string {
+  const v = Number.isFinite(q) ? q : 0
+  if (v >= 85) return "#42d58a" // success
+  if (v >= 70) return "#58e6f5" // cyan
+  if (v >= 50) return "#f4b852" // warning
+  return "#71808f" // muted/grey
+}
+
+/** Kolor dla Q-Score 0..100 (alias progowej skali). */
 export function qColor(q: number): string {
-  return scaleColor(q / 100)
+  return qScoreColor(q)
 }
 
 /** Klasa tekstu (Tailwind) dla wartości 0..1 — gdy potrzebny utility, nie inline. */

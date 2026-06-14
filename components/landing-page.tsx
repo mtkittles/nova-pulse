@@ -25,7 +25,6 @@ import {
 import type { BetType, Tip } from "@/lib/types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
 import { Brand, OgarHorizontal } from "./brand"
-import { ThemeToggle } from "./theme-toggle"
 import { Faq } from "./faq"
 import { CountUp } from "./ui/count-up"
 import { AnimatedTabs } from "./ui/tabs"
@@ -254,7 +253,6 @@ export default function LandingPage({
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <ThemeToggle />
           <Link
             href={loggedIn ? "/stats" : "/login"}
             className="rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
@@ -290,9 +288,6 @@ export default function LandingPage({
                   {item.label}
                 </a>
               ))}
-              <div className="mt-1 flex items-center gap-2">
-                <ThemeToggle />
-              </div>
               <Link
                 href={loggedIn ? "/stats" : "/login"}
                 onClick={() => setMenuOpen(false)}
