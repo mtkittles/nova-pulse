@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { motion, useReducedMotion } from "framer-motion"
 import {
   Activity,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react"
 import type { Tip } from "@/lib/types"
 import { OgarHorizontal, Brand } from "./brand"
+import { LogoutButton } from "./logout-button"
 import { Button } from "./ui/button"
 import { Card } from "./ui/card"
 import { CountUp } from "./ui/count-up"
@@ -81,6 +81,13 @@ export default function LandingPage({
   wcPhase = "pre",
 }: LandingProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  // zamknij menu na Esc
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false)
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [menuOpen])
   const reduce = useReducedMotion()
   const { updatedAt } = useLiveMatches()
 
@@ -126,60 +133,62 @@ export default function LandingPage({
           </Button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setMenuOpen((v) => !v)}
-          className="grid h-11 w-11 place-items-center rounded-2xl border border-[color:var(--border-soft)] bg-[var(--surface-1)] md:hidden"
-          aria-label="Otwórz menu"
-        >
-          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className="absolute left-6 right-6 top-20 z-30 rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-4 shadow-2xl shadow-black/40 md:hidden"
-          >
-            <nav className="grid gap-2">
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-2xl px-4 py-3 text-[color:var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)]"
-                >
-                  {item.label}
-                </a>
-              ))}
-              <Button
-                href={loggedIn ? "/stats" : "/login"}
-                variant="primary"
-                size="md"
-                className="mt-1 w-full"
-              >
-                {loggedIn ? "Mój panel" : "Zaloguj"}
-              </Button>
-            </nav>
-          </motion.div>
-        )}
       </header>
+
+      {/* mobilny toggle — fixed nad overlayem, zawsze klikalny; ta sama funkcja toggle */}
+      <button
+        type="button"
+        onClick={() => setMenuOpen((v) => !v)}
+        className="fixed right-5 top-6 z-[70] grid h-11 w-11 place-items-center rounded-2xl border border-[color:var(--border-soft)] bg-[var(--surface-1)]/90 backdrop-blur md:hidden"
+        aria-label={menuOpen ? "Zamknij menu" : "Otwórz menu"}
+        aria-expanded={menuOpen}
+      >
+        {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {/* mobilne menu: backdrop (klik = zamknij) + panel; wylogowanie wewnątrz */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[60] md:hidden">
+          <button
+            type="button"
+            aria-label="Zamknij menu"
+            onClick={() => setMenuOpen(false)}
+            className="absolute inset-0 bg-[var(--bg-0)]/70 backdrop-blur-sm"
+          />
+          <motion.nav
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduce ? 0 : 0.2 }}
+            className="absolute left-4 right-4 top-20 grid gap-2 rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-4 shadow-2xl shadow-black/40"
+          >
+            {navItems.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-2xl px-4 py-3 text-[color:var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)]"
+              >
+                {item.label}
+              </a>
+            ))}
+            <Button href={loggedIn ? "/stats" : "/login"} variant="primary" size="md" className="mt-1 w-full">
+              {loggedIn ? "Mój panel" : "Zaloguj"}
+            </Button>
+            {loggedIn && (
+              <div className="mt-1" onClick={() => setMenuOpen(false)}>
+                <LogoutButton />
+              </div>
+            )}
+          </motion.nav>
+        </div>
+      )}
 
       {/* HERO — kompaktowe, nie pełnoekranowe */}
       <section id="start" className="relative mx-auto max-w-7xl px-6 pb-10 pt-6 md:pt-10">
-        {/* tło: subtelna siatka + sygnet jako watermark */}
+        {/* tło: subtelna siatka + poświata (oszczędnie, bez dublowania logo) */}
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(var(--border-soft)_1px,transparent_1px),linear-gradient(90deg,var(--border-soft)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
           <div className="absolute right-[-80px] top-[-60px] h-72 w-72 rounded-full bg-[var(--glow-1)] blur-3xl" />
-          <Image
-            src="/brand/lupus-bets-mark.png"
-            alt=""
-            aria-hidden
-            width={360}
-            height={360}
-            className="absolute right-[-40px] top-4 hidden select-none opacity-[0.05] md:block"
-          />
         </div>
 
         <motion.div
@@ -188,8 +197,7 @@ export default function LandingPage({
           transition={{ duration: 0.6 }}
           className="relative z-10 max-w-2xl"
         >
-          <OgarHorizontal height={56} />
-          <h1 className="mt-6 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl">
             LUPUS BETS
           </h1>
           <p className="mt-3 text-2xl font-semibold text-[color:var(--cyan)] sm:text-3xl">
