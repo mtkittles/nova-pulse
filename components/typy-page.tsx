@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import type { Tip } from "@/lib/types"
 import type { CalendarDay } from "@/lib/extra-types"
-import { getMarketLabel, MARKET_FILTERS, marketGroupOf, type MarketGroup } from "@/lib/market-label"
+import { getMarketLabel, MARKET_FILTERS, marketGroupOf, type MarketCategory } from "@/lib/market-label"
 import { AlertTriangle, CalendarOff } from "lucide-react"
 import MatchTipCard, { type MatchGroup } from "./match-tip-card"
 import { Calendar } from "./calendar"
@@ -13,7 +13,7 @@ import { TipGridSkeleton } from "./ui/skeletons"
 import { plMatches, plTips } from "@/lib/i18n"
 
 type Sort = "q" | "date" | "odds"
-type Mode = MarketGroup | "ALL"
+type Mode = MarketCategory | "ALL"
 
 // Grupuje typy w mecze (po event_id; sieroty po home|away|kickoff). Zachowuje kolejność.
 function groupByMatch(tips: Tip[]): MatchGroup[] {
@@ -155,7 +155,7 @@ export default function TypyPage({
   const groups = useMemo(() => groupByMatch(visible), [visible])
 
   const hasThriller = useMemo(
-    () => visible.some((t) => getMarketLabel(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side).market === "Thriller"),
+    () => visible.some((t) => getMarketLabel(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side).short === "Thriller"),
     [visible],
   )
 

@@ -6,6 +6,7 @@ import type { Tip } from "@/lib/types"
 import { scaleColor } from "@/lib/design"
 import { getLeagueDisplayName } from "@/lib/leagues"
 import { getMarketLabel } from "@/lib/market-label"
+import { MetricLabel, METRIC_HINTS } from "./ui/metric-tooltip"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { QRing } from "./ui/q-ring"
 import { TeamCrest } from "./ui/team-crest"
@@ -122,7 +123,7 @@ export default function TipCard({
   const prob = Math.round(tip.model_prob * 100)
   const probColor = scaleColor(tip.model_prob)
   const market = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, tip.home, tip.away)
-  const isThriller = market.market === "Thriller"
+  const isThriller = market.short === "Thriller"
   const edgePct = (tip.edge * 100).toFixed(1)
   const minuteTxt = live?.minute != null ? `${live.minute}'` : ""
 
@@ -204,7 +205,7 @@ export default function TipCard({
         )}
 
         <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${market.badge}`}>
-          {market.market}
+          {market.short}
         </span>
 
         {isThriller && (
@@ -214,22 +215,22 @@ export default function TipCard({
         )}
       </div>
 
-      <p className="relative mt-3 text-sm text-white/65">{market.label}</p>
+      <p className="relative mt-3 text-sm text-white/65">{market.full}</p>
 
       {/* metryki — kurs wyróżniony */}
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/60">Prawd.</p>
+          <MetricLabel label="Szansa modelu" hint={METRIC_HINTS.model} className="text-xs text-white/60" />
           <p className="mt-1 text-xl font-semibold" style={{ color: probColor }}>
             {prob}%
           </p>
         </div>
         <div className="rounded-2xl border border-[color:var(--accent)]/40 bg-[var(--accent)]/10 p-3">
-          <p className="text-xs text-white/70">Kurs</p>
+          <MetricLabel label="Kurs" hint={METRIC_HINTS.odds} className="text-xs text-white/70" />
           <p className="mt-1 text-2xl font-bold text-[color:var(--accent)]">{tip.odds.toFixed(2)}</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/60">Edge</p>
+          <MetricLabel label="Edge" hint={METRIC_HINTS.edge} className="text-xs text-white/60" />
           <p className={`mt-1 text-xl font-semibold ${tip.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
             {tip.edge >= 0 ? "+" : ""}
             {edgePct}%
@@ -237,10 +238,10 @@ export default function TipCard({
         </div>
       </div>
 
-      {/* pasek pewności (gradient wg prawdopodobieństwa) */}
+      {/* pasek szansy modelu (gradient wg prawdopodobieństwa) */}
       <div className="relative mt-4">
         <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="text-white/60">Pewność modelu</span>
+          <span className="text-white/60">Szansa modelu</span>
           <span className="font-semibold" style={{ color: probColor }}>
             {prob}%
           </span>
