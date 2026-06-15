@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 import { CalendarOff, Radio } from "lucide-react"
 import type { Tip } from "@/lib/types"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
@@ -23,6 +24,18 @@ function countdown(iso: string | null, nowMs: number): string {
 }
 
 export function LiveView({ tips }: { tips: Tip[] }) {
+  const reduce = useReducedMotion()
+  // wjazd kart od dołu (fadeInUp), stagger; respektuje prefers-reduced-motion
+  const reveal = (i: number) =>
+    reduce
+      ? {}
+      : {
+          initial: { opacity: 0, y: 16 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, margin: "-40px" },
+          transition: { duration: 0.3, delay: Math.min(i, 8) * 0.05 },
+          whileHover: { scale: 1.01 },
+        }
   const { liveMatches } = useLiveMatches()
   const [now, setNow] = useState<number | null>(null)
   useEffect(() => {
@@ -122,7 +135,11 @@ export function LiveView({ tips }: { tips: Tip[] }) {
             <Radio className="h-4 w-4" /> Brak meczów na żywo w tej chwili.
           </p>
         ) : (
-          active.map((g) => <MatchLiveCard key={g.key} group={g} />)
+          active.map((g, i) => (
+            <motion.div key={g.key} {...reveal(i)}>
+              <MatchLiveCard group={g} />
+            </motion.div>
+          ))
         )}
       </section>
 
@@ -130,7 +147,11 @@ export function LiveView({ tips }: { tips: Tip[] }) {
       {upcoming.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Dziś</h2>
-          {upcoming.map((g) => <MatchLiveCard key={g.key} group={g} />)}
+          {upcoming.map((g, i) => (
+            <motion.div key={g.key} {...reveal(i)}>
+              <MatchLiveCard group={g} />
+            </motion.div>
+          ))}
         </section>
       )}
 

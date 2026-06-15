@@ -177,13 +177,19 @@ export default function TipCard({
         )}
       </div>
 
-      {/* badge'y: rozliczenie + tryb + status + ryzyko */}
+      {/* badge'y: JEDEN status (wynik gdy rozliczony, inaczej stan meczu) + rynek + ryzyko */}
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
-        {liveOn && <StatusPill status="LIVE" />}
-        {finished && settlement === "won" && <StatusPill status="WON" />}
-        {finished && settlement === "lost" && <StatusPill status="LOST" />}
-        {finished && settlement === "pending" && <StatusPill status="PENDING" />}
-        {status === "upcoming" && <Badge tone="cyan">Nadchodzący</Badge>}
+        {tip.actual_result === 1 ? (
+          <StatusPill status="WON" />
+        ) : tip.actual_result === 0 ? (
+          <StatusPill status="LOST" />
+        ) : liveOn ? (
+          <StatusPill status="LIVE" />
+        ) : finished ? (
+          <Badge tone="neutral">Zakończony</Badge>
+        ) : status === "upcoming" ? (
+          <Badge tone="cyan">Nadchodzący</Badge>
+        ) : null}
 
         <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${market.badge}`}>
           {market.short}
