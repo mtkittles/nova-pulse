@@ -114,9 +114,9 @@ export default function LandingPage({
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--bg-0)] text-[color:var(--text-primary)]">
       {/* header */}
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         <Link href="/" className="transition hover:opacity-90" aria-label="LUPUS BETS — strona główna">
-          <OgarHorizontal height={48} />
+          <OgarHorizontal height={36} />
         </Link>
 
         <nav className="hidden gap-8 text-sm text-[color:var(--text-secondary)] lg:flex">
@@ -184,7 +184,7 @@ export default function LandingPage({
       )}
 
       {/* HERO — kompaktowe, nie pełnoekranowe */}
-      <section id="start" className="relative mx-auto max-w-7xl px-6 pb-10 pt-6 md:pt-10">
+      <section id="start" className="relative mx-auto max-w-7xl px-6 pb-10 pt-2 md:pt-6">
         {/* tło: subtelna siatka + poświata (oszczędnie, bez dublowania logo) */}
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(var(--border-soft)_1px,transparent_1px),linear-gradient(90deg,var(--border-soft)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
