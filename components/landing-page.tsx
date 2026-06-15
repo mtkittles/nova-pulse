@@ -22,6 +22,7 @@ import { Button } from "./ui/button"
 import { Card } from "./ui/card"
 import { CountUp } from "./ui/count-up"
 import TipCard from "./tip-card"
+import { CardsCarousel } from "./cards-carousel"
 import { LiveTicker } from "./live-ticker"
 import { useLiveMatches } from "@/hooks/use-live-matches"
 import type { TimelinePoint } from "@/lib/stats-types"
@@ -238,13 +239,12 @@ export default function LandingPage({
 
         {heroTips.length > 0 ? (
           <>
-            <motion.div
-              {...reveal(0.05)}
-              className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {heroTips.map((tip) => (
-                <TipCard key={String(tip.event_id)} tip={tip} href={tipHref(tip)} />
-              ))}
+            <motion.div {...reveal(0.05)}>
+              <CardsCarousel ariaLabel="Topowe typy na dziś">
+                {heroTips.map((tip) => (
+                  <TipCard key={String(tip.event_id)} tip={tip} href={tipHref(tip)} />
+                ))}
+              </CardsCarousel>
             </motion.div>
             <div className="mt-8 text-center sm:hidden">
               <Button href="/typy" variant="secondary" size="md">

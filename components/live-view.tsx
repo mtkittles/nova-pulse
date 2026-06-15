@@ -7,6 +7,7 @@ import type { Tip } from "@/lib/types"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { getLiveStatus, LIVE_STATUS_CONFIG, worstStatus } from "@/lib/utils/live-status"
 import { MatchLiveCard, type MatchLiveGroup } from "./match-live-card"
+import { CardsCarousel } from "./cards-carousel"
 import { EmptyState } from "./ui/empty-state"
 
 // "Za 2h 15min" gdy < 3h, inaczej godzina lokalna "21:00".
@@ -147,11 +148,11 @@ export function LiveView({ tips }: { tips: Tip[] }) {
       {upcoming.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Dziś</h2>
-          {upcoming.map((g, i) => (
-            <motion.div key={g.key} {...reveal(i)}>
-              <MatchLiveCard group={g} />
-            </motion.div>
-          ))}
+          <CardsCarousel ariaLabel="Nadchodzące dziś">
+            {upcoming.map((g) => (
+              <MatchLiveCard key={g.key} group={g} />
+            ))}
+          </CardsCarousel>
         </section>
       )}
 
