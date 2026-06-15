@@ -1,8 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { BarChart3, TrendingUp } from "lucide-react"
+import { BarChart3, Send, TrendingUp } from "lucide-react"
 import type { StatsResponse } from "@/lib/stats-types"
 import type { Tip } from "@/lib/types"
 import { getMarketLabel } from "@/lib/market-label"
@@ -14,7 +15,7 @@ import { EmptyState } from "./ui/empty-state"
 import { StatusPill, type PillStatus } from "./ui/status-pill"
 import { TeamBadge } from "./team-badge"
 
-type Period = "30" | "all"
+type Period = "7" | "30" | "all"
 
 // Data → "6 cze" (strefa urządzenia). Akceptuje "YYYY-MM-DD" lub pełne ISO.
 function fmtDay(val: string): string {
@@ -85,7 +86,8 @@ export function StatsScreen({
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-semibold tracking-tight">Statystyki modelu</h1>
         <div className="inline-flex rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-0.5">
-          <button type="button" onClick={() => selectPeriod("30")} className={periodBtn("30")}>Ostatnie 30 dni</button>
+          <button type="button" onClick={() => selectPeriod("7")} className={periodBtn("7")}>7 dni</button>
+          <button type="button" onClick={() => selectPeriod("30")} className={periodBtn("30")}>30 dni</button>
           <button type="button" onClick={() => selectPeriod("all")} className={periodBtn("all")}>Wszystkie</button>
         </div>
       </header>
@@ -195,8 +197,10 @@ export function StatsScreen({
                   const settled = settleTip(t, t.home_score ?? null, t.away_score ?? null)
                   const pill: PillStatus = settled === "won" ? "WON" : settled === "lost" ? "LOST" : settled === "void" ? "VOID" : "PENDING"
                   const market = getMarketLabel(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side, t.home, t.away)
-                  return (
-                    <div key={`${String(t.event_id)}-${i}`} className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-3">
+                  const href = t.event_id != null && t.event_id !== "" ? `/mecz/${t.event_id}` : null
+                  const cls = `flex items-center gap-3 rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-3 ${href ? "cursor-pointer transition hover:bg-[var(--surface-2)]" : "cursor-default"}`
+                  const inner = (
+                    <>
                       <div className="flex shrink-0 items-center gap-1">
                         <TeamBadge teamName={t.home} logoUrl={t.homeLogo} size="sm" />
                         <TeamBadge teamName={t.away} logoUrl={t.awayLogo} size="sm" />
@@ -207,11 +211,34 @@ export function StatsScreen({
                       </div>
                       <span className="shrink-0 text-sm font-bold text-[color:var(--cyan)] tnum">{t.odds.toFixed(2)}</span>
                       <StatusPill status={pill} />
-                    </div>
+                    </>
+                  )
+                  return href ? (
+                    <Link key={`${String(t.event_id)}-${i}`} href={href} className={cls}>{inner}</Link>
+                  ) : (
+                    <div key={`${String(t.event_id)}-${i}`} className={cls}>{inner}</div>
                   )
                 })}
               </div>
             )}
+          </section>
+
+          {/* TELEGRAM — panel użytkownika */}
+          <section>
+            <Card hover={false} className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 className="flex items-center gap-2 text-lg font-semibold">
+                  <Send className="h-5 w-5 text-[color:var(--cyan)]" /> Lupus Bot na Telegramie
+                </h3>
+                <p className="mt-1 text-sm text-[color:var(--text-secondary)]">Otrzymuj typy jako pierwszy — prosto na czacie.</p>
+              </div>
+              <Link
+                href="https://t.me/lupus_bet_bot"
+                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[var(--cyan)] px-5 py-2.5 text-sm font-semibold text-[color:var(--bg-0)] transition hover:bg-[var(--cyan-strong)]"
+              >
+                <Send className="h-4 w-4" /> Otwórz bota
+              </Link>
+            </Card>
           </section>
         </>
       )}

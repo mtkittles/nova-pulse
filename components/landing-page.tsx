@@ -204,7 +204,8 @@ export default function LandingPage({
             Analiza, nie przeczucie
           </p>
           <p className="mt-5 max-w-xl text-lg leading-8 text-[color:var(--text-secondary)]">
-            Model selekcjonuje BTTS i Team O1.5, aktualizuje wynik na żywo, rozlicza skuteczność.
+            Algorytm Poissona analizuje formę, statystyki i kursy. Typy z przewagą nad bukmacherem —
+            weryfikowane na żywo.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
