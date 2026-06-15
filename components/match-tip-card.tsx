@@ -136,7 +136,7 @@ export default function MatchTipCard({
   const sortedTips = [...group.tips].sort((a, b) => b.q_score - a.q_score)
 
   const cardClass =
-    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085]"
+    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(88,230,245,0.08)]"
 
   const header = (
     <>
