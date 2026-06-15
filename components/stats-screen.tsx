@@ -17,9 +17,15 @@ import { TeamBadge } from "./team-badge"
 
 type Period = "30" | "all"
 
-function shortDate(d: string): string {
-  const [, m, day] = d.split("-")
-  return m && day ? `${Number(day)}.${Number(m)}` : d
+// Data YYYY-MM-DD → "6 cze" (strefa urządzenia).
+function fmtDay(d: string): string {
+  const dt = new Date(`${d}T12:00:00Z`)
+  if (Number.isNaN(dt.getTime())) return d
+  return new Intl.DateTimeFormat("pl-PL", {
+    day: "numeric",
+    month: "short",
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  }).format(dt)
 }
 
 function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: { date: string; roi: number } }[] }) {
@@ -27,8 +33,8 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   const p = payload[0].payload
   return (
     <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-3 py-2 text-xs">
-      <p className="text-[color:var(--text-muted)]">{p.date}</p>
-      <p className="font-semibold text-[color:var(--cyan)] tnum">ROI {p.roi >= 0 ? "+" : ""}{p.roi}%</p>
+      <p className="text-[color:var(--text-muted)]">{fmtDay(p.date)}</p>
+      <p className="font-semibold text-[color:var(--cyan)] tnum">ROI {p.roi >= 0 ? "+" : ""}{p.roi.toFixed(1)}%</p>
     </div>
   )
 }
@@ -61,7 +67,12 @@ export function StatsScreen({
 
   const s = data.summary
   const roiPositive = s.roi >= 0
-  const chart = data.timeline.map((t) => ({ date: shortDate(t.date), roi: +(t.roi * 100).toFixed(1) }))
+  // ROI z Oracle bywa ułamkiem (0.177) albo już procentem (17.7) — wykryj i ujednolić do %.
+  const roiIsFraction = data.timeline.every((t) => Math.abs(t.roi) <= 1)
+  const chart = data.timeline.map((t) => ({
+    date: t.date, // surowa data; formatowanie w tickFormatter/tooltipie
+    roi: +((roiIsFraction ? t.roi * 100 : t.roi)).toFixed(1),
+  }))
   const hasData = s.total_tips > 0
 
   const periodBtn = (p: Period) =>
@@ -120,8 +131,14 @@ export function StatsScreen({
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart data={chart} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                     <CartesianGrid stroke="var(--border-soft)" vertical={false} />
-                    <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} minTickGap={24} />
-                    <YAxis stroke="var(--text-muted)" tick={{ fontSize: 12 }} width={40} unit="%" />
+                    <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} minTickGap={24} tickFormatter={fmtDay} />
+                    <YAxis
+                      stroke="var(--text-muted)"
+                      tick={{ fontSize: 12 }}
+                      width={48}
+                      domain={["dataMin - 5", "dataMax + 5"]}
+                      tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                    />
                     <Tooltip content={<ChartTooltip />} />
                     <Line type="monotone" dataKey="roi" stroke="var(--cyan)" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                   </LineChart>
