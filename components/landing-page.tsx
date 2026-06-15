@@ -197,8 +197,7 @@ export default function LandingPage({
           transition={{ duration: 0.6 }}
           className="relative z-10 max-w-2xl"
         >
-          <OgarHorizontal height={80} />
-          <h1 className="mt-5 text-4xl font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl">
+          <h1 className="text-4xl font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl">
             LUPUS BETS
           </h1>
           <p className="mt-3 text-2xl font-semibold text-[color:var(--cyan)] sm:text-3xl">
