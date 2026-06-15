@@ -88,9 +88,11 @@ export const mockStats: StatsResponse = {
   },
   timeline: built.timeline,
   by_market: [
-    { bet_type: "BTTS", tips: 78, win_rate: 0.64, roi: 0.09 },
-    { bet_type: "OVER_1_5", tips: 71, win_rate: 0.71, roi: 0.07 },
-    { bet_type: "MIX", tips: 33, win_rate: 0.55, roi: 0.14 },
+    { label: "BTTS", tips: 78, win_rate: 0.64, roi: 0.09 },
+    { label: "Team O1.5", tips: 71, win_rate: 0.71, roi: 0.07 },
+    { label: "Over", tips: 52, win_rate: 0.66, roi: 0.11 },
+    { label: "1X2", tips: 40, win_rate: 0.52, roi: 0.14 },
+    { label: "Handicap", tips: 21, win_rate: 0.48, roi: 0.05 },
   ],
   by_league: [
     { league: "Premier League", tips: 41, win_rate: 0.68 },
