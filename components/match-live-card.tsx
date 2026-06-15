@@ -33,7 +33,7 @@ export function MatchLiveCard({ group }: { group: MatchLiveGroup }) {
     group.status === "LIVE_HIT" ? "text-[color:var(--success)]" : group.status === "LIVE_AT_RISK" ? "text-[color:var(--danger)]" : "text-[color:var(--text-primary)]"
 
   const inner = (
-    <div className={`rounded-[var(--radius-card)] border-2 bg-[var(--surface-1)] p-4 transition hover:bg-[var(--surface-2)] ${cfg.border}`}>
+    <div className={`rounded-[var(--radius-card)] border-2 bg-[var(--surface-1)] p-4 transition duration-150 hover:-translate-y-0.5 hover:bg-[var(--surface-2)] hover:shadow-[0_8px_24px_rgba(88,230,245,0.08)] ${cfg.border}`}>
       {/* nagłówek: liga + status/czas */}
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="min-w-0 truncate uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{group.league}</span>
