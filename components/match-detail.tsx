@@ -195,7 +195,7 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
                 >
                   <p className="flex items-center justify-center gap-1 text-[11px] text-[color:var(--text-secondary)]">
                     {c.label}
-                    {c.thriller && hasThriller && <Badge tone="warning" className="px-1.5 py-0">THR</Badge>}
+                    {c.thriller && <Badge tone="warning" className="px-1.5 py-0">THR</Badge>}
                   </p>
                   <p className={`mt-0.5 text-lg font-bold tnum ${val == null ? "text-[color:var(--text-muted)]" : chosen ? "text-[color:var(--cyan)]" : "text-[color:var(--text-primary)]"}`}>
                     {val != null ? val.toFixed(2) : "—"}

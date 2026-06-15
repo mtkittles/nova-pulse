@@ -753,50 +753,22 @@ function mapStatus(raw: unknown, kickoffUtc?: string): MatchStatus {
   return s ? "unknown" : "upcoming"
 }
 
-// Kursy rynków: czytaj z r.odds_markets / r.match_odds (różne klucze), a brakujące
-// uzupełnij z predictions[].odds po rynku. Brak → null (front pokaże „—").
-function adaptOddsMarkets(r: Record<string, unknown>, m: Record<string, unknown>, preds: MatchPrediction[]): OddsMarkets {
-  const src = rec(r.odds_markets ?? r.match_odds ?? m.odds_markets ?? m.match_odds)
-  const g = (...keys: string[]): number | null => {
-    for (const k of keys) {
-      const v = numOrNull(src[k])
-      if (v != null) return v
-    }
-    return null
+// Kursy rynków: czytaj 1:1 z r.odds_markets (klucze zgodne z Oracle). Brak → null.
+export function adaptOddsMarkets(r: unknown): OddsMarkets | null {
+  const raw = (r as Record<string, unknown>)?.odds_markets
+  if (!raw || typeof raw !== "object") return null
+  const o = raw as Record<string, number | null>
+  return {
+    btts_yes: o.btts_yes ?? null,
+    btts_no: o.btts_no ?? null,
+    home_win: o.home_win ?? null,
+    draw: o.draw ?? null,
+    away_win: o.away_win ?? null,
+    over25: o.over25 ?? null,
+    over35: o.over35 ?? null,
+    cs_32: o.cs_32 ?? null,
+    cs_23: o.cs_23 ?? null,
   }
-  const om: OddsMarkets = {
-    btts_yes: g("btts_yes", "btts", "gg"),
-    btts_no: g("btts_no", "ng"),
-    home_win: g("home_win", "home", "1", "odds_1", "win_home"),
-    draw: g("draw", "x", "odds_x"),
-    away_win: g("away_win", "away", "2", "odds_2", "win_away"),
-    over25: g("over25", "over_2_5", "o25"),
-    over35: g("over35", "over_3_5", "o35"),
-    cs_32: g("cs_32", "correct_score_32", "exact_32"),
-    cs_23: g("cs_23", "correct_score_23", "exact_23"),
-  }
-  // fallback z predykcji po surowym typie/stronie
-  const norm = (s: unknown) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")
-  for (const p of preds) {
-    if (p.odds == null) continue
-    const bt = norm(p.bet_type_raw ?? p.bet_type)
-    const side = norm(p.bet_side_raw ?? p.bet_side)
-    const set = (k: keyof OddsMarkets) => {
-      if (om[k] == null) om[k] = p.odds
-    }
-    if (bt.includes("btts")) set(side === "no" || side === "nie" ? "btts_no" : "btts_yes")
-    else if (bt === "1" || (bt === "1x2" && side === "home")) set("home_win")
-    else if (bt === "x" || (bt === "1x2" && (side === "x" || side === "draw"))) set("draw")
-    else if (bt === "2" || (bt === "1x2" && side === "away")) set("away_win")
-    else if (bt === "o25" || bt === "over25") set("over25")
-    else if (bt === "o35" || bt === "over35") set("over35")
-    else if (bt.includes("thril") || bt.includes("exact") || bt.includes("32") || bt.includes("23")) {
-      // 2:3 gdy strona wskazuje gościa, inaczej 3:2
-      if (side.includes("23")) set("cs_23")
-      else set("cs_32")
-    }
-  }
-  return om
 }
 
 export function adaptMatchDetailed(raw: unknown): MatchDetailed {
@@ -840,7 +812,7 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
     away_id: pickId(m, ["away_id", "away_team_id", "awayId"]),
     predictions,
-    odds_markets: adaptOddsMarkets(r, m, predictions),
+    odds_markets: adaptOddsMarkets(r),
     home_metrics: teamMetrics(r.home_stats ?? m.home_stats ?? r.home ?? m.home, home),
     away_metrics: teamMetrics(r.away_stats ?? m.away_stats ?? r.away ?? m.away, away),
     h2h_matches,
