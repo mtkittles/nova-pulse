@@ -68,8 +68,10 @@ export function StatsScreen({
 
   const s = data.summary
   const roiPositive = s.roi >= 0
-  // roi to ułamek (0.4263) — zostawiamy surowy, formatowanie ×100 w osi/tooltipie.
-  const chart = data.timeline.map((t) => ({ date: t.date, roi: t.roi }))
+  // roi to ułamek (0.4263) — surowy; formatowanie ×100 w osi/tooltipie. Sortuj po dacie.
+  const chart = [...data.timeline]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((t) => ({ date: t.date, roi: t.roi }))
   const hasData = s.total_tips > 0
 
   const periodBtn = (p: Period) =>
@@ -134,7 +136,7 @@ export function StatsScreen({
                       tick={{ fontSize: 12 }}
                       width={48}
                       domain={["dataMin", "dataMax"]}
-                      tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
+                      tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
                     />
                     <Tooltip content={<ChartTooltip />} />
                     <Line type="monotone" dataKey="roi" stroke="var(--cyan)" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
@@ -189,7 +191,7 @@ export function StatsScreen({
               <EmptyState icon={BarChart3} title="Brak rozliczonych typów" description="Pojawią się tu po zakończeniu meczów." />
             ) : (
               <div className="space-y-2">
-                {recentTips.slice(0, 10).map((t, i) => {
+                {recentTips.slice(0, 15).map((t, i) => {
                   const settled = settleTip(t, t.home_score ?? null, t.away_score ?? null)
                   const pill: PillStatus = settled === "won" ? "WON" : settled === "lost" ? "LOST" : settled === "void" ? "VOID" : "PENDING"
                   const market = getMarketLabel(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side, t.home, t.away)
