@@ -185,11 +185,10 @@ export function adaptStats(raw: unknown): StatsResponse {
     avg_q_score: num(sum.avg_q_score),
   }
 
+  // Zachowaj surową etykietę rynku z Oracle ("Team O1.5", "BTTS", "Over", "1X2", "Handicap").
   const by_market: MarketStat[] = []
   for (const [k, v] of asEntries(r.by_market)) {
-    const bt = mapBetType(k)
-    if (bt === "THRILLER") continue
-    by_market.push({ bet_type: bt as MarketStat["bet_type"], tips: pickCount(v), win_rate: pickWinRate(v), roi: pickRoi(v) })
+    by_market.push({ label: String(k), tips: pickCount(v), win_rate: pickWinRate(v), roi: pickRoi(v) })
   }
 
   const by_league: LeagueStat[] = (Array.isArray(r.by_league) ? r.by_league : []).map((l) => {

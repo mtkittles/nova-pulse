@@ -5,7 +5,6 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import { BarChart3, TrendingUp } from "lucide-react"
 import type { StatsResponse } from "@/lib/stats-types"
 import type { Tip } from "@/lib/types"
-import { BET_TYPE_SHORT } from "@/lib/labels"
 import { getMarketLabel } from "@/lib/market-label"
 import { settleTip } from "@/lib/tip-utils"
 import { CountUp } from "./ui/count-up"
@@ -17,15 +16,17 @@ import { TeamBadge } from "./team-badge"
 
 type Period = "30" | "all"
 
-// Data YYYY-MM-DD → "6 cze" (strefa urządzenia).
-function fmtDay(d: string): string {
-  const dt = new Date(`${d}T12:00:00Z`)
-  if (Number.isNaN(dt.getTime())) return d
-  return new Intl.DateTimeFormat("pl-PL", {
-    day: "numeric",
-    month: "short",
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  }).format(dt)
+// Data → "6 cze" (strefa urządzenia). Akceptuje "YYYY-MM-DD" lub pełne ISO.
+function fmtDay(val: string): string {
+  const d = new Date(val)
+  return Number.isNaN(d.getTime())
+    ? val
+    : d.toLocaleDateString("pl-PL", { day: "numeric", month: "short" })
+}
+
+// roi z Oracle to ułamek (0.4263 = 42.63%) — formatujemy ×100 ze znakiem.
+function fmtRoi(v: number): string {
+  return `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`
 }
 
 function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: { date: string; roi: number } }[] }) {
@@ -34,7 +35,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   return (
     <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-3 py-2 text-xs">
       <p className="text-[color:var(--text-muted)]">{fmtDay(p.date)}</p>
-      <p className="font-semibold text-[color:var(--cyan)] tnum">ROI {p.roi >= 0 ? "+" : ""}{p.roi.toFixed(1)}%</p>
+      <p className="font-semibold text-[color:var(--cyan)] tnum">ROI {fmtRoi(p.roi)}</p>
     </div>
   )
 }
@@ -67,12 +68,8 @@ export function StatsScreen({
 
   const s = data.summary
   const roiPositive = s.roi >= 0
-  // ROI z Oracle bywa ułamkiem (0.177) albo już procentem (17.7) — wykryj i ujednolić do %.
-  const roiIsFraction = data.timeline.every((t) => Math.abs(t.roi) <= 1)
-  const chart = data.timeline.map((t) => ({
-    date: t.date, // surowa data; formatowanie w tickFormatter/tooltipie
-    roi: +((roiIsFraction ? t.roi * 100 : t.roi)).toFixed(1),
-  }))
+  // roi to ułamek (0.4263) — zostawiamy surowy, formatowanie ×100 w osi/tooltipie.
+  const chart = data.timeline.map((t) => ({ date: t.date, roi: t.roi }))
   const hasData = s.total_tips > 0
 
   const periodBtn = (p: Period) =>
@@ -136,8 +133,8 @@ export function StatsScreen({
                       stroke="var(--text-muted)"
                       tick={{ fontSize: 12 }}
                       width={48}
-                      domain={["dataMin - 5", "dataMax + 5"]}
-                      tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                      domain={["dataMin", "dataMax"]}
+                      tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
                     />
                     <Tooltip content={<ChartTooltip />} />
                     <Line type="monotone" dataKey="roi" stroke="var(--cyan)" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
@@ -168,8 +165,8 @@ export function StatsScreen({
                     {data.by_market.map((m) => {
                       const wins = Math.round(m.win_rate * m.tips)
                       return (
-                        <tr key={m.bet_type} className="border-b border-[color:var(--border-soft)] last:border-0">
-                          <td className="px-2 py-2 font-medium">{BET_TYPE_SHORT[m.bet_type]}</td>
+                        <tr key={m.label} className="border-b border-[color:var(--border-soft)] last:border-0">
+                          <td className="px-2 py-2 font-medium">{m.label}</td>
                           <td className="px-2 py-2 text-center tnum text-[color:var(--text-secondary)]">{m.tips}</td>
                           <td className="px-2 py-2 text-center tnum text-[color:var(--text-secondary)]">{wins}</td>
                           <td className="px-2 py-2 text-center font-semibold tnum">{Math.round(m.win_rate * 100)}%</td>

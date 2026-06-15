@@ -1,5 +1,3 @@
-import type { BetType } from "./types"
-
 // Kontrakt statystyk skuteczności — GOTOWE AGREGATY liczone po stronie bota
 // (z tabeli `bot_predictions`, pole `actual_result`). Strona tylko rysuje.
 // Docelowo: GET /public-api/stats (patrz lib/stats.ts).
@@ -31,11 +29,12 @@ export interface TimelinePoint {
 }
 
 export interface MarketStat {
-  bet_type: Exclude<BetType, "THRILLER">
+  /** etykieta rynku 1:1 z Oracle ("Team O1.5", "BTTS", "Over", "1X2", "Handicap") */
+  label: string
   tips: number
   /** 0..1 */
   win_rate: number
-  /** np. 0.09 */
+  /** 0..1 (ułamek): 0.4263 = +42.63% */
   roi: number
 }
 
