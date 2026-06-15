@@ -11,7 +11,7 @@ import { DateStrip } from "./date-strip"
 import { CalendarModal } from "./calendar-modal"
 import { TypyTable } from "./typy-table"
 import { AnimatedTabs } from "./ui/tabs"
-import { StaggerGrid, StaggerItem } from "./ui/stagger"
+import { CardsCarousel } from "./cards-carousel"
 import { TipGridSkeleton } from "./ui/skeletons"
 import { EmptyState } from "./ui/empty-state"
 import { plMatches } from "@/lib/i18n"
@@ -313,13 +313,11 @@ export default function TypyPage({
           </p>
 
           {view === "cards" ? (
-            <StaggerGrid key={`${date}-${mode}-${league}-${sort}`} className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <CardsCarousel key={`${date}-${mode}-${league}-${sort}`} autoPlay={false} ariaLabel="Typy meczowe">
               {groups.map((g) => (
-                <StaggerItem key={g.key}>
-                  <MatchTipCard group={g} href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined} locked={!loggedIn} />
-                </StaggerItem>
+                <MatchTipCard key={g.key} group={g} href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined} locked={!loggedIn} />
               ))}
-            </StaggerGrid>
+            </CardsCarousel>
           ) : (
             <TypyTable tips={visible} loggedIn={loggedIn} />
           )}
