@@ -79,7 +79,22 @@ export function getLiveStatus(tip: {
   return "PENDING"
 }
 
-// Konfiguracja wizualna (tokeny Graphite Night, nie hardkody kolorów).
+// Ranga statusu — do wyboru „najgorszego" statusu meczu z wielu typów.
+// AT_RISK > OPEN > HIT (live) ; LOST > WON > VOID (finished) ; PENDING najniżej.
+const STATUS_RANK: Record<LiveStatus, number> = {
+  LIVE_AT_RISK: 6,
+  LIVE_OPEN: 5,
+  LIVE_HIT: 4,
+  LOST: 3,
+  WON: 2,
+  VOID: 1,
+  PENDING: 0,
+}
+
+export function worstStatus(list: LiveStatus[]): LiveStatus {
+  return list.reduce((acc, s) => (STATUS_RANK[s] > STATUS_RANK[acc] ? s : acc), "PENDING" as LiveStatus)
+}
+
 export const LIVE_STATUS_CONFIG: Record<
   LiveStatus,
   { label: string; color: string; border: string; dot: boolean; group: "active" | "upcoming" | "finished" }

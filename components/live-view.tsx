@@ -1,24 +1,12 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
 import { CalendarOff, Radio } from "lucide-react"
 import type { Tip } from "@/lib/types"
-import { getMarketLabel } from "@/lib/market-label"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
-import { getLiveStatus, LIVE_STATUS_CONFIG, type LiveStatus } from "@/lib/utils/live-status"
-import { LiveTipCard } from "./live-tip-card"
-import { TeamBadge } from "./team-badge"
-import { StatusPill, type PillStatus } from "./ui/status-pill"
+import { getLiveStatus, LIVE_STATUS_CONFIG, worstStatus } from "@/lib/utils/live-status"
+import { MatchLiveCard, type MatchLiveGroup } from "./match-live-card"
 import { EmptyState } from "./ui/empty-state"
-
-interface Row {
-  tip: Tip
-  status: LiveStatus
-  homeScore: number | null
-  awayScore: number | null
-  minute: string
-}
 
 // "Za 2h 15min" gdy < 3h, inaczej godzina lokalna "21:00".
 function countdown(iso: string | null, nowMs: number): string {
@@ -28,10 +16,7 @@ function countdown(iso: string | null, nowMs: number): string {
   const diff = k - nowMs
   if (diff <= 0) return "lada chwila"
   const mins = Math.floor(diff / 60000)
-  if (mins >= 180) {
-    const d = new Date(iso)
-    return d.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })
-  }
+  if (mins >= 180) return new Date(iso).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })
   const h = Math.floor(mins / 60)
   const m = mins % 60
   return h > 0 ? `Za ${h}h ${m}min` : `Za ${m}min`
@@ -47,17 +32,18 @@ export function LiveView({ tips }: { tips: Tip[] }) {
   }, [])
   const nowMs = now ?? Date.now()
 
-  const rows = useMemo<Row[]>(() => {
-    return tips.map((tip) => {
+  // grupuj typy per mecz (event_id; sieroty po home|away|kickoff)
+  const groups = useMemo<MatchLiveGroup[]>(() => {
+    const order: string[] = []
+    const map = new Map<string, MatchLiveGroup>()
+    for (const tip of tips) {
+      const key = tip.event_id != null && tip.event_id !== "" ? `id:${tip.event_id}` : `m:${tip.home}|${tip.away}|${tip.kickoff_utc ?? ""}`
       const live = findLive(liveMatches, tip.event_id)
       const liveSt = live ? mapLiveStatus(live.status_short) : null
       const homeScore = live ? live.home_score : tip.home_score ?? null
       const awayScore = live ? live.away_score : tip.away_score ?? null
-      // efektywny match_status: dane live nadpisują pole z /tips/today
       const statusStr =
-        liveSt === "finished" ? "FINISHED"
-        : liveSt === "live" || liveSt === "halftime" ? "IN_PLAY"
-        : tip.match_status ?? ""
+        liveSt === "finished" ? "FINISHED" : liveSt === "live" || liveSt === "halftime" ? "IN_PLAY" : tip.match_status ?? ""
       const status = getLiveStatus({
         match_status: statusStr,
         home_score: homeScore,
@@ -66,16 +52,45 @@ export function LiveView({ tips }: { tips: Tip[] }) {
         bet_side: tip.bet_side_raw ?? tip.bet_side,
         actual_result: tip.actual_result,
       })
+      const grp = LIVE_STATUS_CONFIG[status].group
       const minute = liveSt === "halftime" ? "PRZERWA" : live?.minute != null ? `${live.minute}'` : "LIVE"
-      return { tip, status, homeScore, awayScore, minute }
-    })
-  }, [tips, liveMatches])
+      const right = grp === "active" ? minute : grp === "finished" ? "koniec" : countdown(tip.kickoff_utc, nowMs)
 
-  const active = rows.filter((r) => LIVE_STATUS_CONFIG[r.status].group === "active")
-  const upcoming = rows
-    .filter((r) => LIVE_STATUS_CONFIG[r.status].group === "upcoming")
-    .sort((a, b) => (a.tip.kickoff_utc ?? "").localeCompare(b.tip.kickoff_utc ?? ""))
-  const finished = rows.filter((r) => LIVE_STATUS_CONFIG[r.status].group === "finished")
+      let g = map.get(key)
+      if (!g) {
+        g = {
+          key,
+          event_id: tip.event_id,
+          home: tip.home,
+          away: tip.away,
+          homeLogo: tip.homeLogo,
+          awayLogo: tip.awayLogo,
+          league: tip.league,
+          kickoff_utc: tip.kickoff_utc,
+          homeScore,
+          awayScore,
+          right,
+          status,
+          tips: [],
+        }
+        map.set(key, g)
+        order.push(key)
+      }
+      g.homeScore = homeScore
+      g.awayScore = awayScore
+      g.right = right
+      g.tips.push({ tip, status })
+    }
+    // status meczu = najgorszy z typów (border + sekcja)
+    for (const g of map.values()) g.status = worstStatus(g.tips.map((t) => t.status))
+    return order.map((k) => map.get(k)!)
+  }, [tips, liveMatches, nowMs])
+
+  const active = groups.filter((g) => LIVE_STATUS_CONFIG[g.status].group === "active")
+  const upcoming = groups
+    .filter((g) => LIVE_STATUS_CONFIG[g.status].group === "upcoming")
+    .sort((a, b) => (a.kickoff_utc ?? "").localeCompare(b.kickoff_utc ?? ""))
+  const finished = groups.filter((g) => LIVE_STATUS_CONFIG[g.status].group === "finished")
 
   if (tips.length === 0) {
     return (
@@ -90,7 +105,7 @@ export function LiveView({ tips }: { tips: Tip[] }) {
 
   return (
     <div className="space-y-8">
-      {/* AKTYWNE */}
+      {/* NA ŻYWO */}
       <section className="space-y-3">
         <header className="flex items-center gap-2.5">
           <span className="relative flex h-3 w-3">
@@ -107,65 +122,25 @@ export function LiveView({ tips }: { tips: Tip[] }) {
             <Radio className="h-4 w-4" /> Brak meczów na żywo w tej chwili.
           </p>
         ) : (
-          active.map((r) => (
-            <LiveTipCard key={String(r.tip.event_id)} tip={r.tip} status={r.status} homeScore={r.homeScore} awayScore={r.awayScore} minute={r.minute} />
-          ))
+          active.map((g) => <MatchLiveCard key={g.key} group={g} />)
         )}
       </section>
 
-      {/* NADCHODZĄCE DZIŚ */}
+      {/* DZIŚ */}
       {upcoming.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Dziś</h2>
-          <div className="space-y-2">
-            {upcoming.map((r) => (
-              <Link
-                key={String(r.tip.event_id)}
-                href={r.tip.event_id ? `/mecz/${r.tip.event_id}` : "/typy"}
-                className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-3 transition hover:bg-[var(--surface-2)]"
-              >
-                <div className="flex shrink-0 items-center gap-1">
-                  <TeamBadge teamName={r.tip.home} logoUrl={r.tip.homeLogo} size="sm" />
-                  <TeamBadge teamName={r.tip.away} logoUrl={r.tip.awayLogo} size="sm" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{r.tip.home} – {r.tip.away}</p>
-                  <p className="text-xs text-[color:var(--text-muted)] tnum">{countdown(r.tip.kickoff_utc, nowMs)}</p>
-                </div>
-                <MarketBadge tip={r.tip} />
-              </Link>
-            ))}
-          </div>
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Dziś</h2>
+          {upcoming.map((g) => <MatchLiveCard key={g.key} group={g} />)}
         </section>
       )}
 
-      {/* ZAKOŃCZONE DZIŚ */}
+      {/* ZAKOŃCZONE */}
       {finished.length > 0 && (
-        <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Zakończone</h2>
-          <div className="divide-y divide-[color:var(--border-soft)] overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)]">
-            {finished.map((r) => (
-              <Link
-                key={String(r.tip.event_id)}
-                href={r.tip.event_id ? `/mecz/${r.tip.event_id}` : "/typy"}
-                className="flex items-center gap-3 p-3 text-sm transition hover:bg-[var(--surface-2)]"
-              >
-                <span className="w-12 shrink-0 text-center font-bold tnum text-[color:var(--text-secondary)]">
-                  {r.homeScore ?? "-"}:{r.awayScore ?? "-"}
-                </span>
-                <span className="min-w-0 flex-1 truncate">{r.tip.home} – {r.tip.away}</span>
-                <MarketBadge tip={r.tip} />
-                <StatusPill status={r.status as PillStatus} />
-              </Link>
-            ))}
-          </div>
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Zakończone</h2>
+          {finished.map((g) => <MatchLiveCard key={g.key} group={g} />)}
         </section>
       )}
     </div>
   )
-}
-
-function MarketBadge({ tip }: { tip: Tip }) {
-  const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, tip.home, tip.away)
-  return <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.short}</span>
 }
