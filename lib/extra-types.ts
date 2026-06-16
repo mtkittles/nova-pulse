@@ -25,6 +25,19 @@ export interface MatchPrediction {
   q_score: number | null
   edge: number | null
   actual_result: 0 | 1 | null
+  /** rozbicie Q-Score (gdy Oracle podał); null → sekcja ukryta */
+  q_score_breakdown?: QScoreBreakdown | null
+}
+
+export interface QScoreFactor {
+  label: string
+  delta: number // dodatni = plus, ujemny = minus
+}
+
+export interface QScoreBreakdown {
+  total: number
+  base: number // zwykle 50
+  factors: QScoreFactor[]
 }
 
 export interface H2HMatch {

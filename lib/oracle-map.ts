@@ -19,6 +19,8 @@ import type {
   MatchPrediction,
   MatchStatus,
   OddsMarkets,
+  QScoreBreakdown,
+  QScoreFactor,
   Scorer,
   ScoreDist,
   SideStats,
@@ -254,6 +256,32 @@ function numOrNull(x: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+// Rozbicie Q-Score: tolerancyjnie — tablica factors[] lub obiekt {label: delta}.
+function adaptQScoreBreakdown(raw: unknown): QScoreBreakdown | null {
+  if (raw == null || typeof raw !== "object") return null
+  const o = rec(raw)
+  let factors: QScoreFactor[] = []
+  if (Array.isArray(o.factors)) {
+    factors = (o.factors as unknown[])
+      .map((f) => {
+        const r = rec(f)
+        return { label: String(r.label ?? r.name ?? ""), delta: num(r.delta ?? r.value ?? r.points) }
+      })
+      .filter((f) => f.label)
+  } else {
+    for (const [k, v] of Object.entries(o)) {
+      if (["total", "base", "score", "q_score", "q"].includes(k.toLowerCase())) continue
+      const d = Number(v)
+      if (Number.isFinite(d)) factors.push({ label: k, delta: d })
+    }
+  }
+  if (factors.length === 0 && o.total == null) return null
+  const base = o.base != null ? num(o.base) : 50
+  const sum = factors.reduce((a, f) => a + f.delta, 0)
+  const total = o.total != null ? num(o.total) : o.score != null ? num(o.score) : base + sum
+  return { total, base, factors }
+}
+
 function adaptPrediction(raw: unknown): MatchPrediction {
   const p = rec(raw)
   // Czytaj realne wartości (z fallbackiem na alternatywne nazwy); brak → null, NIGDY 0.
@@ -276,6 +304,7 @@ function adaptPrediction(raw: unknown): MatchPrediction {
     q_score,
     edge,
     actual_result: mapResult(p),
+    q_score_breakdown: adaptQScoreBreakdown(p.q_score_breakdown ?? p.qscore_breakdown ?? p.q_breakdown),
   }
 }
 
@@ -803,8 +832,8 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     away,
     homeLogo: pickLogo(m.home_team_logo ?? m.home_logo),
     awayLogo: pickLogo(m.away_team_logo ?? m.away_logo),
-    league: getLeagueName(String(m.league ?? "")),
-    leagueCode: String(m.league ?? ""),
+    league: getLeagueName(String(m.league_code ?? r.league_code ?? m.league ?? "")),
+    leagueCode: String(m.league_code ?? r.league_code ?? m.league ?? ""),
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
     stadium: m.stadium != null ? String(m.stadium) : m.venue != null ? String(m.venue) : null,
     status: mapStatus(m.status ?? r.status, normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date)),
