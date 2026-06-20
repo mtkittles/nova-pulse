@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import { ArrowLeft, BarChart3, MapPin } from "lucide-react"
-import type { MatchDetailed, MatchPrediction, OddsMarkets } from "@/lib/extra-types"
+import type { MatchDetailed, MatchPrediction, OddsMarkets, SideStats } from "@/lib/extra-types"
 import { getMarketLabel } from "@/lib/market-label"
 import { getLeagueDisplayName } from "@/lib/leagues"
 import { formatKickoff } from "@/lib/time"
@@ -14,6 +14,7 @@ import { QScoreBreakdownCard } from "./q-score-breakdown"
 import { StandingsTable } from "./standings-table"
 import { TopScorers } from "./top-scorers"
 import { FormPanel } from "./form-panel"
+import { HomeAwayStats } from "./home-away-stats"
 import { LazyMount, ScoreHeatmap } from "./match-charts"
 import { Card } from "./ui/card"
 import { Badge } from "./ui/badge"
@@ -55,7 +56,15 @@ function parseScore(s: string): [number, number] | null {
   return m ? [Number(m[1]), Number(m[2])] : null
 }
 
-export function MatchDetail({ match }: { match: MatchDetailed }) {
+export function MatchDetail({
+  match,
+  homeSide,
+  awaySide,
+}: {
+  match: MatchDetailed
+  homeSide?: SideStats | null
+  awaySide?: SideStats | null
+}) {
   const reduce = useReducedMotion()
   const [now, setNow] = useState<number | null>(null)
   useEffect(() => {
@@ -231,7 +240,7 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
         </Card>
       </motion.div>
 
-      {/* [E] FORMA */}
+      {/* [E] FORMA (przełącznik 5/10/15 w FormPanel) */}
       <motion.div {...reveal(0.05)} className="mb-5">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Forma — ostatnie mecze</h2>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -239,6 +248,21 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
           <FormPanel teamId={match.away_id} teamName={match.away} />
         </div>
       </motion.div>
+
+      {/* [J] STATYSTYKI DOM/WYJAZD — ukryte gdy brak splitu */}
+      {(homeSide || awaySide) && (
+        <motion.div {...reveal(0.05)} className="mb-5">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Statystyki: forma u siebie / na wyjeździe</h2>
+          <HomeAwayStats
+            homeName={match.home}
+            homeLogo={match.homeLogo}
+            homeStats={homeSide}
+            awayName={match.away}
+            awayLogo={match.awayLogo}
+            awayStats={awaySide}
+          />
+        </motion.div>
+      )}
 
       {/* [F] H2H */}
       <motion.div {...reveal(0.05)}>

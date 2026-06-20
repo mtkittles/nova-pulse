@@ -111,6 +111,7 @@ export interface SideStats {
   ga_avg?: number | null
   btts_pct?: number | null
   over15_pct?: number | null
+  over25_pct?: number | null
   clean_sheets_pct?: number | null
 }
 
