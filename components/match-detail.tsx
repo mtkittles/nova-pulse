@@ -12,6 +12,7 @@ import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matche
 import { TeamBadge } from "./team-badge"
 import { QScoreBreakdownCard } from "./q-score-breakdown"
 import { StandingsTable } from "./standings-table"
+import { TopScorers } from "./top-scorers"
 import { FormPanel } from "./form-panel"
 import { LazyMount, ScoreHeatmap } from "./match-charts"
 import { Card } from "./ui/card"
@@ -293,6 +294,13 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
         <motion.div {...reveal(0.05)} className="mt-5">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Tabela ligowa</h2>
           <StandingsTable leagueCode={match.leagueCode} homeName={match.home} awayName={match.away} />
+        </motion.div>
+      )}
+
+      {/* [I] TOP STRZELCY LIGI — tylko gdy znamy kod ligi (sekcja sama ukrywa się, gdy brak danych) */}
+      {match.leagueCode && (
+        <motion.div {...reveal(0.05)}>
+          <TopScorers leagueCode={match.leagueCode} leagueName={leagueText} homeName={match.home} awayName={match.away} />
         </motion.div>
       )}
     </div>
