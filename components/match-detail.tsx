@@ -10,6 +10,8 @@ import { getLeagueDisplayName } from "@/lib/leagues"
 import { formatKickoff } from "@/lib/time"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { TeamBadge } from "./team-badge"
+import { QScoreBreakdownCard } from "./q-score-breakdown"
+import { StandingsTable } from "./standings-table"
 import { FormPanel } from "./form-panel"
 import { LazyMount, ScoreHeatmap } from "./match-charts"
 import { Card } from "./ui/card"
@@ -180,6 +182,13 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
         </motion.div>
       )}
 
+      {/* [H] Q-SCORE BREAKDOWN — tylko gdy Oracle podał rozbicie */}
+      {best?.q_score_breakdown && (
+        <motion.div {...reveal(0.05)} className="mb-5">
+          <QScoreBreakdownCard breakdown={best.q_score_breakdown} />
+        </motion.div>
+      )}
+
       {/* [C] KURSY RYNKÓW */}
       <motion.div {...reveal(0.05)} className="mb-5">
         <Card hover={false}>
@@ -278,6 +287,14 @@ export function MatchDetail({ match }: { match: MatchDetailed }) {
           )}
         </Card>
       </motion.div>
+
+      {/* [G] TABELA LIGOWA — tylko gdy znamy kod ligi */}
+      {match.leagueCode && (
+        <motion.div {...reveal(0.05)} className="mt-5">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Tabela ligowa</h2>
+          <StandingsTable leagueCode={match.leagueCode} homeName={match.home} awayName={match.away} />
+        </motion.div>
+      )}
     </div>
   )
 }
