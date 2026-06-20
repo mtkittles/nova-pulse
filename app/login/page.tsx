@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { randomUUID } from "crypto"
-import { ArrowLeft, Mail } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Brand } from "@/components/brand"
 import { DeepLinkLogin } from "@/components/deep-link-login"
 import { getSession } from "@/lib/auth"
@@ -47,32 +47,6 @@ export default async function LoginPage() {
           </p>
 
           <DeepLinkLogin token={token} redirectTo="/stats" />
-
-          <div className="my-6 flex items-center gap-3 text-xs text-white/55">
-            <span className="h-px flex-1 bg-white/10" />
-            email wkrótce
-            <span className="h-px flex-1 bg-white/10" />
-          </div>
-
-          <div className="grid gap-4 opacity-60">
-            <label className="grid gap-2">
-              <span className="text-sm text-white/55">Email</span>
-              <input
-                type="email"
-                disabled
-                placeholder="twoj@email.com"
-                className="rounded-2xl border border-white/10 bg-[var(--bg)]/70 px-4 py-3 text-white outline-none placeholder:text-white/55"
-              />
-            </label>
-            <button
-              type="button"
-              disabled
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-6 py-3 font-semibold text-[color:var(--on-accent)]"
-            >
-              <Mail className="h-4 w-4" />
-              Zaloguj przez email
-            </button>
-          </div>
         </div>
 
         <p className="mt-5 text-center text-xs text-white/55">
