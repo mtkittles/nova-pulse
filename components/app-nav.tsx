@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { BarChart3, Crown, Home, Medal, Newspaper, Radio, Shield, Target, Ticket, Trophy } from "lucide-react"
+import { BarChart3, Crown, Home, Medal, Menu, Newspaper, Radio, Shield, Target, Ticket, Trophy, User, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { Brand } from "./brand"
 import { LogoutButton } from "./logout-button"
@@ -33,6 +34,15 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
   const path = usePathname()
   const isActive = (href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`))
   const items: NavItem[] = isAdmin ? [...NAV, { href: "/admin", label: "Admin", icon: Shield }] : NAV
+
+  // mobilne menu — toggle ☰/✕ (zamknij na Esc / klik tła / klik linku)
+  const [menuOpen, setMenuOpen] = useState(false)
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false)
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [menuOpen])
 
   // licznik meczów na żywo → kropka/badge przy zakładce Live
   const { liveMatches } = useLiveMatches()
@@ -70,9 +80,18 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
+          {/* desktop: profil / wyloguj lub zaloguj (mobilnie zastąpione togglem) */}
+          <div className="hidden items-center gap-2 lg:flex">
             {loggedIn ? (
-              <LogoutButton />
+              <>
+                <Link
+                  href="/profil"
+                  className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-1)] px-4 py-2 text-sm font-medium text-[color:var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)]"
+                >
+                  <User className="h-4 w-4" /> Profil
+                </Link>
+                <LogoutButton />
+              </>
             ) : (
               <Link
                 href="/login"
@@ -84,6 +103,66 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
           </div>
         </div>
       </header>
+
+      {/* mobilny toggle menu — ZAWSZE toggle (☰/✕), fixed nad overlayem; nigdy nie ikona wylogowania */}
+      <button
+        type="button"
+        onClick={() => setMenuOpen((v) => !v)}
+        className="fixed right-5 top-3.5 z-[70] grid h-11 w-11 place-items-center rounded-2xl border border-[color:var(--border-soft)] bg-[var(--surface-1)]/90 backdrop-blur lg:hidden"
+        aria-label={menuOpen ? "Zamknij menu" : "Otwórz menu"}
+        aria-expanded={menuOpen}
+      >
+        {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </button>
+
+      {/* mobilne menu: backdrop (klik = zamknij) + panel; wylogowanie WEWNĄTRZ panelu */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[60] lg:hidden">
+          <button type="button" aria-label="Zamknij menu" onClick={() => setMenuOpen(false)} className="absolute inset-0 bg-[var(--bg-0)]/70 backdrop-blur-sm" />
+          <nav className="absolute left-4 right-4 top-16 grid max-h-[80vh] gap-1 overflow-y-auto rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-3 shadow-2xl shadow-black/40">
+            {items.map((item) => {
+              const Icon = item.icon
+              const active = isActive(item.href)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                    active ? "bg-[var(--cyan-soft)] text-[color:var(--cyan)]" : "text-[color:var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)]"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" /> {item.label}
+                </Link>
+              )
+            })}
+            <div className="mt-1 border-t border-[color:var(--border-soft)] pt-2">
+              {loggedIn ? (
+                <div className="grid gap-1">
+                  <Link
+                    href="/profil"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-medium text-[color:var(--text-secondary)] transition hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)]"
+                  >
+                    <User className="h-4 w-4" /> Profil
+                  </Link>
+                  <div onClick={() => setMenuOpen(false)}>
+                    <LogoutButton />
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="block rounded-2xl bg-[var(--accent)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--on-accent)]"
+                >
+                  Zaloguj
+                </Link>
+              )}
+            </div>
+          </nav>
+        </div>
+      )}
 
       {/* dolna nawigacja mobilna — 4 zakładki, sticky bottom + safe-area */}
       <nav
