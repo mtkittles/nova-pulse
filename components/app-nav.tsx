@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { BarChart3, Home, Medal, Menu, Newspaper, Radio, Shield, Target, Ticket, Trophy, User, X } from "lucide-react"
+import { BarChart3, Crown, Home, Medal, Menu, Newspaper, Radio, Shield, Target, Ticket, Trophy, User, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { Brand } from "./brand"
 import { LogoutButton } from "./logout-button"
@@ -17,6 +17,7 @@ const NAV: NavItem[] = [
   { href: "/live", label: "Live", icon: Radio },
   { href: "/stats", label: "Statystyki", icon: BarChart3 },
   { href: "/ligi", label: "Ligi", icon: Medal },
+  { href: "/ranking", label: "Ranking", icon: Crown },
   { href: "/newsy", label: "Newsy", icon: Newspaper },
   { href: "/kupony", label: "Kupony", icon: Ticket },
 ]
