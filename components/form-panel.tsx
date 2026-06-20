@@ -21,7 +21,7 @@ const SQUARE: Record<"W" | "D" | "L", { label: string; cls: string }> = {
 
 export function FormPanel({ teamId, teamName }: { teamId: string | number | null; teamName: string }) {
   const [scope, setScope] = useState<FormScope>("all")
-  const [count, setCount] = useState(5)
+  const [count, setCount] = useState(10)
   const [form, setForm] = useState<TeamForm | null>(null)
   const [loading, setLoading] = useState(teamId != null)
 

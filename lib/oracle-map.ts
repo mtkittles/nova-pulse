@@ -569,8 +569,8 @@ export function adaptTeam(raw: unknown): TeamSeason | null {
     btts_pct: pct(st.btts_pct ?? st.btts ?? st.btts_percentage),
     over15_pct: pct(st.over_1_5_pct ?? st.over15_pct ?? st.over_1_5 ?? st.over_1_5_percentage),
     over25_pct: pct(st.over_2_5_pct ?? st.over25_pct ?? st.over_2_5 ?? st.over_2_5_percentage),
-    home_stats: sideStats(t.home_stats ?? t.home ?? st.home_stats),
-    away_stats: sideStats(t.away_stats ?? t.away ?? st.away_stats),
+    home_stats: sideStats(t.home_stats ?? rec(t.home_away_split).home ?? t.home ?? st.home_stats),
+    away_stats: sideStats(t.away_stats ?? rec(t.home_away_split).away ?? t.away ?? st.away_stats),
     form: resultsFromForm(t.form ?? t.recent_form ?? st.form ?? r.form),
     scorers: adaptScorers(t.scorers ?? t.top_scorers ?? r.scorers ?? r.top_scorers),
   }
@@ -585,7 +585,8 @@ function sideStats(raw: unknown): SideStats | null {
     ga_avg: numOrNull(o.ga_avg ?? o.avg_ga ?? o.avg_goals_against),
     btts_pct: pct(o.btts_pct ?? o.btts),
     over15_pct: pct(o.over_1_5_pct ?? o.over15_pct ?? o.over_1_5),
-    clean_sheets_pct: pct(o.clean_sheets_pct ?? o.clean_sheets ?? o.cs_pct),
+    over25_pct: pct(o.over_2_5_pct ?? o.over25_pct ?? o.over_2_5),
+    clean_sheets_pct: pct(o.clean_sheets_pct ?? o.clean_sheets ?? o.cs_pct ?? o.clean_sheet_pct),
   }
   const hasAny = Object.values(s).some((v) => v != null)
   return hasAny ? s : null
