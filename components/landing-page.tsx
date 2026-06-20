@@ -129,7 +129,7 @@ export default function LandingPage({
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button href={loggedIn ? "/stats" : "/login"} variant="primary" size="md">
+          <Button href={loggedIn ? "/profil" : "/login"} variant="primary" size="md">
             {loggedIn ? "Mój panel" : "Zaloguj"}
           </Button>
         </div>
@@ -172,7 +172,7 @@ export default function LandingPage({
                 {item.label}
               </a>
             ))}
-            <Button href={loggedIn ? "/stats" : "/login"} variant="primary" size="md" className="mt-1 w-full">
+            <Button href={loggedIn ? "/profil" : "/login"} variant="primary" size="md" className="mt-1 w-full">
               {loggedIn ? "Mój panel" : "Zaloguj"}
             </Button>
             {loggedIn && (
