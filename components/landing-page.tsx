@@ -49,6 +49,7 @@ const navItems = [
   { label: "Dziś", href: "#today" },
   { label: "Jak działa", href: "#how" },
   { label: "Statystyki", href: "/stats" },
+  { label: "Ranking", href: "/ranking" },
 ]
 
 const howItWorks = [

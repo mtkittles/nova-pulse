@@ -198,6 +198,20 @@ export interface MarketRankings {
   over_15: RankingTeam[]
 }
 
+// === Ranking typerów (/rankings/users) ===
+export interface RankingUser {
+  display_id: string // zamaskowany identyfikator, np. "123***45"
+  total_picks: number
+  won_picks: number
+  win_rate: number // 0..100
+}
+
+export interface UserRankings {
+  users: RankingUser[]
+  updated_at: string | null
+  error: boolean
+}
+
 // === Mistrzostwa Świata 2026 (/worldcup/*) ===
 export type WCStatus = "advance" | "playoff" | "out"
 

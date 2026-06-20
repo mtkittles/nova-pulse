@@ -1,5 +1,5 @@
 import "server-only"
-import type { MarketRankings, RankingTeam } from "./extra-types"
+import type { MarketRankings, RankingTeam, RankingUser, UserRankings } from "./extra-types"
 import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 
 function rec(x: unknown): Record<string, unknown> {
@@ -75,6 +75,42 @@ function mockRankings(): MarketRankings {
       },
     }))
   return { btts: make(80, 72), over_15: make(88, null) }
+}
+
+// Maskuje identyfikator: "12345678" → "123***78" (prywatność typerów).
+function maskId(raw: unknown): string {
+  const s = String(raw ?? "").trim()
+  if (!s) return "anon"
+  if (s.includes("*")) return s // już zamaskowany przez Oracle
+  if (s.length <= 4) return `${s[0] ?? ""}***`
+  return `${s.slice(0, 3)}***${s.slice(-2)}`
+}
+
+// Ranking typerów (/rankings/users). Pusty/niedostępny → bez crasha.
+export async function getUserRankings(): Promise<UserRankings> {
+  if (!isOracleConfigured()) return { users: [], updated_at: null, error: false }
+  try {
+    const data = await oracleFetch<unknown>("/rankings/users", 120)
+    const r = rec(data)
+    const list = Array.isArray(data) ? data : Array.isArray(r.users) ? r.users : Array.isArray(r.rankings) ? r.rankings : []
+    const users: RankingUser[] = (list as unknown[]).map((u) => {
+      const o = rec(u)
+      const total = num(o.total_picks ?? o.total ?? o.picks)
+      const won = num(o.won_picks ?? o.won ?? o.wins)
+      const wrRaw = o.win_rate ?? o.winrate ?? (total ? won / total : 0)
+      const wr = Number(wrRaw)
+      return {
+        display_id: maskId(o.display_id ?? o.masked_id ?? o.telegram_id ?? o.uid ?? o.user_id),
+        total_picks: total,
+        won_picks: won,
+        win_rate: Number.isFinite(wr) ? Math.round((wr <= 1 ? wr * 100 : wr) * 10) / 10 : 0,
+      }
+    })
+    return { users, updated_at: r.updated_at != null ? String(r.updated_at) : null, error: false }
+  } catch (err) {
+    console.error("getUserRankings: Oracle niedostępne →", err)
+    return { users: [], updated_at: null, error: true }
+  }
 }
 
 export async function getMarketRankings(): Promise<MarketRankings> {
