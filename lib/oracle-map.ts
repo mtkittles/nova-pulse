@@ -307,6 +307,9 @@ function adaptPrediction(raw: unknown): MatchPrediction {
     q_score,
     edge,
     actual_result: mapResult(p),
+    // Wynik końcowy z predykcji (gdy Oracle dołącza po rozliczeniu).
+    actual_home_score: numOrNull(p.actual_home_score ?? p.final_home_score ?? p.home_score),
+    actual_away_score: numOrNull(p.actual_away_score ?? p.final_away_score ?? p.away_score),
     q_score_breakdown: adaptQScoreBreakdown(p.q_score_breakdown ?? p.qscore_breakdown ?? p.q_breakdown),
   }
 }
@@ -841,6 +844,9 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
     stadium: m.stadium != null ? String(m.stadium) : m.venue != null ? String(m.venue) : null,
     status: mapStatus(m.status ?? r.status, normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date)),
+    // Wynik końcowy (źródło prawdy po meczu) — defensywnie z wielu nazw pól.
+    home_score: numOrNull(m.home_score ?? m.actual_home_score ?? m.final_home_score ?? r.home_score ?? r.actual_home_score),
+    away_score: numOrNull(m.away_score ?? m.actual_away_score ?? m.final_away_score ?? r.away_score ?? r.actual_away_score),
     home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
     away_id: pickId(m, ["away_id", "away_team_id", "awayId"]),
     predictions,
