@@ -3,8 +3,8 @@ import { getSession } from "@/lib/auth"
 import { AppShell } from "@/components/app-shell"
 import { LiveView } from "@/components/live-view"
 
-// Auto-odświeżanie listy co 30 s; wyniki na żywo dociąga klient (useLiveMatches).
-export const revalidate = 30
+// Auto-odświeżanie listy co 60 s (spójnie z live-pollingiem klienta useLiveMatches).
+export const revalidate = 60
 
 export const metadata = {
   title: "Na żywo",
