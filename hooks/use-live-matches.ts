@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import useSWR from "swr"
 
 export interface LiveMatch {
@@ -18,10 +19,17 @@ export interface LiveMatch {
   last_live_update: string | null
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+// Dane live nie mogą być cache'owane; 4xx/5xx rzucają błąd (nie cichy fail).
+const fetcher = async (url: string) => {
+  const res = await fetch(url, { cache: "no-store" })
+  if (!res.ok) throw new Error(`Live fetch ${res.status}`)
+  return res.json()
+}
 
 // Globalny hook live — SWR deduplikuje, więc wiele kart dzieli jedno zapytanie.
 export function useLiveMatches() {
+  // czas ostatniego udanego pobrania (po stronie klienta) — aktualizowany przy każdym refetch
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null)
   const { data, error, isLoading } = useSWR<{ matches: LiveMatch[]; updated_at: string | null }>(
     "/api/live",
     fetcher,
@@ -29,11 +37,13 @@ export function useLiveMatches() {
       refreshInterval: 60000, // co 60s
       revalidateOnFocus: true,
       dedupingInterval: 30000,
+      onSuccess: () => setFetchedAt(Date.now()),
     },
   )
   return {
     liveMatches: data?.matches ?? [],
     updatedAt: data?.updated_at ?? null,
+    fetchedAt,
     error,
     isLoading,
   }
