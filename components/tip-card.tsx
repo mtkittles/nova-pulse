@@ -15,6 +15,7 @@ import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { formatKickoff } from "@/lib/time"
 import { fmtProb, fmtOdds, fmtEdge } from "@/lib/format"
+import { DEMO_UNLOCK_PREMIUM } from "@/lib/demo-mode"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
 
 function LeagueRow({ leagueText, right }: { leagueText: string; right: React.ReactNode }) {
@@ -98,8 +99,9 @@ export default function TipCard({
     )
   }
 
-  // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem
-  if (locked) {
+  // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem.
+  // W demo z odblokowanym premium NIE pokazuj kłódki — pełne dane dla testera.
+  if (locked && !DEMO_UNLOCK_PREMIUM) {
     const lockedRight = liveOn && live ? `🔴 ${live.home_score}:${live.away_score}` : formatKickoff(tip.kickoff_utc)
     return (
       <article className="relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">

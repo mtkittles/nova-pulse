@@ -8,6 +8,7 @@ import { getMarketLabel } from "@/lib/market-label"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { formatKickoff } from "@/lib/time"
 import { fmtProb, fmtOdds, fmtEdge, sortKey } from "@/lib/format"
+import { DEMO_UNLOCK_PREMIUM } from "@/lib/demo-mode"
 import { QRing } from "./ui/q-ring"
 import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
@@ -175,8 +176,8 @@ export default function MatchTipCard({
     </>
   )
 
-  // wariant zablokowany (anonim)
-  if (locked) {
+  // wariant zablokowany (anonim) — w demo z odblokowanym premium pokazujemy pełne dane
+  if (locked && !DEMO_UNLOCK_PREMIUM) {
     return (
       <article className={cardClass}>
         {header}
