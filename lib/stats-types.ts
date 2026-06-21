@@ -43,6 +43,8 @@ export interface LeagueStat {
   tips: number
   /** 0..1 */
   win_rate: number
+  /** 0..1 (ułamek): 0.4263 = +42.63% */
+  roi: number
 }
 
 export interface QScoreBucket {
@@ -51,6 +53,8 @@ export interface QScoreBucket {
   tips: number
   /** 0..1 — pokazuje kalibrację: wyższy Q-Score → wyższa trafialność */
   win_rate: number
+  /** 0..1 (ułamek): 0.4263 = +42.63% */
+  roi: number
 }
 
 export interface StatsResponse {

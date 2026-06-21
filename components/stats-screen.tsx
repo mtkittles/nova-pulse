@@ -149,6 +149,37 @@ export function StatsScreen({
             </Card>
           </section>
 
+          {/* [C2] SKUTECZNOŚĆ WG Q-SCORE */}
+          {data.q_score_buckets.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Skuteczność wg Q-Score</h2>
+              <Card hover={false}>
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[color:var(--border-soft)] text-xs uppercase tracking-wide text-[color:var(--text-muted)]">
+                    <tr>
+                      <th className="px-2 py-2 text-left">Zakres Q</th>
+                      <th className="px-2 py-2 text-center">Typy</th>
+                      <th className="px-2 py-2 text-center">%</th>
+                      <th className="px-2 py-2 text-right">ROI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.q_score_buckets.map((b) => (
+                      <tr key={b.bucket} className="border-b border-[color:var(--border-soft)] last:border-0">
+                        <td className="px-2 py-2 font-medium tnum">{b.bucket}</td>
+                        <td className="px-2 py-2 text-center tnum text-[color:var(--text-secondary)]">{b.tips}</td>
+                        <td className="px-2 py-2 text-center font-semibold tnum">{Math.round(b.win_rate * 100)}%</td>
+                        <td className={`px-2 py-2 text-right font-semibold tnum ${b.roi >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+                          {b.roi >= 0 ? "+" : ""}{(b.roi * 100).toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Card>
+            </section>
+          )}
+
           {/* [D] PODZIAŁ PO RYNKACH */}
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Podział po rynkach</h2>

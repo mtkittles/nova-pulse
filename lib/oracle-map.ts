@@ -198,7 +198,7 @@ export function adaptStats(raw: unknown): StatsResponse {
 
   const by_league: LeagueStat[] = (Array.isArray(r.by_league) ? r.by_league : []).map((l) => {
     const o = (l ?? {}) as Record<string, unknown>
-    return { league: String(o.league ?? o.name ?? "—"), tips: pickCount(o), win_rate: pickWinRate(o) }
+    return { league: String(o.league ?? o.name ?? "—"), tips: pickCount(o), win_rate: pickWinRate(o), roi: pickRoi(o) }
   })
 
   const timeline: TimelinePoint[] = (Array.isArray(r.timeline) ? r.timeline : []).map((p) => {
@@ -210,6 +210,7 @@ export function adaptStats(raw: unknown): StatsResponse {
     bucket: String(k).replace(/-/g, "–"),
     tips: pickCount(v),
     win_rate: pickWinRate(v),
+    roi: pickRoi(v),
   }))
 
   return {
