@@ -82,7 +82,7 @@ export function StatsScreen({
     }`
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-2xl space-y-8 lg:max-w-6xl">
       {/* [A] NAGŁÓWEK */}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-semibold tracking-tight">Statystyki modelu</h1>

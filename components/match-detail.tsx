@@ -111,7 +111,7 @@ export function MatchDetail({
   const om = match.odds_markets
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-16">
+    <div className="mx-auto max-w-2xl px-4 pb-16 lg:max-w-6xl">
       <Link href="/typy" className="mb-5 inline-flex items-center gap-2 text-sm text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]">
         <ArrowLeft className="h-4 w-4" /> Wróć do typów
       </Link>
