@@ -7,12 +7,12 @@ import { getLeagueDisplayName } from "@/lib/leagues"
 import { getMarketLabel } from "@/lib/market-label"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { formatKickoff } from "@/lib/time"
-import { fmtProb, fmtOdds, fmtEdge, sortKey } from "@/lib/format"
+import { fmtProb, fmtOdds, fmtEdge, fmtQ, sortKey } from "@/lib/format"
 import { DEMO_UNLOCK_PREMIUM } from "@/lib/demo-mode"
 import { QRing } from "./ui/q-ring"
 import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
-import { ArrowRight, Lock } from "lucide-react"
+import { ArrowRight, ChevronDown, Lock } from "lucide-react"
 
 // Jedna karta = jeden mecz z listą rynków (BTTS, 1X2, Over 2.5, Team O1.5...).
 // To rozwiązuje pozorne duplikaty: różne rynki tego samego meczu pod jednym nagłówkiem.
@@ -58,33 +58,58 @@ function MarketRow({
   const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, home, away)
   const settlement: Settlement = finished ? settleTip(tip, homeScore, awayScore) : "pending"
   const edgeMuted = tip.edge == null
+  const edgeClass = edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-emerald-300" : "text-rose-300"
+  // Mobile: zwięzły wiersz + rozwijane szczegóły (edge, pełna nazwa). Desktop: pełne dane od razu.
+  const [open, setOpen] = useState(false)
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
-      <QRing value={tip.q_score} size={42} stroke={4} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.short}</span>
-          {finished && settleBadge(settlement)}
-        </div>
-        <p className="mt-1 truncate text-xs text-white/70">{m.full}</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-3 text-right">
-        <div>
-          <p className="text-[10px] text-white/50">Szansa</p>
-          <p className="text-sm font-semibold" style={{ color: tip.model_prob != null ? m.color : "var(--text-muted)" }}>{fmtProb(tip.model_prob)}</p>
-        </div>
-        <div>
-          <p className="text-[10px] text-white/50">Kurs</p>
-          <p className="text-sm font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
-        </div>
-        <div className="hidden sm:block">
-          <p className="text-[10px] text-white/50">Edge</p>
-          <p className={`text-sm font-semibold ${edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-            {fmtEdge(tip.edge)}
+    <div className="rounded-2xl border border-white/10 bg-white/[0.035]">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 p-3 text-left">
+        <QRing value={tip.q_score} size={42} stroke={4} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.short}</span>
+            {finished && settleBadge(settlement)}
+          </div>
+          {/* pełna nazwa rynku — od razu na desktop, na mobile dopiero po rozwinięciu */}
+          <p className="mt-1 hidden truncate text-xs text-white/70 sm:block">{m.full}</p>
+          {/* mobile: zwięzła linia „Q · model% · kurs" */}
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-white/60 tnum sm:hidden">
+            <span>Q {fmtQ(tip.q_score)}</span>
+            <span className="text-white/30">·</span>
+            <span>{fmtProb(tip.model_prob)}</span>
+            <span className="text-white/30">·</span>
+            <span className="font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</span>
           </p>
         </div>
-      </div>
+        {/* desktop: pełne metryki od razu */}
+        <div className="hidden shrink-0 items-center gap-3 text-right sm:flex">
+          <div>
+            <p className="text-[10px] text-white/50">Szansa</p>
+            <p className="text-sm font-semibold" style={{ color: tip.model_prob != null ? m.color : "var(--text-muted)" }}>{fmtProb(tip.model_prob)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-white/50">Kurs</p>
+            <p className="text-sm font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-white/50">Edge</p>
+            <p className={`text-sm font-semibold ${edgeClass}`}>{fmtEdge(tip.edge)}</p>
+          </div>
+        </div>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-white/40 transition sm:hidden ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {/* rozwinięcie (tylko mobile): edge + pełna nazwa rynku */}
+      {open && (
+        <div className="space-y-1 border-t border-white/10 px-3 py-2 text-xs sm:hidden">
+          <p className="text-white/70">{m.full}</p>
+          <div className="flex items-center justify-between">
+            <span className="text-white/50">Edge</span>
+            <span className={`font-semibold tnum ${edgeClass}`}>{fmtEdge(tip.edge)}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

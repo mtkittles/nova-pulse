@@ -7,7 +7,6 @@ import type { Tip } from "@/lib/types"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { getLiveStatus, LIVE_STATUS_CONFIG, worstStatus } from "@/lib/utils/live-status"
 import { MatchLiveCard, type MatchLiveGroup } from "./match-live-card"
-import { CardsCarousel } from "./cards-carousel"
 import { EmptyState } from "./ui/empty-state"
 
 // "Za 2h 15min" gdy < 3h, inaczej godzina lokalna "21:00".
@@ -149,11 +148,13 @@ export function LiveView({ tips }: { tips: Tip[] }) {
             <Radio className="h-4 w-4" /> Brak meczów na żywo w tej chwili.
           </p>
         ) : (
-          active.map((g, i) => (
-            <motion.div key={g.key} {...reveal(i)}>
-              <MatchLiveCard group={g} />
-            </motion.div>
-          ))
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {active.map((g, i) => (
+              <motion.div key={g.key} {...reveal(i)}>
+                <MatchLiveCard group={g} />
+              </motion.div>
+            ))}
+          </div>
         )}
       </section>
 
@@ -161,11 +162,12 @@ export function LiveView({ tips }: { tips: Tip[] }) {
       {upcoming.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Dziś</h2>
-          <CardsCarousel ariaLabel="Nadchodzące dziś">
+          {/* Mobile: lista pionowa. Desktop: grid 2 kolumny (bez karuzeli dla długich list). */}
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {upcoming.map((g) => (
               <MatchLiveCard key={g.key} group={g} />
             ))}
-          </CardsCarousel>
+          </div>
         </section>
       )}
 
@@ -173,7 +175,9 @@ export function LiveView({ tips }: { tips: Tip[] }) {
       {finished.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Zakończone</h2>
-          {finished.map((g) => <MatchLiveCard key={g.key} group={g} />)}
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {finished.map((g) => <MatchLiveCard key={g.key} group={g} />)}
+          </div>
         </section>
       )}
     </div>

@@ -15,7 +15,7 @@ export default async function LivePage() {
   const [today, session] = await Promise.all([getLiveWindowTips(), getSession()])
   return (
     <AppShell loggedIn={Boolean(session)} isAdmin={session?.isAdmin}>
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-2xl lg:max-w-5xl">
         <LiveView tips={today.tips} />
       </div>
     </AppShell>
