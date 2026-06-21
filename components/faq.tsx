@@ -7,7 +7,7 @@ import { ChevronDown } from "lucide-react"
 const ITEMS: { q: string; a: string }[] = [
   {
     q: "Czym jest LUPUS BETS?",
-    a: "To interfejs nad silnikiem predykcji piłkarskich Lupus Bot. Silnik (model Dixon-Coles) liczy prawdopodobieństwa, a my pokazujemy gotowe typy: BTTS, Over 1.5, Mix oraz tryb Thriller (dokładny wynik 3:2/2:3).",
+    a: "To interfejs nad silnikiem predykcji piłkarskich Lupus Bot. Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score, a my pokazujemy gotowe typy: BTTS, Over 1.5, Mix oraz tryb Thriller (dokładny wynik 3:2/2:3).",
   },
   {
     q: "Czy strona liczy typy na żywo?",

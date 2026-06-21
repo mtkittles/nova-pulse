@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "LUPUS BETS",
-    description: "Predykcje piłkarskie napędzane modelem Dixon-Coles.",
+    description: "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score.",
   },
 }
 

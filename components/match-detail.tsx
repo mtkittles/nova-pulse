@@ -233,7 +233,7 @@ export function MatchDetail({
       {/* [D] HEATMAPA */}
       <motion.div {...reveal(0.05)} className="mb-5">
         <Card hover={false}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona)</h2>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona/Dixon-Coles)</h2>
           {match.score_matrix ? (
             <LazyMount height={360}>
               <ScoreHeatmap matrix={match.score_matrix} home={match.home} away={match.away} highlightThriller={hasThriller} />
