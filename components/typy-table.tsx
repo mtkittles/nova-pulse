@@ -11,6 +11,7 @@ import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matche
 import { TeamBadge } from "./team-badge"
 import { StatusPill, type PillStatus } from "./ui/status-pill"
 import { qScoreColor } from "@/lib/design"
+import { fmtProb, fmtOdds, fmtEdge, fmtQ } from "@/lib/format"
 
 function timeLocal(iso: string | null): string {
   if (!iso) return "wkrótce"
@@ -43,8 +44,7 @@ function Row({ tip, loggedIn, now }: { tip: Tip; loggedIn: boolean; now: number 
 
   const market = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, tip.home, tip.away)
   const leagueText = tip.leagueCode ? getLeagueDisplayName(tip.leagueCode) : tip.league
-  const prob = Math.round(tip.model_prob * 100)
-  const edgePct = (tip.edge * 100).toFixed(1)
+  const edgeMuted = tip.edge == null
 
   // sierota = brak fixture → bez linku (P0-03)
   const isOrphan = !tip.kickoff_utc && !tip.match_status
@@ -78,11 +78,11 @@ function Row({ tip, loggedIn, now }: { tip: Tip; loggedIn: boolean; now: number 
       <td className={cell}>
         <span className={`inline-block rounded-full border px-2 py-0.5 text-xs font-semibold ${market.badge}`}>{market.short}</span>
       </td>
-      <td className={`${cell} text-center font-bold tnum`} style={{ color: qScoreColor(tip.q_score) }}>{tip.q_score}</td>
-      <td className={`${cell} hidden text-center text-[color:var(--text-secondary)] tnum sm:table-cell`}>{prob}%</td>
-      <td className={`${cell} text-center font-bold text-[color:var(--cyan)] tnum`}>{tip.odds.toFixed(2)}</td>
-      <td className={`${cell} text-center font-semibold tnum ${tip.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
-        {tip.edge >= 0 ? "+" : ""}{edgePct}%
+      <td className={`${cell} text-center font-bold tnum`} style={{ color: tip.q_score != null ? qScoreColor(tip.q_score) : "var(--text-muted)" }}>{fmtQ(tip.q_score)}</td>
+      <td className={`${cell} hidden text-center text-[color:var(--text-secondary)] tnum sm:table-cell`}>{fmtProb(tip.model_prob)}</td>
+      <td className={`${cell} text-center font-bold text-[color:var(--cyan)] tnum`}>{fmtOdds(tip.odds)}</td>
+      <td className={`${cell} text-center font-semibold tnum ${edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+        {fmtEdge(tip.edge)}
       </td>
       <td className={`${cell} text-right`}>
         <StatusPill status={pill} />

@@ -7,6 +7,7 @@ import { getLeagueDisplayName } from "@/lib/leagues"
 import { getMarketLabel } from "@/lib/market-label"
 import { mapMatchStatus, settleTip, statusFromKickoff, type Settlement } from "@/lib/tip-utils"
 import { formatKickoff } from "@/lib/time"
+import { fmtProb, fmtOdds, fmtEdge, sortKey } from "@/lib/format"
 import { QRing } from "./ui/q-ring"
 import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
@@ -55,8 +56,7 @@ function MarketRow({
 }) {
   const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, home, away)
   const settlement: Settlement = finished ? settleTip(tip, homeScore, awayScore) : "pending"
-  const prob = Math.round(tip.model_prob * 100)
-  const edgePct = (tip.edge * 100).toFixed(1)
+  const edgeMuted = tip.edge == null
 
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
@@ -71,16 +71,16 @@ function MarketRow({
       <div className="flex shrink-0 items-center gap-3 text-right">
         <div>
           <p className="text-[10px] text-white/50">Szansa</p>
-          <p className="text-sm font-semibold" style={{ color: m.color }}>{prob}%</p>
+          <p className="text-sm font-semibold" style={{ color: tip.model_prob != null ? m.color : "var(--text-muted)" }}>{fmtProb(tip.model_prob)}</p>
         </div>
         <div>
           <p className="text-[10px] text-white/50">Kurs</p>
-          <p className="text-sm font-bold text-[color:var(--accent)]">{tip.odds.toFixed(2)}</p>
+          <p className="text-sm font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
         </div>
         <div className="hidden sm:block">
           <p className="text-[10px] text-white/50">Edge</p>
-          <p className={`text-sm font-semibold ${tip.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-            {tip.edge >= 0 ? "+" : ""}{edgePct}%
+          <p className={`text-sm font-semibold ${edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+            {fmtEdge(tip.edge)}
           </p>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function MatchTipCard({
     : finished ? <span className="text-white/55">koniec</span>
     : <span className="text-white/55">{formatKickoff(group.kickoff_utc)}</span>
 
-  const sortedTips = [...group.tips].sort((a, b) => b.q_score - a.q_score)
+  const sortedTips = [...group.tips].sort((a, b) => sortKey(b.q_score) - sortKey(a.q_score))
 
   const cardClass =
     "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(88,230,245,0.08)]"

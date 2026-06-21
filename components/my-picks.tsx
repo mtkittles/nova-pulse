@@ -6,6 +6,7 @@ import { Plus, Trash2, X } from "lucide-react"
 import type { BetType, Tip } from "@/lib/types"
 import type { UserPick } from "@/lib/extra-types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
+import { fmtOdds } from "@/lib/format"
 
 const COLORS = { cyan: "#67e8f9", violet: "#c4b5fd", emerald: "#6ee7b7", rose: "#fda4af", grid: "rgba(255,255,255,0.08)", axis: "rgba(255,255,255,0.45)" }
 const tip = { background: "#10111d", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "0.75rem", color: "#fff" } as const
@@ -298,7 +299,7 @@ function PickModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => v
                       {t.home} <span className="text-white/55">vs</span> {t.away}
                       <span className="ml-2 text-white/60">{BET_TYPE_SHORT[t.bet_type]} {t.bet_side}</span>
                     </span>
-                    <span className="shrink-0 font-semibold">{t.odds.toFixed(2)}</span>
+                    <span className="shrink-0 font-semibold">{fmtOdds(t.odds)}</span>
                   </button>
                 )
               })}

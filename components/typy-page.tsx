@@ -5,6 +5,7 @@ import type { Tip } from "@/lib/types"
 import type { CalendarDay } from "@/lib/extra-types"
 import { getMarketLabel, MARKET_FILTERS, marketGroupOf, type MarketCategory } from "@/lib/market-label"
 import { mapMatchStatus, statusFromKickoff } from "@/lib/tip-utils"
+import { sortKey } from "@/lib/format"
 import { AlertTriangle, CalendarOff, CalendarDays, LayoutGrid, Table2 } from "lucide-react"
 import MatchTipCard, { type MatchGroup } from "./match-tip-card"
 import { DateStrip } from "./date-strip"
@@ -155,13 +156,14 @@ export default function TypyPage({
     const out = tips
       .filter((t) => (mode === "ALL" ? true : marketGroupOf(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side) === mode))
       .filter((t) => (league === "ALL" ? true : t.league === league))
-      .filter((t) => t.q_score >= minQ)
-      .filter((t) => t.edge * 100 >= minEdge)
+      // null = nieznana metryka: widoczna przy progu 0, ukrywana dopiero gdy próg podniesiony
+      .filter((t) => (t.q_score == null ? minQ <= 0 : t.q_score >= minQ))
+      .filter((t) => (t.edge == null ? minEdge <= 0 : t.edge * 100 >= minEdge))
       .filter((t) => (statusF === "ALL" ? true : statusOf(t, now) === statusF))
     out.sort((a, b) => {
-      if (sort === "q") return b.q_score - a.q_score
-      if (sort === "odds") return b.odds - a.odds
-      if (sort === "edge") return b.edge - a.edge
+      if (sort === "q") return sortKey(b.q_score) - sortKey(a.q_score)
+      if (sort === "odds") return sortKey(b.odds) - sortKey(a.odds)
+      if (sort === "edge") return sortKey(b.edge) - sortKey(a.edge)
       const ta = a.kickoff_utc ? new Date(a.kickoff_utc).getTime() : Infinity
       const tb = b.kickoff_utc ? new Date(b.kickoff_utc).getTime() : Infinity
       return ta - tb

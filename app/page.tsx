@@ -3,6 +3,7 @@ import { getStats } from "@/lib/stats"
 import { getTodayTips } from "@/lib/tips"
 import { getSession } from "@/lib/auth"
 import { getWCOverview } from "@/lib/worldcup"
+import { sortKey } from "@/lib/format"
 import type { Tip } from "@/lib/types"
 
 // Strona zależy od danych na żywo i sesji — renderuj per żądanie (nie prerender).
@@ -28,7 +29,7 @@ export default async function Home() {
   ])
 
   const tips = today.tips
-  const byQ = [...tips].sort((a, b) => b.q_score - a.q_score)
+  const byQ = [...tips].sort((a, b) => sortKey(b.q_score) - sortKey(a.q_score))
   // Rekomendacje value: tylko dodatni Edge, maks. 2 (nie promujemy ujemnego Edge).
   const valueTips = byQ.filter((t) => (t.edge ?? 0) > 0)
   const topTips: Tip[] = valueTips.slice(0, 2)

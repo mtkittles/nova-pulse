@@ -23,14 +23,14 @@ export interface Tip {
   bet_side: string
   /** surowy bet_side z Oracle ("home"/"away"/"") — do rozróżnienia rynku */
   bet_side_raw?: string
-  /** prawdopodobieństwo modelu, zakres 0..1 */
-  model_prob: number
-  /** kurs bukmacherski */
-  odds: number
-  /** edge / wartość oczekiwana, np. 0.08 = +8% */
-  edge: number
-  /** Q-Score jakości typu, zakres 0..100 */
-  q_score: number
+  /** prawdopodobieństwo modelu, zakres 0..1; null gdy Oracle nie podał (NIE 0) */
+  model_prob: number | null
+  /** kurs bukmacherski; null gdy brak (NIE 0) */
+  odds: number | null
+  /** edge / wartość oczekiwana, np. 0.08 = +8%; null gdy nie da się policzyć */
+  edge: number | null
+  /** Q-Score jakości typu, zakres 0..100; null gdy brak oceny (NIE 0) */
+  q_score: number | null
   /** NULL przed meczem, 1 = trafione, 0 = pudło (weryfikuje live_tracker) */
   actual_result: 0 | 1 | null
   /** wynik meczu z Oracle (gdy rozegrany) */

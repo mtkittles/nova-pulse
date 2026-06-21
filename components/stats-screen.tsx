@@ -7,6 +7,7 @@ import { BarChart3, Send, TrendingUp } from "lucide-react"
 import type { StatsResponse } from "@/lib/stats-types"
 import type { Tip } from "@/lib/types"
 import { getMarketLabel } from "@/lib/market-label"
+import { fmtOdds } from "@/lib/format"
 import { settleTip } from "@/lib/tip-utils"
 import { CountUp } from "./ui/count-up"
 import { Card } from "./ui/card"
@@ -209,7 +210,7 @@ export function StatsScreen({
                         <p className="truncate text-sm font-medium">{t.home} – {t.away}</p>
                         <p className="mt-0.5"><span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] font-semibold ${market.badge}`}>{market.short}</span></p>
                       </div>
-                      <span className="shrink-0 text-sm font-bold text-[color:var(--cyan)] tnum">{t.odds.toFixed(2)}</span>
+                      <span className="shrink-0 text-sm font-bold text-[color:var(--cyan)] tnum">{fmtOdds(t.odds)}</span>
                       <StatusPill status={pill} />
                     </>
                   )

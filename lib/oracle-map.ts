@@ -104,11 +104,14 @@ function mapResult(t: Record<string, unknown>): 0 | 1 | null {
 
 export function adaptTip(raw: unknown): Tip {
   const t = (raw ?? {}) as Record<string, unknown>
-  const model_prob = num(t.model_prob)
-  const odds = num(t.odds)
-  // użyj realnego edge (może być ujemny); gdy brak — policz przewagę nad kursem
-  const rawEdge = Number(t.edge)
-  const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
+  // Brak danych → null (NIGDY 0 — 0 wygląda jak realna ocena/kurs).
+  const model_prob = numOrNull(t.model_prob)
+  const odds = numOrNull(t.odds)
+  // Edge: użyj realnego (może być ujemny); gdy brak, a mamy prob+odds → policz
+  // przewagę nad kursem; gdy i tego brak → null.
+  const edge =
+    numOrNull(t.edge) ??
+    (model_prob != null && odds != null && odds > 0 ? model_prob - 1 / odds : null)
 
   return {
     event_id: (t.af_fixture_id ?? t.event_id ?? t.fixture_id ?? t.match_id ?? t.id ?? "") as string | number,
@@ -127,7 +130,7 @@ export function adaptTip(raw: unknown): Tip {
     model_prob,
     odds,
     edge,
-    q_score: num(t.q_score),
+    q_score: numOrNull(t.q_score),
     actual_result: mapResult(t),
     home_score: t.home_score != null ? num(t.home_score) : null,
     away_score: t.away_score != null ? num(t.away_score) : null,

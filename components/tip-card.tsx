@@ -14,6 +14,7 @@ import { QRing } from "./ui/q-ring"
 import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { formatKickoff } from "@/lib/time"
+import { fmtProb, fmtOdds, fmtEdge } from "@/lib/format"
 import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
 
 function LeagueRow({ leagueText, right }: { leagueText: string; right: React.ReactNode }) {
@@ -122,11 +123,12 @@ export default function TipCard({
     )
   }
 
-  const prob = Math.round(tip.model_prob * 100)
-  const probColor = scaleColor(tip.model_prob)
+  const hasProb = tip.model_prob != null
+  const prob = hasProb ? Math.round((tip.model_prob as number) * 100) : null
+  const probColor = hasProb ? scaleColor(tip.model_prob as number) : "var(--text-muted)"
   const market = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, tip.home, tip.away)
   const isThriller = market.short === "Thriller"
-  const edgePct = (tip.edge * 100).toFixed(1)
+  const edgeMuted = tip.edge == null
   const minuteTxt = live?.minute != null ? `${live.minute}'` : ""
 
   const scoreTxt = hasScore ? `${homeScore} : ${awayScore}` : null
@@ -209,40 +211,41 @@ export default function TipCard({
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <MetricLabel label="Szansa modelu" hint={METRIC_HINTS.model} className="text-xs text-white/60" />
           <p className="mt-1 text-xl font-semibold" style={{ color: probColor }}>
-            {prob}%
+            {fmtProb(tip.model_prob)}
           </p>
         </div>
         <div className="rounded-2xl border border-[color:var(--accent)]/40 bg-[var(--accent)]/10 p-3">
           <MetricLabel label="Kurs" hint={METRIC_HINTS.odds} className="text-xs text-white/70" />
-          <p className="mt-1 text-2xl font-bold text-[color:var(--accent)]">{tip.odds.toFixed(2)}</p>
+          <p className="mt-1 text-2xl font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <MetricLabel label="Edge" hint={METRIC_HINTS.edge} className="text-xs text-white/60" />
-          <p className={`mt-1 text-xl font-semibold ${tip.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
-            {tip.edge >= 0 ? "+" : ""}
-            {edgePct}%
+          <p className={`mt-1 text-xl font-semibold ${edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+            {fmtEdge(tip.edge)}
           </p>
         </div>
       </div>
 
-      {/* pasek szansy modelu (gradient wg prawdopodobieństwa) */}
-      <div className="relative mt-4">
-        <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="text-white/60">Szansa modelu</span>
-          <span className="font-semibold" style={{ color: probColor }}>
-            {prob}%
-          </span>
+      {/* pasek szansy modelu (gradient wg prawdopodobieństwa) — tylko gdy znana */}
+      {hasProb && (
+        <div className="relative mt-4">
+          <div className="mb-1.5 flex items-center justify-between text-xs">
+            <span className="text-white/60">Szansa modelu</span>
+            <span className="font-semibold" style={{ color: probColor }}>
+              {prob}%
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${prob}%`,
+                background: `linear-gradient(90deg, ${scaleColor(Math.max(0, (tip.model_prob as number) - 0.25))}, ${probColor})`,
+              }}
+            />
+          </div>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${prob}%`,
-              background: `linear-gradient(90deg, ${scaleColor(Math.max(0, tip.model_prob - 0.25))}, ${probColor})`,
-            }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* sierota (brak fixture) — brak strony analizy */}
       {isOrphan && (
