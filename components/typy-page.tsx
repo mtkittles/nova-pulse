@@ -12,7 +12,6 @@ import { DateStrip } from "./date-strip"
 import { CalendarModal } from "./calendar-modal"
 import { TypyTable } from "./typy-table"
 import { AnimatedTabs } from "./ui/tabs"
-import { CardsCarousel } from "./cards-carousel"
 import { TipGridSkeleton } from "./ui/skeletons"
 import { EmptyState } from "./ui/empty-state"
 import { plMatches } from "@/lib/i18n"
@@ -315,11 +314,12 @@ export default function TypyPage({
           </p>
 
           {view === "cards" ? (
-            <CardsCarousel key={`${date}-${mode}-${league}-${sort}`} autoPlay={false} ariaLabel="Typy meczowe">
+            // Mobile: lista pionowa (1 kolumna). Desktop: grid 2/3 kolumny (bez karuzeli dla długich list).
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {groups.map((g) => (
                 <MatchTipCard key={g.key} group={g} href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined} locked={!loggedIn} />
               ))}
-            </CardsCarousel>
+            </div>
           ) : (
             <TypyTable tips={visible} loggedIn={loggedIn} />
           )}
