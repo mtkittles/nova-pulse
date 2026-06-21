@@ -34,6 +34,13 @@ Oracle VPS. Ta strona to drugi interfejs nad tym samym silnikiem i bazą:
 - Repo: `mtkittles/nova-pulse`. Branch roboczy: `claude/determined-galileo-1Vsu7`.
 - GitHub przez MCP (brak `gh` CLI w tym środowisku).
 
+## RAPORTOWANIE
+
+- Po każdej sesji/sprincie **automatycznie** twórz krótkie podsumowanie jako
+  plik `.md` i dostarcz je użytkownikowi (SendUserFile). W czacie zostaw tylko
+  zwięzłą notkę + odwołanie do pliku.
+- Plik podsumowania: lista zadań + commity, kluczowe decyzje, ewentualne env vary.
+
 ## CZEGO NIE ROBIĆ
 
 - ❌ Nie wystawiać klucza API / adresu Oracle do przeglądarki.
