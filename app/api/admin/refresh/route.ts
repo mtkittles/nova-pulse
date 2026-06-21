@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
+import { DEMO_MODE } from "@/lib/demo-mode"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -10,6 +11,11 @@ export async function POST() {
   const session = await getSession()
   if (!session?.isAdmin) {
     return NextResponse.json({ error: "Brak uprawnień." }, { status: 403 })
+  }
+
+  // Demo: akcje mutujące Oracle wyłączone (no-op, zero zapisu).
+  if (DEMO_MODE) {
+    return NextResponse.json({ ok: true, demo: true, message: "Niedostępne w trybie demo." })
   }
 
   const base = process.env.ORACLE_API_URL

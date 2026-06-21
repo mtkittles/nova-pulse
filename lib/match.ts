@@ -28,7 +28,6 @@ export async function getMatch(id: string): Promise<MatchInfo> {
   try {
     await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/match/${encodeURIComponent(id)}`)
-    console.log(`[oracle] /match/${id} raw:`, JSON.stringify(data).slice(0, 600))
     if (data && typeof data === "object" && (data as { found?: unknown }).found === false) {
       return notFound(id)
     }
@@ -42,7 +41,7 @@ export async function getMatch(id: string): Promise<MatchInfo> {
 function detailedNotFound(id: string): MatchDetailed {
   return {
     found: false, event_id: id, home: "—", away: "—", league: "—", kickoff_utc: "",
-    stadium: null, status: "upcoming", home_id: null, away_id: null, predictions: [],
+    stadium: null, status: "upcoming", home_score: null, away_score: null, home_id: null, away_id: null, predictions: [],
     odds_markets: null,
     home_metrics: null, away_metrics: null, h2h_matches: [], h2h_summary: null,
     score_distribution: [], score_matrix: null, home_scorers: [], away_scorers: [],
@@ -68,7 +67,7 @@ function mockDetailed(id: string): MatchDetailed {
   return {
     found: true, event_id: id, home: "FC Tokyo", away: "Cerezo Osaka", league: "J1 League",
     kickoff_utc: new Date(Date.now() + 2 * 864e5).toISOString().slice(0, 16) + ":00Z",
-    stadium: "Ajinomoto Stadium", status: "upcoming", home_id: 101, away_id: 202,
+    stadium: "Ajinomoto Stadium", status: "upcoming", home_score: null, away_score: null, home_id: 101, away_id: 202,
     predictions: [
       { bet_type: "OVER_1_5", bet_side: "O1.5", model_prob: 0.84, odds: 1.3, q_score: 88, edge: 0.06, actual_result: null },
       { bet_type: "BTTS", bet_side: "TAK", model_prob: 0.66, odds: 1.8, q_score: 71, edge: 0.02, actual_result: null },
@@ -113,7 +112,6 @@ export async function getMatchDetailed(id: string): Promise<MatchDetailed> {
   try {
     await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/match/${encodeURIComponent(id)}/detailed`)
-    console.log(`[oracle] /match/${id}/detailed raw:`, JSON.stringify(data).slice(0, 800))
     if (data && typeof data === "object" && (data as { found?: unknown }).found === false) {
       return detailedNotFound(id)
     }

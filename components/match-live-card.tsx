@@ -6,6 +6,7 @@ import { getMarketLabel } from "@/lib/market-label"
 import { LIVE_STATUS_CONFIG, type LiveStatus } from "@/lib/utils/live-status"
 import { TeamBadge } from "./team-badge"
 import { QScoreRing } from "./ui/q-score-ring"
+import { fmtOdds, fmtEdge } from "@/lib/format"
 
 export interface MatchLiveGroup {
   key: string
@@ -76,9 +77,9 @@ export function MatchLiveCard({ group }: { group: MatchLiveGroup }) {
                   <span className={`text-sm font-medium ${tcfg.color}`}>{m.short}</span>
                   <span className="ml-1 truncate text-xs text-[color:var(--text-muted)]">{m.full}</span>
                 </span>
-                <span className="shrink-0 text-sm font-bold text-[color:var(--cyan)] tnum">{tip.odds.toFixed(2)}</span>
-                <span className={`w-14 shrink-0 text-right text-xs font-semibold tnum ${tip.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
-                  {tip.edge >= 0 ? "+" : ""}{(tip.edge * 100).toFixed(1)}%
+                <span className="shrink-0 text-sm font-bold text-[color:var(--cyan)] tnum">{fmtOdds(tip.odds)}</span>
+                <span className={`w-14 shrink-0 text-right text-xs font-semibold tnum ${tip.edge == null ? "text-[color:var(--text-muted)]" : tip.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+                  {fmtEdge(tip.edge)}
                 </span>
               </div>
             )

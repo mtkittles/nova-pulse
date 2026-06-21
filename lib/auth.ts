@@ -1,6 +1,7 @@
 import "server-only"
 import { cookies } from "next/headers"
 import { SignJWT, jwtVerify } from "jose"
+import { DEMO_MODE, DEMO_UNLOCK_PREMIUM, DEMO_UNLOCK_ADMIN, DEMO_USER } from "./demo-mode"
 
 export const SESSION_COOKIE = "lb_session"
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 7 // 7 dni
@@ -44,7 +45,8 @@ export async function signSession(p: { uid: string; username?: string; name?: st
     .sign(key())
 }
 
-export async function getSession(): Promise<Session | null> {
+// Realna sesja z cookie + JWT (bez zmian względem produkcji).
+async function readRealSession(): Promise<Session | null> {
   try {
     const store = await cookies()
     const token = store.get(SESSION_COOKIE)?.value
@@ -62,4 +64,22 @@ export async function getSession(): Promise<Session | null> {
   } catch {
     return null
   }
+}
+
+// Sesja demo: gdy brak realnej sesji i DEMO_MODE → syntetyczny tester.
+// P0-2: premium i admin to ROZDZIELNE flagi. Premium odblokowane domyślnie,
+// admin TYLKO gdy jawnie włączony serwerowo (DEMO_UNLOCK_ADMIN=true).
+const DEMO_SESSION: Session = {
+  uid: DEMO_USER.id,
+  username: DEMO_USER.username,
+  name: DEMO_USER.first_name,
+  tier: DEMO_UNLOCK_PREMIUM ? "premium" : "free",
+  isAdmin: DEMO_UNLOCK_ADMIN,
+}
+
+export async function getSession(): Promise<Session | null> {
+  const real = await readRealSession()
+  if (real) return real
+  if (DEMO_MODE) return DEMO_SESSION
+  return null
 }

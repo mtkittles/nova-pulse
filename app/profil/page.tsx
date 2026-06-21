@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 import { ArrowRight, BarChart3, Send, Ticket } from "lucide-react"
 import { getSession } from "@/lib/auth"
 import { getUserPicks } from "@/lib/picks"
+import { DEMO_MODE, DEMO_USER } from "@/lib/demo-mode"
+import { MOCK_PROFILE } from "@/lib/demo-data"
 import { getMarketLabel } from "@/lib/market-label"
 import { AppShell } from "@/components/app-shell"
 import { Card } from "@/components/ui/card"
@@ -19,7 +21,10 @@ export const metadata = { title: "Profil", description: "Twój profil: statystyk
 export default async function ProfilPage() {
   const session = await getSession()
   if (!session) redirect("/login")
-  const picks = await getUserPicks(session.uid)
+  // Demo: dla syntetycznego testera mockowy profil (zero kontaktu z Oracle).
+  const isDemoUser = DEMO_MODE && session.uid === DEMO_USER.id
+  const picks = isDemoUser ? MOCK_PROFILE.picks : await getUserPicks(session.uid)
+  const defaultNick = isDemoUser ? MOCK_PROFILE.nick : session.name || session.username || "Gracz"
 
   const settled = picks.filter((p) => p.status === "won" || p.status === "lost")
   const won = settled.filter((p) => p.status === "won").length
@@ -46,7 +51,7 @@ export default async function ProfilPage() {
       <div className="mx-auto max-w-2xl space-y-6">
         {/* [A] NAGŁÓWEK */}
         <Card hover={false}>
-          <ProfileIdentity defaultNick={session.name || session.username || "Gracz"} tier={session.tier} />
+          <ProfileIdentity defaultNick={defaultNick} tier={session.tier} />
         </Card>
 
         {/* [B] ODZNAKI */}
@@ -121,9 +126,11 @@ export default async function ProfilPage() {
                 )
               })}
             </div>
-            <Link href="/kupony" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[color:var(--cyan)] hover:gap-2">
-              Wszystkie moje typy <ArrowRight className="h-4 w-4" />
-            </Link>
+            {process.env.NEXT_PUBLIC_FEATURE_COUPONS === "true" && (
+              <Link href="/kupony" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[color:var(--cyan)] hover:gap-2">
+                Wszystkie moje typy <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
           </Card>
         )}
 

@@ -17,7 +17,6 @@ export async function getUserPicks(telegramId: string): Promise<UserPick[]> {
   if (!isOracleConfigured()) return mockPicks()
   try {
     const data = await oracleFetch<unknown>(`/user/${encodeURIComponent(telegramId)}/picks`, 0)
-    console.log(`[oracle] /user/${telegramId}/picks raw:`, JSON.stringify(data).slice(0, 500))
     return adaptUserPicks(data)
   } catch (err) {
     console.error("getUserPicks: Oracle niedostępne →", err)

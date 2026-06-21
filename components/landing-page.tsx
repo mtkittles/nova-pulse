@@ -60,8 +60,8 @@ const howItWorks = [
   },
   {
     icon: Cpu,
-    title: "Model Dixon-Coles + kalibracja + Q-Score",
-    text: "Liczymy prawdopodobieństwa goli i jakość sygnału — każdy typ dostaje ocenę.",
+    title: "Model goli + kalibracja + Q-Score",
+    text: "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score.",
   },
   {
     icon: CheckCircle2,
@@ -206,8 +206,8 @@ export default function LandingPage({
             Analiza, nie przeczucie
           </p>
           <p className="mt-5 max-w-xl text-lg leading-8 text-[color:var(--text-secondary)]">
-            Algorytm Poissona analizuje formę, statystyki i kursy. Typy z przewagą nad bukmacherem —
-            weryfikowane na żywo.
+            Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny
+            Q-Score. Typy z przewagą nad bukmacherem — weryfikowane na żywo.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -423,7 +423,7 @@ export default function LandingPage({
           </div>
         </div>
         <p className="mt-6 text-xs text-[color:var(--text-muted)]">
-          © 2026 LUPUS BETS. Interfejs nad silnikiem Lupus Bot. Predykcje oparte na modelu Dixon-Coles.
+          © 2026 LUPUS BETS. Interfejs nad silnikiem Lupus Bot. Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score.
         </p>
       </footer>
     </main>

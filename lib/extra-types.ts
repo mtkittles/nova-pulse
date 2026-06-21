@@ -25,6 +25,9 @@ export interface MatchPrediction {
   q_score: number | null
   edge: number | null
   actual_result: 0 | 1 | null
+  /** wynik końcowy meczu z Oracle (gdy rozegrany); null gdy brak */
+  actual_home_score?: number | null
+  actual_away_score?: number | null
   /** rozbicie Q-Score (gdy Oracle podał); null → sekcja ukryta */
   q_score_breakdown?: QScoreBreakdown | null
 }
@@ -366,6 +369,9 @@ export interface MatchDetailed {
   kickoff_utc: string
   stadium: string | null
   status: MatchStatus
+  /** wynik końcowy meczu z Oracle (gdy rozegrany); null gdy brak */
+  home_score: number | null
+  away_score: number | null
   home_id: string | number | null
   away_id: string | number | null
   predictions: MatchPrediction[]

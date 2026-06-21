@@ -81,8 +81,12 @@ export function MatchDetail({
     liveSt === "live" || liveSt === "halftime" ? "live" : liveSt === "finished" ? "finished" : match.status
   const liveOn = status === "live"
   const finished = status === "finished"
-  const homeScore = live ? live.home_score : null
-  const awayScore = live ? live.away_score : null
+  // Łańcuch fallbacku wyniku: 1) live (IN_PLAY) → 2) wynik końcowy z /detailed
+  // → 3) wynik z predykcji (actual_*) → 4) null ("—"). Źródło prawdy po meczu = Oracle.
+  const liveScore = live && live.home_score != null && live.away_score != null ? ([live.home_score, live.away_score] as const) : null
+  const predScored = match.predictions.find((p) => p.actual_home_score != null && p.actual_away_score != null)
+  const homeScore = liveScore?.[0] ?? match.home_score ?? predScored?.actual_home_score ?? null
+  const awayScore = liveScore?.[1] ?? match.away_score ?? predScored?.actual_away_score ?? null
   const hasScore = homeScore != null && awayScore != null
   const minuteTxt = liveSt === "halftime" ? "PRZERWA" : live?.minute != null ? `${live.minute}'` : "LIVE"
 
@@ -229,7 +233,7 @@ export function MatchDetail({
       {/* [D] HEATMAPA */}
       <motion.div {...reveal(0.05)} className="mb-5">
         <Card hover={false}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona)</h2>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona/Dixon-Coles)</h2>
           {match.score_matrix ? (
             <LazyMount height={360}>
               <ScoreHeatmap matrix={match.score_matrix} home={match.home} away={match.away} highlightThriller={hasThriller} />

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Space_Grotesk } from "next/font/google"
 import "./globals.css"
+import { DEMO_MODE } from "@/lib/demo-mode"
 
 // Tekst UI — Inter; nagłówki/wyświetlanie — Space Grotesk (max 2 rodziny).
 const inter = Inter({
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "LUPUS BETS",
-    description: "Predykcje piłkarskie napędzane modelem Dixon-Coles.",
+    description: "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score.",
   },
 }
 
@@ -55,7 +56,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pl" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className="bg-[var(--bg-0)] text-[color:var(--text-primary)] antialiased">{children}</body>
+      <body className="bg-[var(--bg-0)] text-[color:var(--text-primary)] antialiased">
+        {DEMO_MODE && (
+          <div className="flex h-8 items-center justify-center gap-2 border-b border-amber-400/20 bg-amber-400/10 px-4 text-center text-xs font-medium text-amber-300">
+            🔍 Tryb demonstracyjny — dane przykładowe, profil mockowy
+          </div>
+        )}
+        {children}
+      </body>
     </html>
   )
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { getUserPicks, saveUserPicks } from "@/lib/picks"
+import { DEMO_MODE } from "@/lib/demo-mode"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -17,6 +18,8 @@ export async function GET() {
 export async function POST(req: Request) {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: "Wymagane logowanie." }, { status: 401 })
+  // Demo: nie zapisujemy nic na Oracle (no-op).
+  if (DEMO_MODE) return NextResponse.json({ ok: true, demo: true, message: "Niedostępne w trybie demo." })
   let body: { picks?: unknown }
   try {
     body = await req.json()

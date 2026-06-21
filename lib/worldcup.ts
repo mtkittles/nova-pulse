@@ -242,7 +242,6 @@ async function tryOracle<T>(path: string, revalidate: number): Promise<unknown |
   if (!isOracleConfigured()) return null
   try {
     const data = await oracleFetch<unknown>(path, revalidate)
-    console.log(`[oracle] ${path} raw:`, JSON.stringify(data).slice(0, 400))
     return data
   } catch (err) {
     console.error(`worldcup ${path}: Oracle niedostępne →`, err)

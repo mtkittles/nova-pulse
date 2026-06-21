@@ -6,7 +6,7 @@ import { HelpCircle } from "lucide-react"
 export const METRIC_HINTS = {
   q: "Jakość sygnału modelu (0-100). Wyższy = pewniejsza analiza.",
   edge: "Przewaga modelu nad kursem bukmachera. Dodatni = wartość.",
-  model: "Prawdopodobieństwo wg modelu Dixon-Coles + kalibracja.",
+  model: "Prawdopodobieństwo wg modelu goli Poissona/Dixon-Coles z kalibracją.",
   odds: "Kurs bukmacherski (implikuje prawdopodobieństwo rynkowe).",
 } as const
 

@@ -104,11 +104,14 @@ function mapResult(t: Record<string, unknown>): 0 | 1 | null {
 
 export function adaptTip(raw: unknown): Tip {
   const t = (raw ?? {}) as Record<string, unknown>
-  const model_prob = num(t.model_prob)
-  const odds = num(t.odds)
-  // użyj realnego edge (może być ujemny); gdy brak — policz przewagę nad kursem
-  const rawEdge = Number(t.edge)
-  const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
+  // Brak danych → null (NIGDY 0 — 0 wygląda jak realna ocena/kurs).
+  const model_prob = numOrNull(t.model_prob)
+  const odds = numOrNull(t.odds)
+  // Edge: użyj realnego (może być ujemny); gdy brak, a mamy prob+odds → policz
+  // przewagę nad kursem; gdy i tego brak → null.
+  const edge =
+    numOrNull(t.edge) ??
+    (model_prob != null && odds != null && odds > 0 ? model_prob - 1 / odds : null)
 
   return {
     event_id: (t.af_fixture_id ?? t.event_id ?? t.fixture_id ?? t.match_id ?? t.id ?? "") as string | number,
@@ -127,7 +130,7 @@ export function adaptTip(raw: unknown): Tip {
     model_prob,
     odds,
     edge,
-    q_score: num(t.q_score),
+    q_score: numOrNull(t.q_score),
     actual_result: mapResult(t),
     home_score: t.home_score != null ? num(t.home_score) : null,
     away_score: t.away_score != null ? num(t.away_score) : null,
@@ -304,6 +307,9 @@ function adaptPrediction(raw: unknown): MatchPrediction {
     q_score,
     edge,
     actual_result: mapResult(p),
+    // Wynik końcowy z predykcji (gdy Oracle dołącza po rozliczeniu).
+    actual_home_score: numOrNull(p.actual_home_score ?? p.final_home_score ?? p.home_score),
+    actual_away_score: numOrNull(p.actual_away_score ?? p.final_away_score ?? p.away_score),
     q_score_breakdown: adaptQScoreBreakdown(p.q_score_breakdown ?? p.qscore_breakdown ?? p.q_breakdown),
   }
 }
@@ -838,6 +844,9 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
     stadium: m.stadium != null ? String(m.stadium) : m.venue != null ? String(m.venue) : null,
     status: mapStatus(m.status ?? r.status, normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date)),
+    // Wynik końcowy (źródło prawdy po meczu) — defensywnie z wielu nazw pól.
+    home_score: numOrNull(m.home_score ?? m.actual_home_score ?? m.final_home_score ?? r.home_score ?? r.actual_home_score),
+    away_score: numOrNull(m.away_score ?? m.actual_away_score ?? m.final_away_score ?? r.away_score ?? r.actual_away_score),
     home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
     away_id: pickId(m, ["away_id", "away_team_id", "awayId"]),
     predictions,

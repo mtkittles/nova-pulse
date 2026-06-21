@@ -15,10 +15,12 @@ export function QRing({
   stroke?: number
   label?: string
 }) {
-  const v = Math.max(0, Math.min(100, value != null && Number.isFinite(value) ? value : 0))
+  const has = value != null && Number.isFinite(value)
+  const v = has ? Math.max(0, Math.min(100, value as number)) : 0
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
-  const color = qColor(v)
+  // Brak Q-Score → pierścień szary (muted), nie zielony/cyan z fałszywym „0".
+  const color = has ? qColor(v) : "var(--text-muted)"
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
@@ -41,7 +43,7 @@ export function QRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-sm font-semibold leading-none" style={{ color }}>
-          {Math.round(v)}
+          {has ? Math.round(v) : "—"}
         </span>
         <span className="mt-0.5 text-[8px] uppercase tracking-wider text-white/55">{label}</span>
       </div>
