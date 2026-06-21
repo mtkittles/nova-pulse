@@ -116,8 +116,12 @@ export function MatchDetail({
         <ArrowLeft className="h-4 w-4" /> Wróć do typów
       </Link>
 
+      {/* Mobile: jedna kolumna (jak dotąd). Desktop: dashboard 2-kolumnowy —
+          szerokie sekcje (scoreboard, rekomendacja, heatmapa, forma) na całość,
+          mniejsze karty analityczne parami w dwóch kolumnach. */}
+      <div className="space-y-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
       {/* [A] SCOREBOARD */}
-      <Card hover={false} className="mb-5">
+      <Card hover={false} className="lg:col-span-2">
         <div className="flex items-center justify-between gap-3">
           <span className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">{leagueText}</span>
           {liveOn ? (
@@ -161,7 +165,7 @@ export function MatchDetail({
 
       {/* [B] PROGNOZA BOTA */}
       {best && bestMarket && (
-        <motion.div {...reveal()} className="mb-5">
+        <motion.div {...reveal()} className="lg:col-span-2">
           <Card active className="overflow-hidden">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -198,13 +202,13 @@ export function MatchDetail({
 
       {/* [H] Q-SCORE BREAKDOWN — tylko gdy Oracle podał rozbicie */}
       {best?.q_score_breakdown && (
-        <motion.div {...reveal(0.05)} className="mb-5">
+        <motion.div {...reveal(0.05)}>
           <QScoreBreakdownCard breakdown={best.q_score_breakdown} />
         </motion.div>
       )}
 
       {/* [C] KURSY RYNKÓW */}
-      <motion.div {...reveal(0.05)} className="mb-5">
+      <motion.div {...reveal(0.05)}>
         <Card hover={false}>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Kursy rynków</h2>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -231,7 +235,7 @@ export function MatchDetail({
       </motion.div>
 
       {/* [D] HEATMAPA */}
-      <motion.div {...reveal(0.05)} className="mb-5">
+      <motion.div {...reveal(0.05)} className="lg:col-span-2">
         <Card hover={false}>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona/Dixon-Coles)</h2>
           {match.score_matrix ? (
@@ -245,7 +249,7 @@ export function MatchDetail({
       </motion.div>
 
       {/* [E] FORMA (przełącznik 5/10/15 w FormPanel) */}
-      <motion.div {...reveal(0.05)} className="mb-5">
+      <motion.div {...reveal(0.05)} className="lg:col-span-2">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Forma — ostatnie mecze</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <FormPanel teamId={match.home_id} teamName={match.home} />
@@ -255,7 +259,7 @@ export function MatchDetail({
 
       {/* [J] STATYSTYKI DOM/WYJAZD — ukryte gdy brak splitu */}
       {(homeSide || awaySide) && (
-        <motion.div {...reveal(0.05)} className="mb-5">
+        <motion.div {...reveal(0.05)}>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Statystyki: forma u siebie / na wyjeździe</h2>
           <HomeAwayStats
             homeName={match.home}
@@ -319,7 +323,7 @@ export function MatchDetail({
 
       {/* [G] TABELA LIGOWA — tylko gdy znamy kod ligi */}
       {match.leagueCode && (
-        <motion.div {...reveal(0.05)} className="mt-5">
+        <motion.div {...reveal(0.05)}>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Tabela ligowa</h2>
           <StandingsTable leagueCode={match.leagueCode} homeName={match.home} awayName={match.away} />
         </motion.div>
@@ -331,6 +335,7 @@ export function MatchDetail({
           <TopScorers leagueCode={match.leagueCode} leagueName={leagueText} homeName={match.home} awayName={match.away} />
         </motion.div>
       )}
+      </div>
     </div>
   )
 }
