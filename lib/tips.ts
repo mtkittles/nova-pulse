@@ -1,4 +1,4 @@
-import type { TipsResponse } from "./types"
+import type { Tip, TipsResponse } from "./types"
 import { mockTips } from "./mock-tips"
 import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptTips } from "./oracle-map"
@@ -49,6 +49,21 @@ export async function getTips(date?: string): Promise<TipsResponse> {
 // Zachowane dla zgodności (landing).
 export async function getTodayTips(): Promise<TipsResponse> {
   return getTips()
+}
+
+// Historia rozliczonych typów (/tips/history) — do sekcji „Ostatnie rozliczone typy".
+// Zastępuje dawne sklejanie kilku ostatnich dni. Pusty/niedostępny → [].
+export async function getTipsHistory(limit = 15): Promise<Tip[]> {
+  if (!isOracleConfigured()) {
+    return mockTips.tips.filter((t) => t.actual_result != null).slice(0, limit)
+  }
+  try {
+    const data = await oracleFetch<unknown>(`/tips/history?status=settled&limit=${limit}`)
+    return adaptTips(data).tips
+  } catch (err) {
+    console.error("getTipsHistory: Oracle niedostępne →", err)
+    return []
+  }
 }
 
 // /live (P0-7): okno czasowe szersze niż „dziś" — mecze nie giną po północy.
