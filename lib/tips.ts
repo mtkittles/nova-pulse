@@ -3,13 +3,18 @@ import { mockTips } from "./mock-tips"
 import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptTips } from "./oracle-map"
 
-function todayWarsaw(): string {
+function warsawDate(offsetDays = 0): string {
+  const d = new Date(Date.now() + offsetDays * 864e5)
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Warsaw",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date())
+  }).format(d)
+}
+
+function todayWarsaw(): string {
+  return warsawDate(0)
 }
 
 function emptyTips(date: string): TipsResponse {
@@ -44,4 +49,26 @@ export async function getTips(date?: string): Promise<TipsResponse> {
 // Zachowane dla zgodności (landing).
 export async function getTodayTips(): Promise<TipsResponse> {
   return getTips()
+}
+
+// /live (P0-7): okno czasowe szersze niż „dziś" — mecze nie giną po północy.
+// Endpoint /tips przyjmuje pojedynczą datę, więc pobieramy wczoraj+dziś+jutro
+// (Warszawa) i scalamy; precyzyjne okno [now-6h, now+24h] tnie klient (LiveView).
+// TODO Sprint 3: zastąpić dedykowanym /tips/active z zakresem from/to.
+export async function getLiveWindowTips(): Promise<TipsResponse> {
+  const today = todayWarsaw()
+  if (!isOracleConfigured()) return { ...mockTips, date: today }
+  const dates = [warsawDate(-1), warsawDate(0), warsawDate(1)]
+  const results = await Promise.all(dates.map((d) => getTips(d)))
+  const seen = new Set<string>()
+  const tips = []
+  for (const r of results) {
+    for (const t of r.tips) {
+      const k = `${t.event_id}|${t.bet_type}|${t.bet_side}`
+      if (seen.has(k)) continue
+      seen.add(k)
+      tips.push(t)
+    }
+  }
+  return { date: today, tips }
 }
