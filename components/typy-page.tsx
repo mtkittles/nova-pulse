@@ -120,7 +120,8 @@ export default function TypyPage({
   const [mode, setMode] = useState<Mode>("ALL")
   const [league, setLeague] = useState("ALL")
   const [minQ, setMinQ] = useState(0)
-  const [minEdge, setMinEdge] = useState(0)
+  // P0/S2: jawny przełącznik value zamiast ukrytego minEdge=0. Domyślnie tylko value (edge > 0).
+  const [valueOnly, setValueOnly] = useState(true)
   const [statusF, setStatusF] = useState<StatusFilter>("ALL")
   const [sort, setSort] = useState<Sort>("q")
   const [view, setView] = useState<View>("cards")
@@ -149,15 +150,25 @@ export default function TypyPage({
     }
   }
 
-  const leagues = useMemo(() => [...new Set(tips.map((t) => t.league))].sort(), [tips])
+  // Filtr ligi po stabilnym leagueCode (fallback na nazwę, gdy brak kodu).
+  const leagueKey = (t: Tip) => t.leagueCode || t.league
+  const leagues = useMemo(() => {
+    const map = new Map<string, string>() // code → czytelna nazwa
+    for (const t of tips) {
+      const code = leagueKey(t)
+      if (code && !map.has(code)) map.set(code, t.league)
+    }
+    return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]))
+  }, [tips])
 
   const visible = useMemo(() => {
     const out = tips
       .filter((t) => (mode === "ALL" ? true : marketGroupOf(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side) === mode))
-      .filter((t) => (league === "ALL" ? true : t.league === league))
+      .filter((t) => (league === "ALL" ? true : leagueKey(t) === league))
       // null = nieznana metryka: widoczna przy progu 0, ukrywana dopiero gdy próg podniesiony
       .filter((t) => (t.q_score == null ? minQ <= 0 : t.q_score >= minQ))
-      .filter((t) => (t.edge == null ? minEdge <= 0 : t.edge * 100 >= minEdge))
+      // tylko value = edge > 0 (null/≤0 odpada); "wszystkie analizy" = bez filtra edge
+      .filter((t) => (valueOnly ? t.edge != null && t.edge > 0 : true))
       .filter((t) => (statusF === "ALL" ? true : statusOf(t, now) === statusF))
     out.sort((a, b) => {
       if (sort === "q") return sortKey(b.q_score) - sortKey(a.q_score)
@@ -168,7 +179,7 @@ export default function TypyPage({
       return ta - tb
     })
     return out
-  }, [tips, mode, league, minQ, minEdge, statusF, sort, now])
+  }, [tips, mode, league, minQ, valueOnly, statusF, sort, now])
 
   const groups = useMemo(() => groupByMatch(visible), [visible])
 
@@ -229,9 +240,9 @@ export default function TypyPage({
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <select value={league} onChange={(e) => setLeague(e.target.value)} className={selectClass} aria-label="Filtruj po lidze">
           <option value="ALL">Wszystkie ligi</option>
-          {leagues.map((l) => (
-            <option key={l} value={l}>
-              {l}
+          {leagues.map(([code, name]) => (
+            <option key={code} value={code}>
+              {name}
             </option>
           ))}
         </select>
@@ -255,10 +266,23 @@ export default function TypyPage({
           <input type="range" min={0} max={100} step={5} value={minQ} onChange={(e) => setMinQ(Number(e.target.value))} className="accent-[var(--cyan)]" />
         </label>
 
-        <label className="flex items-center gap-2 rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-1)] px-4 py-2 text-sm text-[color:var(--text-secondary)]">
-          Min. edge: <span className="font-semibold text-[color:var(--cyan)] tnum">{minEdge}%</span>
-          <input type="range" min={0} max={15} step={1} value={minEdge} onChange={(e) => setMinEdge(Number(e.target.value))} className="accent-[var(--cyan)]" />
-        </label>
+        {/* jawny przełącznik: tylko value (edge > 0) vs wszystkie analizy */}
+        <div className="inline-flex rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-0.5 text-sm">
+          <button
+            type="button"
+            onClick={() => setValueOnly(true)}
+            className={`rounded-full px-3 py-1.5 font-medium transition ${valueOnly ? "bg-[var(--cyan-soft)] text-[color:var(--text-primary)]" : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"}`}
+          >
+            Tylko value
+          </button>
+          <button
+            type="button"
+            onClick={() => setValueOnly(false)}
+            className={`rounded-full px-3 py-1.5 font-medium transition ${!valueOnly ? "bg-[var(--cyan-soft)] text-[color:var(--text-primary)]" : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"}`}
+          >
+            Wszystkie analizy
+          </button>
+        </div>
 
         {/* przełącznik widoku */}
         <div className="ml-auto inline-flex rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-0.5">
