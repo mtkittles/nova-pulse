@@ -126,9 +126,11 @@ export default async function ProfilPage() {
                 )
               })}
             </div>
-            <Link href="/kupony" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[color:var(--cyan)] hover:gap-2">
-              Wszystkie moje typy <ArrowRight className="h-4 w-4" />
-            </Link>
+            {process.env.NEXT_PUBLIC_FEATURE_COUPONS === "true" && (
+              <Link href="/kupony" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[color:var(--cyan)] hover:gap-2">
+                Wszystkie moje typy <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
           </Card>
         )}
 

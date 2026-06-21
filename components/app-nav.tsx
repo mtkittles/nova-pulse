@@ -11,6 +11,11 @@ import { mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 
 type NavItem = { href: string; label: string; icon: LucideIcon; highlight?: boolean }
 
+// Feature flagi (P0-4): Newsy/Kupony ukryte w nawigacji, dopóki nie włączone.
+// Domyślnie false → linki schowane (strony nadal dostępne bezpośrednio).
+const SHOW_NEWS = process.env.NEXT_PUBLIC_FEATURE_NEWS === "true"
+const SHOW_COUPONS = process.env.NEXT_PUBLIC_FEATURE_COUPONS === "true"
+
 const NAV: NavItem[] = [
   { href: "/mundial", label: "Mundial", icon: Trophy, highlight: true },
   { href: "/typy", label: "Typy", icon: Target },
@@ -18,8 +23,8 @@ const NAV: NavItem[] = [
   { href: "/stats", label: "Statystyki", icon: BarChart3 },
   { href: "/ligi", label: "Ligi", icon: Medal },
   { href: "/ranking", label: "Ranking", icon: Crown },
-  { href: "/newsy", label: "Newsy", icon: Newspaper },
-  { href: "/kupony", label: "Kupony", icon: Ticket },
+  ...(SHOW_NEWS ? [{ href: "/newsy", label: "Newsy", icon: Newspaper }] : []),
+  ...(SHOW_COUPONS ? [{ href: "/kupony", label: "Kupony", icon: Ticket }] : []),
 ]
 
 // Dolna nawigacja mobilna — 4 zakładki (≤768px).
