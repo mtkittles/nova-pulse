@@ -821,6 +821,8 @@ export function adaptOddsMarkets(r: unknown): OddsMarkets | null {
     over35: o.over35 ?? null,
     cs_32: o.cs_32 ?? null,
     cs_23: o.cs_23 ?? null,
+    home_team_o15: o.home_team_o15 ?? null,
+    away_team_o15: o.away_team_o15 ?? null,
   }
 }
 

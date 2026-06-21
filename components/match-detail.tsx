@@ -49,6 +49,8 @@ const MARKET_CELLS: { key: keyof OddsMarkets; label: string; thriller?: boolean 
   { key: "away_win", label: "2 · Gość" },
   { key: "over25", label: "Over 2.5" },
   { key: "over35", label: "Over 3.5" },
+  { key: "home_team_o15", label: "Gospodarz O1.5" },
+  { key: "away_team_o15", label: "Gość O1.5" },
   { key: "cs_32", label: "Thriller 3:2", thriller: true },
   { key: "cs_23", label: "Thriller 2:3", thriller: true },
 ]

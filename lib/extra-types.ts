@@ -350,6 +350,9 @@ export interface OddsMarkets {
   over35: number | null
   cs_32: number | null
   cs_23: number | null
+  /** Team Over 1.5 — kolumny mogą nie istnieć w DB → zwykle null (przygotowanie na przyszłość) */
+  home_team_o15: number | null
+  away_team_o15: number | null
 }
 
 export type MatchStatus =

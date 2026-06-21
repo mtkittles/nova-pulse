@@ -76,7 +76,7 @@ function mockDetailed(id: string): MatchDetailed {
     ],
     odds_markets: {
       btts_yes: 1.8, btts_no: 1.95, home_win: 2.1, draw: 3.3, away_win: 3.4,
-      over25: 1.95, over35: 3.1, cs_32: 21, cs_23: 26,
+      over25: 1.95, over35: 3.1, cs_32: 21, cs_23: 26, home_team_o15: null, away_team_o15: null,
     },
     home_metrics: { name: "FC Tokyo", gf_avg: 1.8, ga_avg: 1.1, btts_pct: 58, over15_pct: 82, clean_sheets_pct: 32, form_points: 73 },
     away_metrics: { name: "Cerezo Osaka", gf_avg: 1.5, ga_avg: 1.3, btts_pct: 61, over15_pct: 78, clean_sheets_pct: 26, form_points: 60 },
