@@ -42,7 +42,6 @@ export async function getCalendar(fromArg?: string, toArg?: string): Promise<Cal
 
   try {
     const data = await oracleFetch<unknown>(`/calendar?from=${from}&to=${to}`, 300)
-    console.log("[oracle] /calendar raw:", JSON.stringify(data).slice(0, 500))
     const days = adaptCalendar(data)
     if (days.length > 0) return days
   } catch (err) {

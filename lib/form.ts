@@ -54,7 +54,6 @@ export async function getTeamForm(id: string, scope: FormScope, count: number): 
     const data = await oracleFetch<unknown>(
       `/team/${encodeURIComponent(id)}/form?scope=${scope}&count=${count}`,
     )
-    console.log(`[oracle] /team/${id}/form raw:`, JSON.stringify(data).slice(0, 500))
     return adaptForm(data)
   } catch (err) {
     console.error("getTeamForm: Oracle niedostępne →", err)

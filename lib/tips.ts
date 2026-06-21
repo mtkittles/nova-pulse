@@ -30,7 +30,6 @@ export async function getTips(date?: string): Promise<TipsResponse> {
   try {
     await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/tips?date=${encodeURIComponent(d)}`)
-    console.log(`[oracle] /tips?date=${d} raw:`, JSON.stringify(data).slice(0, 500))
     if (!hasTipsArray(data)) {
       console.error("getTips: odpowiedź Oracle niezgodna z kontraktem")
       return emptyTips(d)

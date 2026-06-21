@@ -118,7 +118,6 @@ export async function getMarketRankings(): Promise<MarketRankings> {
   try {
     await ensureLeagueNames()
     const data = await oracleFetch<unknown>("/rankings/markets", 300)
-    console.log("[oracle] /rankings/markets raw:", JSON.stringify(data).slice(0, 400))
     const r = rec(data)
     const btts = adaptList(r.btts, "btts_pct_last10", "predicted_btts_prob")
     const over_15 = adaptList(r.over_15, "over_15_pct_last10", "predicted_over_15_prob")

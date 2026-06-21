@@ -69,7 +69,6 @@ export async function getTeam(id: string): Promise<TeamSeason | null> {
   if (!isOracleConfigured()) return mockTeam(id)
   try {
     const data = await oracleFetch<unknown>(`/team/${encodeURIComponent(id)}`)
-    console.log(`[oracle] /team/${id} raw:`, JSON.stringify(data).slice(0, 500))
     return adaptTeam(data)
   } catch (err) {
     console.error("getTeam: Oracle niedostępne →", err)
@@ -82,7 +81,6 @@ export async function getTeamUpcoming(id: string): Promise<UpcomingMatch[]> {
   try {
     await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/team/${encodeURIComponent(id)}/upcoming`)
-    console.log(`[oracle] /team/${id}/upcoming raw:`, JSON.stringify(data).slice(0, 500))
     return adaptUpcoming(data)
   } catch (err) {
     console.error("getTeamUpcoming: Oracle niedostępne →", err)

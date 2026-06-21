@@ -28,7 +28,6 @@ export async function getMatch(id: string): Promise<MatchInfo> {
   try {
     await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/match/${encodeURIComponent(id)}`)
-    console.log(`[oracle] /match/${id} raw:`, JSON.stringify(data).slice(0, 600))
     if (data && typeof data === "object" && (data as { found?: unknown }).found === false) {
       return notFound(id)
     }
@@ -113,7 +112,6 @@ export async function getMatchDetailed(id: string): Promise<MatchDetailed> {
   try {
     await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/match/${encodeURIComponent(id)}/detailed`)
-    console.log(`[oracle] /match/${id}/detailed raw:`, JSON.stringify(data).slice(0, 800))
     if (data && typeof data === "object" && (data as { found?: unknown }).found === false) {
       return detailedNotFound(id)
     }

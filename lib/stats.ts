@@ -34,7 +34,6 @@ export async function getStats(period?: string): Promise<StatsResponse> {
   const path = period ? `/stats?period=${encodeURIComponent(period)}` : "/stats"
   try {
     const data = await oracleFetch<unknown>(path)
-    console.log(`[oracle] /stats?period=${period ?? ""} raw:`, JSON.stringify(data).slice(0, 500))
     if (!hasSummary(data)) {
       console.error("getStats: odpowiedź Oracle niezgodna z kontraktem")
       return emptyStats()

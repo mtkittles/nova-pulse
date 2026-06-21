@@ -29,7 +29,6 @@ export async function getDates(): Promise<DatesResponse> {
   try {
     const data = await oracleFetch<unknown>("/dates")
     // surowy log do weryfikacji kształtu (widoczny w logach Vercela)
-    console.log("[oracle] /dates raw:", JSON.stringify(data).slice(0, 500))
     const d = data as Record<string, unknown>
     if (d && Array.isArray(d.dates)) {
       const dates = (d.dates as unknown[]).map(String).sort()
