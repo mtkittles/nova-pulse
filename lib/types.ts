@@ -4,6 +4,9 @@
 
 export type BetType = "BTTS" | "OVER_1_5" | "MIX" | "THRILLER"
 
+/** Tier rekomendacji z Oracle: value (najmocniejszy) / watchlist / analysis. */
+export type RecommendationTier = "value" | "watchlist" | "analysis"
+
 export interface Tip {
   event_id: string | number
   league: string
@@ -33,6 +36,10 @@ export interface Tip {
   q_score: number | null
   /** NULL przed meczem, 1 = trafione, 0 = pudło (weryfikuje live_tracker) */
   actual_result: 0 | 1 | null
+  /** główna rekomendacja meczu (z Oracle) — zamiast lokalnego max(q_score) */
+  is_primary?: boolean
+  /** tier rekomendacji z Oracle; null gdy brak */
+  tier?: RecommendationTier | null
   /** wynik meczu z Oracle (gdy rozegrany) */
   home_score?: number | null
   away_score?: number | null

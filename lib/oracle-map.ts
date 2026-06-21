@@ -1,6 +1,6 @@
 import "server-only"
 import { getLeagueName } from "./leagues"
-import type { BetType, Tip, TipsResponse } from "./types"
+import type { BetType, RecommendationTier, Tip, TipsResponse } from "./types"
 import type {
   LeagueStat,
   MarketStat,
@@ -91,6 +91,19 @@ function normalizeIso(d: unknown): string {
   return s
 }
 
+// Tier rekomendacji z Oracle → znormalizowany enum (null gdy brak/nieznany).
+function mapTier(raw: unknown): RecommendationTier | null {
+  const s = String(raw ?? "").toLowerCase().trim()
+  if (s === "value") return "value"
+  if (s === "watchlist" || s === "watch") return "watchlist"
+  if (s === "analysis" || s === "analiza") return "analysis"
+  return null
+}
+
+function isPrimary(o: Record<string, unknown>): boolean {
+  return o.is_primary_recommendation === true || o.is_primary === true
+}
+
 function mapResult(t: Record<string, unknown>): 0 | 1 | null {
   const r = t.actual_result
   if (r === 1 || r === "1") return 1
@@ -132,6 +145,8 @@ export function adaptTip(raw: unknown): Tip {
     edge,
     q_score: numOrNull(t.q_score),
     actual_result: mapResult(t),
+    is_primary: isPrimary(t),
+    tier: mapTier(t.recommendation_tier ?? t.tier),
     home_score: t.home_score != null ? num(t.home_score) : null,
     away_score: t.away_score != null ? num(t.away_score) : null,
     match_status: t.match_status != null ? String(t.match_status) : undefined,
@@ -308,6 +323,8 @@ function adaptPrediction(raw: unknown): MatchPrediction {
     q_score,
     edge,
     actual_result: mapResult(p),
+    is_primary: isPrimary(p),
+    tier: mapTier(p.recommendation_tier ?? p.tier),
     // Wynik końcowy z predykcji (gdy Oracle dołącza po rozliczeniu).
     actual_home_score: numOrNull(p.actual_home_score ?? p.final_home_score ?? p.home_score),
     actual_away_score: numOrNull(p.actual_away_score ?? p.final_away_score ?? p.away_score),

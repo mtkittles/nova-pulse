@@ -1,4 +1,4 @@
-import type { BetType } from "./types"
+import type { BetType, RecommendationTier } from "./types"
 
 export type FormScope = "all" | "home" | "away"
 
@@ -28,6 +28,10 @@ export interface MatchPrediction {
   /** wynik końcowy meczu z Oracle (gdy rozegrany); null gdy brak */
   actual_home_score?: number | null
   actual_away_score?: number | null
+  /** główna rekomendacja meczu (z Oracle) — zamiast lokalnego max(q_score) */
+  is_primary?: boolean
+  /** tier rekomendacji z Oracle; null gdy brak */
+  tier?: RecommendationTier | null
   /** rozbicie Q-Score (gdy Oracle podał); null → sekcja ukryta */
   q_score_breakdown?: QScoreBreakdown | null
 }
