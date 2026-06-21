@@ -203,6 +203,20 @@ export function ScoreHeatmap({
             </span>
           )}
         </div>
+
+        {/* legenda intensywności + opis */}
+        <div className="mt-3 space-y-1.5">
+          <div className="flex items-center gap-2 text-[11px] text-white/55">
+            <span>niskie</span>
+            <span
+              className="h-2 flex-1 rounded-full"
+              style={{ background: "linear-gradient(90deg, rgba(103,232,249,0.06), rgba(103,232,249,0.96))" }}
+            />
+            <span>wysokie</span>
+          </div>
+          <p className="text-center text-[11px] text-white/55">Im jaśniejsze pole, tym większe prawdopodobieństwo wyniku.</p>
+          <p className="text-center text-[11px] text-white/55">Obramowanie = wynik powiązany z wybranym rynkiem.</p>
+        </div>
       </div>
     </div>
   )
