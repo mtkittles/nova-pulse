@@ -10,6 +10,7 @@ import { formatKickoff } from "@/lib/time"
 import { fmtProb, fmtOdds, fmtEdge, fmtQ, sortKey } from "@/lib/format"
 import { DEMO_UNLOCK_PREMIUM } from "@/lib/demo-mode"
 import { QRing } from "./ui/q-ring"
+import { TierBadge } from "./ui/tier-badge"
 import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { ArrowRight, ChevronDown, Lock } from "lucide-react"
@@ -67,8 +68,9 @@ function MarketRow({
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 p-3 text-left">
         <QRing value={tip.q_score} size={42} stroke={4} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.short}</span>
+            <TierBadge tier={tip.tier} />
             {finished && settleBadge(settlement)}
           </div>
           {/* pełna nazwa rynku — od razu na desktop, na mobile dopiero po rozwinięciu */}
@@ -159,7 +161,10 @@ export default function MatchTipCard({
     : finished ? <span className="text-white/55">koniec</span>
     : <span className="text-white/55">{formatKickoff(group.kickoff_utc)}</span>
 
-  const sortedTips = [...group.tips].sort((a, b) => sortKey(b.q_score) - sortKey(a.q_score))
+  // główna rekomendacja (is_primary) na górze, potem po Q-Score
+  const sortedTips = [...group.tips].sort(
+    (a, b) => Number(b.is_primary ?? false) - Number(a.is_primary ?? false) || sortKey(b.q_score) - sortKey(a.q_score),
+  )
 
   const cardClass =
     "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(88,230,245,0.08)]"

@@ -3,11 +3,13 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
-import { ArrowLeft, BarChart3, MapPin } from "lucide-react"
+import { ArrowLeft, BarChart3, ChevronDown, MapPin } from "lucide-react"
 import type { MatchDetailed, MatchPrediction, OddsMarkets, SideStats } from "@/lib/extra-types"
 import { getMarketLabel } from "@/lib/market-label"
 import { getLeagueDisplayName } from "@/lib/leagues"
 import { formatKickoff } from "@/lib/time"
+import { fmtProb, fmtOdds, fmtEdge } from "@/lib/format"
+import { TierBadge } from "./ui/tier-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { TeamBadge } from "./team-badge"
 import { QScoreBreakdownCard } from "./q-score-breakdown"
@@ -47,6 +49,8 @@ const MARKET_CELLS: { key: keyof OddsMarkets; label: string; thriller?: boolean 
   { key: "away_win", label: "2 · Gość" },
   { key: "over25", label: "Over 2.5" },
   { key: "over35", label: "Over 3.5" },
+  { key: "home_team_o15", label: "Gospodarz O1.5" },
+  { key: "away_team_o15", label: "Gość O1.5" },
   { key: "cs_32", label: "Thriller 3:2", thriller: true },
   { key: "cs_23", label: "Thriller 2:3", thriller: true },
 ]
@@ -66,6 +70,7 @@ export function MatchDetail({
   awaySide?: SideStats | null
 }) {
   const reduce = useReducedMotion()
+  const [othersOpen, setOthersOpen] = useState(false)
   const [now, setNow] = useState<number | null>(null)
   useEffect(() => {
     setNow(Date.now())
@@ -92,13 +97,18 @@ export function MatchDetail({
 
   const leagueText = match.leagueCode ? getLeagueDisplayName(match.leagueCode) : match.league
 
-  // rekomendacja = najwyższy Q-Score
-  const best = match.predictions.reduce<MatchPrediction | undefined>(
-    (acc, p) => ((p.q_score ?? -1) > (acc?.q_score ?? -1) ? p : acc),
-    undefined,
-  )
+  // główna rekomendacja: is_primary z Oracle; fallback na najwyższy Q-Score
+  const primaryByOracle = match.predictions.find((p) => p.is_primary)
+  const best =
+    primaryByOracle ??
+    match.predictions.reduce<MatchPrediction | undefined>(
+      (acc, p) => ((p.q_score ?? -1) > (acc?.q_score ?? -1) ? p : acc),
+      undefined,
+    )
   const bestMarket = best ? getMarketLabel(best.bet_type_raw ?? best.bet_type, best.bet_side_raw ?? best.bet_side, match.home, match.away) : null
   const chosenKey = chosenMarketKey(best)
+  // pozostałe predykcje (poza główną) → rozwijalna lista
+  const otherPreds = match.predictions.filter((p) => p !== best)
   const hasThriller = match.predictions.some((p) => chosenMarketKey(p) === "cs_32" || chosenMarketKey(p) === "cs_23")
 
   const reveal = (delay = 0) => ({
@@ -169,7 +179,10 @@ export function MatchDetail({
           <Card active className="overflow-hidden">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${bestMarket.badge}`}>{bestMarket.short}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${bestMarket.badge}`}>{bestMarket.short}</span>
+                  <TierBadge tier={best.tier} />
+                </div>
                 <p className="mt-2 text-sm font-medium text-[color:var(--text-primary)]">{bestMarket.full}</p>
                 {best.actual_result != null && (
                   <div className="mt-2">
@@ -196,6 +209,39 @@ export function MatchDetail({
                 </p>
               </div>
             </div>
+
+            {/* Pozostałe analizy meczu (rozwijalne) */}
+            {otherPreds.length > 0 && (
+              <div className="mt-4 border-t border-[color:var(--border-soft)] pt-3">
+                <button
+                  type="button"
+                  onClick={() => setOthersOpen((o) => !o)}
+                  className="flex w-full items-center justify-between text-sm font-medium text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+                >
+                  <span>Pozostałe analizy ({otherPreds.length})</span>
+                  <ChevronDown className={`h-4 w-4 transition ${othersOpen ? "rotate-180" : ""}`} />
+                </button>
+                {othersOpen && (
+                  <div className="mt-3 space-y-2">
+                    {otherPreds.map((p, i) => {
+                      const pm = getMarketLabel(p.bet_type_raw ?? p.bet_type, p.bet_side_raw ?? p.bet_side, match.home, match.away)
+                      return (
+                        <div key={i} className="flex items-center gap-2 rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] p-2.5 text-xs">
+                          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${pm.badge}`}>{pm.short}</span>
+                          <TierBadge tier={p.tier} />
+                          <span className="ml-auto flex items-center gap-3 tnum">
+                            <span className="text-[color:var(--text-secondary)]">Q {p.q_score != null ? Math.round(p.q_score) : "—"}</span>
+                            <span className="text-[color:var(--text-secondary)]">{fmtProb(p.model_prob)}</span>
+                            <span className="font-bold text-[color:var(--cyan)]">{fmtOdds(p.odds)}</span>
+                            <span className={`font-semibold ${p.edge == null ? "text-[color:var(--text-muted)]" : p.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>{fmtEdge(p.edge)}</span>
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
         </motion.div>
       )}

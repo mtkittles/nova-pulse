@@ -45,24 +45,12 @@ export function LiveView({ tips }: { tips: Tip[] }) {
   }, [])
   const nowMs = now ?? Date.now()
 
-  // Okno czasowe /live (P0-7): [now-6h, now+24h]. Tnie po kickoff_utc.
-  // Tipy bez godziny/niepoprawne zostają (statusu pilnuje logika live).
-  const windowed = useMemo(() => {
-    const from = nowMs - 6 * 3600_000
-    const to = nowMs + 24 * 3600_000
-    return tips.filter((t) => {
-      if (!t.kickoff_utc) return true
-      const k = new Date(t.kickoff_utc).getTime()
-      if (!Number.isFinite(k)) return true
-      return k >= from && k <= to
-    })
-  }, [tips, nowMs])
-
+  // Okno czasowe liczy Oracle (/tips/active, -6h/+24h) — front już nie filtruje po czasie.
   // grupuj typy per mecz (event_id; sieroty po home|away|kickoff)
   const groups = useMemo<MatchLiveGroup[]>(() => {
     const order: string[] = []
     const map = new Map<string, MatchLiveGroup>()
-    for (const tip of windowed) {
+    for (const tip of tips) {
       const key = tip.event_id != null && tip.event_id !== "" ? `id:${tip.event_id}` : `m:${tip.home}|${tip.away}|${tip.kickoff_utc ?? ""}`
       const live = findLive(liveMatches, tip.event_id)
       const liveSt = live ? mapLiveStatus(live.status_short) : null
@@ -110,7 +98,7 @@ export function LiveView({ tips }: { tips: Tip[] }) {
     // status meczu = najgorszy z typów (border + sekcja)
     for (const g of map.values()) g.status = worstStatus(g.tips.map((t) => t.status))
     return order.map((k) => map.get(k)!)
-  }, [windowed, liveMatches, nowMs])
+  }, [tips, liveMatches, nowMs])
 
   const active = groups.filter((g) => LIVE_STATUS_CONFIG[g.status].group === "active")
   const upcoming = groups
@@ -118,7 +106,7 @@ export function LiveView({ tips }: { tips: Tip[] }) {
     .sort((a, b) => (a.kickoff_utc ?? "").localeCompare(b.kickoff_utc ?? ""))
   const finished = groups.filter((g) => LIVE_STATUS_CONFIG[g.status].group === "finished")
 
-  if (windowed.length === 0) {
+  if (tips.length === 0) {
     return (
       <EmptyState
         icon={CalendarOff}

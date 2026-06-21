@@ -149,6 +149,37 @@ export function StatsScreen({
             </Card>
           </section>
 
+          {/* [C2] SKUTECZNOŚĆ WG Q-SCORE */}
+          {data.q_score_buckets.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Skuteczność wg Q-Score</h2>
+              <Card hover={false}>
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[color:var(--border-soft)] text-xs uppercase tracking-wide text-[color:var(--text-muted)]">
+                    <tr>
+                      <th className="px-2 py-2 text-left">Zakres Q</th>
+                      <th className="px-2 py-2 text-center">Typy</th>
+                      <th className="px-2 py-2 text-center">%</th>
+                      <th className="px-2 py-2 text-right">ROI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.q_score_buckets.map((b) => (
+                      <tr key={b.bucket} className="border-b border-[color:var(--border-soft)] last:border-0">
+                        <td className="px-2 py-2 font-medium tnum">{b.bucket}</td>
+                        <td className="px-2 py-2 text-center tnum text-[color:var(--text-secondary)]">{b.tips}</td>
+                        <td className="px-2 py-2 text-center font-semibold tnum">{Math.round(b.win_rate * 100)}%</td>
+                        <td className={`px-2 py-2 text-right font-semibold tnum ${b.roi >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+                          {b.roi >= 0 ? "+" : ""}{(b.roi * 100).toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Card>
+            </section>
+          )}
+
           {/* [D] PODZIAŁ PO RYNKACH */}
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Podział po rynkach</h2>
@@ -186,6 +217,45 @@ export function StatsScreen({
               )}
             </Card>
           </section>
+
+          {/* [D2] NAJLEPSZE LIGI (sort po ROI malejąco) */}
+          {data.by_league.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Najlepsze ligi</h2>
+              <Card hover={false}>
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[color:var(--border-soft)] text-xs uppercase tracking-wide text-[color:var(--text-muted)]">
+                    <tr>
+                      <th className="px-2 py-2 text-left">Liga</th>
+                      <th className="px-2 py-2 text-center">Typy</th>
+                      <th className="px-2 py-2 text-center">Traf.</th>
+                      <th className="px-2 py-2 text-center">%</th>
+                      <th className="px-2 py-2 text-right">ROI</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...data.by_league]
+                      .sort((a, b) => b.roi - a.roi)
+                      .map((l) => {
+                        const wins = Math.round(l.win_rate * l.tips)
+                        return (
+                          <tr key={l.league} className="border-b border-[color:var(--border-soft)] last:border-0">
+                            <td className="px-2 py-2 font-medium">{l.league}</td>
+                            <td className="px-2 py-2 text-center tnum text-[color:var(--text-secondary)]">{l.tips}</td>
+                            <td className="px-2 py-2 text-center tnum text-[color:var(--text-secondary)]">{wins}</td>
+                            <td className="px-2 py-2 text-center font-semibold tnum">{Math.round(l.win_rate * 100)}%</td>
+                            <td className={`px-2 py-2 text-right font-semibold tnum ${l.roi >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+                              {l.roi >= 0 ? "+" : ""}{(l.roi * 100).toFixed(1)}%
+                            </td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
+                <p className="mt-3 text-[11px] text-[color:var(--text-muted)]">Ligi z min. 5 rozliczonymi typami.</p>
+              </Card>
+            </section>
+          )}
 
           {/* [E] OSTATNIE TYPY */}
           <section>

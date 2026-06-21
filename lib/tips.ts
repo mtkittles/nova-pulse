@@ -1,4 +1,4 @@
-import type { TipsResponse } from "./types"
+import type { Tip, TipsResponse } from "./types"
 import { mockTips } from "./mock-tips"
 import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptTips } from "./oracle-map"
@@ -51,24 +51,32 @@ export async function getTodayTips(): Promise<TipsResponse> {
   return getTips()
 }
 
-// /live (P0-7): okno czasowe szersze niż „dziś" — mecze nie giną po północy.
-// Endpoint /tips przyjmuje pojedynczą datę, więc pobieramy wczoraj+dziś+jutro
-// (Warszawa) i scalamy; precyzyjne okno [now-6h, now+24h] tnie klient (LiveView).
-// TODO Sprint 3: zastąpić dedykowanym /tips/active z zakresem from/to.
+// Historia rozliczonych typów (/tips/history) — do sekcji „Ostatnie rozliczone typy".
+// Zastępuje dawne sklejanie kilku ostatnich dni. Pusty/niedostępny → [].
+export async function getTipsHistory(limit = 15): Promise<Tip[]> {
+  if (!isOracleConfigured()) {
+    return mockTips.tips.filter((t) => t.actual_result != null).slice(0, limit)
+  }
+  try {
+    const data = await oracleFetch<unknown>(`/tips/history?status=settled&limit=${limit}`)
+    return adaptTips(data).tips
+  } catch (err) {
+    console.error("getTipsHistory: Oracle niedostępne →", err)
+    return []
+  }
+}
+
+// /live: aktywne typy z dedykowanego endpointu /tips/active.
+// Oracle sam liczy okno (-6h/+24h) i dołącza match_status/home_score/away_score,
+// więc front nie filtruje już po czasie. Pusty/niedostępny → [].
 export async function getLiveWindowTips(): Promise<TipsResponse> {
   const today = todayWarsaw()
   if (!isOracleConfigured()) return { ...mockTips, date: today }
-  const dates = [warsawDate(-1), warsawDate(0), warsawDate(1)]
-  const results = await Promise.all(dates.map((d) => getTips(d)))
-  const seen = new Set<string>()
-  const tips = []
-  for (const r of results) {
-    for (const t of r.tips) {
-      const k = `${t.event_id}|${t.bet_type}|${t.bet_side}`
-      if (seen.has(k)) continue
-      seen.add(k)
-      tips.push(t)
-    }
+  try {
+    const data = await oracleFetch<unknown>("/tips/active")
+    return { date: today, tips: adaptTips(data).tips }
+  } catch (err) {
+    console.error("getLiveWindowTips: /tips/active niedostępne →", err)
+    return emptyTips(today)
   }
-  return { date: today, tips }
 }
