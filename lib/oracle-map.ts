@@ -394,6 +394,16 @@ export function adaptMatch(raw: unknown): MatchInfo {
   }
 }
 
+// Tolerancyjny bool: true/false/1/0/"yes"/"no"/"tak"/"nie" → boolean; brak → null.
+function boolOrNull(x: unknown): boolean | null {
+  if (x == null) return null
+  if (typeof x === "boolean") return x
+  const s = String(x).toLowerCase().trim()
+  if (["1", "true", "yes", "tak", "t", "y"].includes(s)) return true
+  if (["0", "false", "no", "nie", "n", "f"].includes(s)) return false
+  return null
+}
+
 function formResult(raw: unknown): "W" | "D" | "L" {
   const m = rec(raw)
   const r = String(m.result ?? m.outcome ?? "").toUpperCase()
@@ -443,6 +453,12 @@ export function adaptForm(raw: unknown): TeamForm {
     }
 
     const score = gf != null && ga != null ? `${gf}:${ga}` : m.score != null ? String(m.score) : undefined
+    // Rynki: preferuj jawne pola Oracle; w razie braku policz z gf/ga.
+    const total = gf != null && ga != null ? gf + ga : null
+    const btts = boolOrNull(m.btts) ?? (gf != null && ga != null ? gf > 0 && ga > 0 : null)
+    const over15 = boolOrNull(m.over_1_5 ?? m.over15) ?? (total != null ? total > 1 : null)
+    const over25 = boolOrNull(m.over_2_5 ?? m.over25) ?? (total != null ? total > 2 : null)
+    const teamOver15 = boolOrNull(m.team_over_1_5 ?? m.team_over15) ?? (gf != null ? gf > 1 : null)
     return {
       result: formResult(m),
       opponent: m.opponent != null ? String(m.opponent) : undefined,
@@ -451,6 +467,10 @@ export function adaptForm(raw: unknown): TeamForm {
       gf,
       ga,
       home: isHome,
+      btts,
+      over15,
+      over25,
+      teamOver15,
     }
   })
   return {

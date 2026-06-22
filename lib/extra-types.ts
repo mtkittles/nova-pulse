@@ -81,6 +81,11 @@ export interface FormMatch {
   gf?: number // gole TEJ drużyny
   ga?: number // gole przeciwnika
   home?: boolean
+  // rynki rozliczone w tym meczu (z Oracle lub policzone z gf/ga); null = nieznane
+  btts?: boolean | null
+  over15?: boolean | null
+  over25?: boolean | null
+  teamOver15?: boolean | null // ta drużyna strzeliła ≥2
 }
 
 export interface TeamForm {

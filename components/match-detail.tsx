@@ -10,6 +10,7 @@ import { getLeagueDisplayName } from "@/lib/leagues"
 import { formatKickoff } from "@/lib/time"
 import { fmtProb, fmtOdds, fmtEdge } from "@/lib/format"
 import { TierBadge } from "./ui/tier-badge"
+import { TrackTipButton, type TrackTipData } from "./track-tip-button"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { TeamBadge } from "./team-badge"
 import { QScoreBreakdownCard } from "./q-score-breakdown"
@@ -64,12 +65,26 @@ export function MatchDetail({
   match,
   homeSide,
   awaySide,
+  trackedKeys = [],
 }: {
   match: MatchDetailed
   homeSide?: SideStats | null
   awaySide?: SideStats | null
+  trackedKeys?: string[]
 }) {
   const reduce = useReducedMotion()
+  const trackedSet = new Set(trackedKeys)
+  const trackDataFor = (p: MatchPrediction): TrackTipData => ({
+    event_id: match.event_id,
+    bet_type: p.bet_type_raw ?? p.bet_type,
+    bet_side: p.bet_side_raw ?? p.bet_side,
+    odds: p.odds,
+    home_team: match.home,
+    away_team: match.away,
+    match_date: match.kickoff_utc,
+    league_code: match.leagueCode ?? "",
+  })
+  const isTracked = (p: MatchPrediction) => trackedSet.has(`${match.event_id}|${p.bet_type}`)
   const [othersOpen, setOthersOpen] = useState(false)
   const [now, setNow] = useState<number | null>(null)
   useEffect(() => {
@@ -210,6 +225,11 @@ export function MatchDetail({
               </div>
             </div>
 
+            {/* Śledź typ — główna rekomendacja */}
+            <div className="mt-4">
+              <TrackTipButton data={trackDataFor(best)} loggedIn tracked={isTracked(best)} />
+            </div>
+
             {/* Pozostałe analizy meczu (rozwijalne) */}
             {otherPreds.length > 0 && (
               <div className="mt-4 border-t border-[color:var(--border-soft)] pt-3">
@@ -235,6 +255,7 @@ export function MatchDetail({
                             <span className="font-bold text-[color:var(--cyan)]">{fmtOdds(p.odds)}</span>
                             <span className={`font-semibold ${p.edge == null ? "text-[color:var(--text-muted)]" : p.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>{fmtEdge(p.edge)}</span>
                           </span>
+                          <TrackTipButton data={trackDataFor(p)} loggedIn tracked={isTracked(p)} variant="icon" />
                         </div>
                       )
                     })}

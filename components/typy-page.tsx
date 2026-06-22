@@ -132,6 +132,24 @@ export default function TypyPage({
     return () => clearInterval(id)
   }, [])
 
+  // typy śledzone przez usera → stan "śledzony" na kartach (klucz "event_id|bet_type")
+  const [trackedKeys, setTrackedKeys] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    if (!loggedIn) return
+    let alive = true
+    fetch("/api/user/picks")
+      .then((r) => (r.ok ? r.json() : { picks: [] }))
+      .then((d) => {
+        if (!alive) return
+        const list = Array.isArray(d?.picks) ? d.picks : []
+        setTrackedKeys(new Set(list.map((p: { event_id: string | number; bet_type: string }) => `${p.event_id}|${p.bet_type}`)))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [loggedIn])
+
   const selectedDay = useMemo(() => calendar.find((d) => d.date === date), [calendar, date])
 
   async function selectDate(d: string) {
@@ -341,7 +359,14 @@ export default function TypyPage({
             // Mobile: lista pionowa (1 kolumna). Desktop: grid 2/3 kolumny (bez karuzeli dla długich list).
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {groups.map((g) => (
-                <MatchTipCard key={g.key} group={g} href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined} locked={!loggedIn} />
+                <MatchTipCard
+                  key={g.key}
+                  group={g}
+                  href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined}
+                  locked={!loggedIn}
+                  loggedIn={loggedIn}
+                  trackedKeys={trackedKeys}
+                />
               ))}
             </div>
           ) : (
