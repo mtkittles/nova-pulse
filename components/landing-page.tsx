@@ -6,12 +6,17 @@ import { motion, useReducedMotion } from "framer-motion"
 import {
   Activity,
   ArrowRight,
+  Check,
   CheckCircle2,
   Cpu,
   Menu,
+  Percent,
   Send,
   ShieldCheck,
+  Star,
+  Tag,
   Target,
+  TrendingUp,
   Trophy,
   X,
 } from "lucide-react"
@@ -67,6 +72,46 @@ const howItWorks = [
     icon: CheckCircle2,
     title: "Automatyczna weryfikacja na żywo",
     text: "Aktualizujemy wynik na żywo i rozliczamy typy po zakończeniu meczu.",
+  },
+]
+
+// Onboarding: jak czytać metryki typu.
+const EDU = [
+  { icon: Star, tone: "text-[color:var(--cyan)]", title: "Q-Score", text: "Jakość sygnału 0–100. Powyżej 70 = mocny sygnał." },
+  { icon: Percent, tone: "text-[color:var(--text-primary)]", title: "Model %", text: "Szansa wg modelu. Powyżej 60% = przewaga statystyczna." },
+  { icon: TrendingUp, tone: "text-[color:var(--success)]", title: "Edge", text: "Przewaga nad kursem bukmachera. Dodatni = value bet." },
+  { icon: Tag, tone: "text-[color:var(--text-primary)]", title: "Kurs", text: "Kurs rynkowy. Im wyższy przy tym samym edge, tym lepsza wartość." },
+]
+
+// Plany (prezentacja — brak płatności; Trial/Premium kierują do bota).
+const PLANS: {
+  name: string
+  price: string
+  features: string[]
+  cta: { label: string; href: string }
+  highlight?: boolean
+  badge?: { label: string; cls: string }
+}[] = [
+  {
+    name: "Darmowy",
+    price: "0 zł / miesiąc",
+    features: ["Lista typów dnia", "Podstawowe statystyki", "Opóźnienie 24h"],
+    cta: { label: "Zacznij za darmo", href: "/typy" },
+  },
+  {
+    name: "Trial 7 dni",
+    price: "Bezpłatnie",
+    features: ["Wszystko z Free", "Typy w czasie rzeczywistym", "Q-Score + Edge", "Statystyki zaawansowane", "Szczegóły /mecz"],
+    cta: { label: "Wypróbuj 7 dni", href: "https://t.me/lupus_bet_bot" },
+    highlight: true,
+    badge: { label: "Nowość", cls: "border-amber-400/40 bg-amber-400/15 text-amber-200" },
+  },
+  {
+    name: "Premium",
+    price: "Przez bota Telegram",
+    features: ["Wszystko z Trial", "Powiadomienia live", "Historia typów", "Ranking typerów"],
+    cta: { label: "Dołącz przez Telegram", href: "https://t.me/lupus_bet_bot" },
+    badge: { label: "Popularne", cls: "border-emerald-400/40 bg-emerald-400/15 text-emerald-200" },
   },
 ]
 
@@ -226,6 +271,30 @@ export default function LandingPage({
         <LiveTicker />
       </section>
 
+      {/* JAK CZYTAĆ TYP — onboarding */}
+      <section className="mx-auto max-w-7xl px-6 pt-14">
+        <motion.div {...reveal()} className="mb-6 max-w-2xl">
+          <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--cyan)]/80">Onboarding</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">Jak czytać typ?</h2>
+        </motion.div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {EDU.map((e, i) => {
+            const Icon = e.icon
+            return (
+              <motion.div key={e.title} {...reveal(i * 0.05)} className="h-full">
+                <Card className="h-full">
+                  <div className={`grid h-10 w-10 place-items-center rounded-xl border border-[color:var(--border-strong)] bg-[var(--surface-2)] ${e.tone}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-3 text-sm font-semibold">{e.title}</h3>
+                  <p className="mt-1.5 text-xs leading-6 text-[color:var(--text-secondary)]">{e.text}</p>
+                </Card>
+              </motion.div>
+            )
+          })}
+        </div>
+      </section>
+
       {/* DZIŚ */}
       <section id="today" className="mx-auto max-w-7xl px-6 py-14">
         <motion.div {...reveal()} className="mb-6 flex items-end justify-between gap-4">
@@ -377,6 +446,49 @@ export default function LandingPage({
           </motion.div>
         </section>
       )}
+
+      {/* PLANY (prezentacja — brak płatności) */}
+      <section id="plany" className="mx-auto max-w-7xl px-6 py-14">
+        <motion.div {...reveal()} className="mb-8 max-w-2xl">
+          <p className="text-sm uppercase tracking-[0.25em] text-[color:var(--cyan)]/80">Plany</p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Wybierz swój poziom dostępu.</h2>
+        </motion.div>
+        <div className="grid gap-5 md:grid-cols-3">
+          {PLANS.map((plan, i) => (
+            <motion.div key={plan.name} {...reveal(i * 0.08)} className="h-full">
+              <Card
+                hover={false}
+                active={plan.highlight}
+                className={`relative flex h-full flex-col ${plan.highlight ? "border-[color:var(--cyan)]/60" : ""}`}
+              >
+                {plan.badge && (
+                  <span className={`absolute right-4 top-4 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${plan.badge.cls}`}>
+                    {plan.badge.label}
+                  </span>
+                )}
+                <h3 className="text-lg font-semibold">{plan.name}</h3>
+                <p className="mt-1 text-2xl font-bold tracking-tight">{plan.price}</p>
+                <ul className="mt-5 flex-1 space-y-2.5 text-sm text-[color:var(--text-secondary)]">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--cyan)]" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6">
+                  <Button href={plan.cta.href} variant={plan.highlight ? "primary" : "secondary"} size="md" className="w-full">
+                    {plan.cta.href.includes("t.me") && <Send className="h-4 w-4" />} {plan.cta.label}
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+        <p className="mt-5 text-center text-xs text-[color:var(--text-muted)]">
+          Plany Trial i Premium prowadzone są przez bota Telegram. Brak płatności na stronie.
+        </p>
+      </section>
 
       {/* STOPKA */}
       <footer className="mx-auto max-w-7xl px-6 py-12">
