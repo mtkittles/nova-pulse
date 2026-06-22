@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { motion, useReducedMotion } from "framer-motion"
+import { useEffect, useRef, useState } from "react"
+import { motion } from "framer-motion"
 import { ArrowLeft, BarChart3, ChevronDown, MapPin } from "lucide-react"
 import type { MatchDetailed, MatchPrediction, OddsMarkets, SideStats } from "@/lib/extra-types"
 import { getMarketLabel } from "@/lib/market-label"
@@ -11,6 +11,7 @@ import { formatKickoff } from "@/lib/time"
 import { fmtProb, fmtOdds, fmtEdge } from "@/lib/format"
 import { TierBadge } from "./ui/tier-badge"
 import { TrackTipButton, type TrackTipData } from "./track-tip-button"
+import { MeczTabs, type MeczTab } from "./mecz-tabs"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { TeamBadge } from "./team-badge"
 import { QScoreBreakdownCard } from "./q-score-breakdown"
@@ -72,7 +73,6 @@ export function MatchDetail({
   awaySide?: SideStats | null
   trackedKeys?: string[]
 }) {
-  const reduce = useReducedMotion()
   const trackedSet = new Set(trackedKeys)
   const trackDataFor = (p: MatchPrediction): TrackTipData => ({
     event_id: match.event_id,
@@ -126,283 +126,296 @@ export function MatchDetail({
   const otherPreds = match.predictions.filter((p) => p !== best)
   const hasThriller = match.predictions.some((p) => chosenMarketKey(p) === "cs_32" || chosenMarketKey(p) === "cs_23")
 
-  const reveal = (delay = 0) => ({
-    initial: reduce ? { opacity: 0 } : { opacity: 0, y: 18 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-60px" },
-    transition: { duration: 0.4, delay: reduce ? 0 : delay },
-  })
-
   const om = match.odds_markets
 
+  // zakładki
+  const [tab, setTab] = useState<MeczTab>("prognoza")
+  const scoreRef = useRef<HTMLDivElement>(null)
+  const changeTab = (t: MeczTab) => {
+    setTab(t)
+    if (typeof window !== "undefined") {
+      const rect = scoreRef.current?.getBoundingClientRect()
+      const top = rect ? rect.top + window.scrollY - 72 : 0
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" })
+    }
+  }
+  // płynny fade między zakładkami (bez slide → brak layout shift na mobile)
+  const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3 } }
+
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-16 lg:max-w-6xl">
+    <div className="mx-auto max-w-2xl px-4 pb-16 lg:max-w-5xl">
       <Link href="/typy" className="mb-5 inline-flex items-center gap-2 text-sm text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]">
         <ArrowLeft className="h-4 w-4" /> Wróć do typów
       </Link>
 
-      {/* Mobile: jedna kolumna (jak dotąd). Desktop: dashboard 2-kolumnowy —
-          szerokie sekcje (scoreboard, rekomendacja, heatmapa, forma) na całość,
-          mniejsze karty analityczne parami w dwóch kolumnach. */}
-      <div className="space-y-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
-      {/* [A] SCOREBOARD */}
-      <Card hover={false} className="lg:col-span-2">
-        <div className="flex items-center justify-between gap-3">
-          <span className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">{leagueText}</span>
-          {liveOn ? (
-            <StatusPill status="LIVE" />
-          ) : finished ? (
-            <Badge tone="neutral">Zakończony</Badge>
-          ) : (
-            <Badge tone="cyan">Nadchodzący</Badge>
-          )}
-        </div>
-
-        <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex flex-col items-center gap-2 sm:items-end">
-            <TeamBadge teamName={match.home} logoUrl={match.homeLogo} size="md" />
-            <span className="text-center text-base font-semibold leading-tight sm:text-right">{match.home}</span>
-          </div>
-          <div className="flex flex-col items-center px-2">
-            {liveOn || finished ? (
-              <span className={`text-3xl font-extrabold tnum ${liveOn ? "text-[color:var(--danger)]" : "text-[color:var(--text-primary)]"}`}>
-                {hasScore ? `${homeScore} : ${awayScore}` : "—"}
-              </span>
+      {/* [A] SCOREBOARD — zawsze nad zakładkami */}
+      <div ref={scoreRef}>
+        <Card hover={false}>
+          <div className="flex items-center justify-between gap-3">
+            <span className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">{leagueText}</span>
+            {liveOn ? (
+              <StatusPill status="LIVE" />
+            ) : finished ? (
+              <Badge tone="neutral">Zakończony</Badge>
             ) : (
-              <span className="whitespace-nowrap text-sm font-medium text-[color:var(--text-secondary)]">
-                {formatKickoff(match.kickoff_utc)}
-              </span>
+              <Badge tone="cyan">Nadchodzący</Badge>
             )}
-            {liveOn && <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--danger)]">{minuteTxt}</span>}
           </div>
-          <div className="flex flex-col items-center gap-2 sm:items-start">
-            <TeamBadge teamName={match.away} logoUrl={match.awayLogo} size="md" />
-            <span className="text-center text-base font-semibold leading-tight sm:text-left">{match.away}</span>
+
+          <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <div className="flex flex-col items-center gap-2 sm:items-end">
+              <TeamBadge teamName={match.home} logoUrl={match.homeLogo} size="md" />
+              <span className="text-center text-base font-semibold leading-tight sm:text-right">{match.home}</span>
+            </div>
+            <div className="flex flex-col items-center px-2">
+              {liveOn || finished ? (
+                <span className={`text-3xl font-extrabold tnum ${liveOn ? "text-[color:var(--danger)]" : "text-[color:var(--text-primary)]"}`}>
+                  {hasScore ? `${homeScore} : ${awayScore}` : "—"}
+                </span>
+              ) : (
+                <span className="whitespace-nowrap text-sm font-medium text-[color:var(--text-secondary)]">
+                  {formatKickoff(match.kickoff_utc)}
+                </span>
+              )}
+              {liveOn && <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--danger)]">{minuteTxt}</span>}
+            </div>
+            <div className="flex flex-col items-center gap-2 sm:items-start">
+              <TeamBadge teamName={match.away} logoUrl={match.awayLogo} size="md" />
+              <span className="text-center text-base font-semibold leading-tight sm:text-left">{match.away}</span>
+            </div>
           </div>
-        </div>
 
-        {match.stadium && (
-          <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-[color:var(--text-muted)]">
-            <MapPin className="h-3.5 w-3.5" /> {match.stadium}
-          </p>
-        )}
-      </Card>
+          {match.stadium && (
+            <p className="mt-4 flex items-center justify-center gap-1.5 text-xs text-[color:var(--text-muted)]">
+              <MapPin className="h-3.5 w-3.5" /> {match.stadium}
+            </p>
+          )}
+        </Card>
+      </div>
 
-      {/* [B] PROGNOZA BOTA */}
-      {best && bestMarket && (
-        <motion.div {...reveal()} className="lg:col-span-2">
-          <Card active className="overflow-hidden">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${bestMarket.badge}`}>{bestMarket.short}</span>
-                  <TierBadge tier={best.tier} />
+      {/* PASEK ZAKŁADEK (sticky pod headerem) */}
+      <MeczTabs active={tab} onChange={changeTab} h2hCount={match.h2h_matches.length} />
+
+      {/* ── PROGNOZA: [B] [H] [C] ── */}
+      {tab === "prognoza" && (
+        <motion.div key="prognoza" {...fade} className="space-y-5">
+          {/* [B] PROGNOZA BOTA */}
+          {best && bestMarket && (
+            <Card active className="overflow-hidden">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${bestMarket.badge}`}>{bestMarket.short}</span>
+                    <TierBadge tier={best.tier} />
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-[color:var(--text-primary)]">{bestMarket.full}</p>
+                  {best.actual_result != null && (
+                    <div className="mt-2">
+                      <StatusPill status={best.actual_result === 1 ? "WON" : "LOST"} />
+                    </div>
+                  )}
                 </div>
-                <p className="mt-2 text-sm font-medium text-[color:var(--text-primary)]">{bestMarket.full}</p>
-                {best.actual_result != null && (
-                  <div className="mt-2">
-                    <StatusPill status={best.actual_result === 1 ? "WON" : "LOST"} />
+                <QScoreRing value={best.q_score} size={72} />
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] p-2.5">
+                  <MetricLabel label="Szansa modelu" hint={METRIC_HINTS.model} className="text-[11px] text-[color:var(--text-secondary)]" />
+                  <p className="mt-0.5 font-semibold tnum">{best.model_prob != null ? `${Math.round(best.model_prob * 100)}%` : "—"}</p>
+                </div>
+                <div className="rounded-xl border border-[color:var(--border-strong)] bg-[var(--cyan-soft)] p-2.5">
+                  <MetricLabel label="Kurs" hint={METRIC_HINTS.odds} className="text-[11px] text-[color:var(--text-secondary)]" />
+                  <p className="mt-0.5 text-lg font-bold text-[color:var(--cyan)] tnum">{best.odds != null ? best.odds.toFixed(2) : "—"}</p>
+                </div>
+                <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] p-2.5">
+                  <MetricLabel label="Edge" hint={METRIC_HINTS.edge} className="text-[11px] text-[color:var(--text-secondary)]" />
+                  <p className={`mt-0.5 font-semibold tnum ${best.edge != null && best.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+                    {best.edge != null ? `${best.edge >= 0 ? "+" : ""}${(best.edge * 100).toFixed(1)}%` : "—"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Śledź typ — główna rekomendacja */}
+              <div className="mt-4">
+                <TrackTipButton data={trackDataFor(best)} loggedIn tracked={isTracked(best)} />
+              </div>
+
+              {/* Pozostałe analizy meczu (rozwijalne) */}
+              {otherPreds.length > 0 && (
+                <div className="mt-4 border-t border-[color:var(--border-soft)] pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setOthersOpen((o) => !o)}
+                    className="flex w-full items-center justify-between text-sm font-medium text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+                  >
+                    <span>Pozostałe analizy ({otherPreds.length})</span>
+                    <ChevronDown className={`h-4 w-4 transition ${othersOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {othersOpen && (
+                    <div className="mt-3 space-y-2">
+                      {otherPreds.map((p, i) => {
+                        const pm = getMarketLabel(p.bet_type_raw ?? p.bet_type, p.bet_side_raw ?? p.bet_side, match.home, match.away)
+                        return (
+                          <div key={i} className="flex items-center gap-2 rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] p-2.5 text-xs">
+                            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${pm.badge}`}>{pm.short}</span>
+                            <TierBadge tier={p.tier} />
+                            <span className="ml-auto flex items-center gap-3 tnum">
+                              <span className="text-[color:var(--text-secondary)]">Q {p.q_score != null ? Math.round(p.q_score) : "—"}</span>
+                              <span className="text-[color:var(--text-secondary)]">{fmtProb(p.model_prob)}</span>
+                              <span className="font-bold text-[color:var(--cyan)]">{fmtOdds(p.odds)}</span>
+                              <span className={`font-semibold ${p.edge == null ? "text-[color:var(--text-muted)]" : p.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>{fmtEdge(p.edge)}</span>
+                            </span>
+                            <TrackTipButton data={trackDataFor(p)} loggedIn tracked={isTracked(p)} variant="icon" />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* [H] Q-SCORE BREAKDOWN — tylko gdy Oracle podał rozbicie */}
+          {best?.q_score_breakdown && <QScoreBreakdownCard breakdown={best.q_score_breakdown} />}
+
+          {/* [C] KURSY RYNKÓW */}
+          <Card hover={false}>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Kursy rynków</h2>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {MARKET_CELLS.map((c) => {
+                const val = om ? om[c.key] : null
+                const chosen = chosenKey === c.key
+                return (
+                  <div
+                    key={c.key}
+                    className={`rounded-xl border p-2.5 text-center ${chosen ? "border-[color:var(--border-strong)] bg-[var(--cyan-soft)]" : "border-[color:var(--border-soft)] bg-[var(--surface-2)]"}`}
+                  >
+                    <p className="flex items-center justify-center gap-1 text-[11px] text-[color:var(--text-secondary)]">
+                      {c.label}
+                      {c.thriller && <Badge tone="warning" className="px-1.5 py-0">THR</Badge>}
+                    </p>
+                    <p className={`mt-0.5 text-lg font-bold tnum ${val == null ? "text-[color:var(--text-muted)]" : chosen ? "text-[color:var(--cyan)]" : "text-[color:var(--text-primary)]"}`}>
+                      {val != null ? val.toFixed(2) : "—"}
+                    </p>
                   </div>
-                )}
-              </div>
-              <QScoreRing value={best.q_score} size={72} />
+                )
+              })}
             </div>
+          </Card>
+        </motion.div>
+      )}
 
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] p-2.5">
-                <MetricLabel label="Szansa modelu" hint={METRIC_HINTS.model} className="text-[11px] text-[color:var(--text-secondary)]" />
-                <p className="mt-0.5 font-semibold tnum">{best.model_prob != null ? `${Math.round(best.model_prob * 100)}%` : "—"}</p>
-              </div>
-              <div className="rounded-xl border border-[color:var(--border-strong)] bg-[var(--cyan-soft)] p-2.5">
-                <MetricLabel label="Kurs" hint={METRIC_HINTS.odds} className="text-[11px] text-[color:var(--text-secondary)]" />
-                <p className="mt-0.5 text-lg font-bold text-[color:var(--cyan)] tnum">{best.odds != null ? best.odds.toFixed(2) : "—"}</p>
-              </div>
-              <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] p-2.5">
-                <MetricLabel label="Edge" hint={METRIC_HINTS.edge} className="text-[11px] text-[color:var(--text-secondary)]" />
-                <p className={`mt-0.5 font-semibold tnum ${best.edge != null && best.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
-                  {best.edge != null ? `${best.edge >= 0 ? "+" : ""}${(best.edge * 100).toFixed(1)}%` : "—"}
-                </p>
-              </div>
+      {/* ── ANALIZA: [E] [J] [D] ── */}
+      {tab === "analiza" && (
+        <motion.div key="analiza" {...fade} className="space-y-5">
+          {/* [E] FORMA (przełącznik 5/10/15 + historyczne BTTS w FormPanel) */}
+          <div>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Forma — ostatnie mecze</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormPanel teamId={match.home_id} teamName={match.home} />
+              <FormPanel teamId={match.away_id} teamName={match.away} />
             </div>
+          </div>
 
-            {/* Śledź typ — główna rekomendacja */}
-            <div className="mt-4">
-              <TrackTipButton data={trackDataFor(best)} loggedIn tracked={isTracked(best)} />
+          {/* [J] STATYSTYKI DOM/WYJAZD — ukryte gdy brak splitu */}
+          {(homeSide || awaySide) && (
+            <div>
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Statystyki: forma u siebie / na wyjeździe</h2>
+              <HomeAwayStats
+                homeName={match.home}
+                homeLogo={match.homeLogo}
+                homeStats={homeSide}
+                awayName={match.away}
+                awayLogo={match.awayLogo}
+                awayStats={awaySide}
+              />
             </div>
+          )}
 
-            {/* Pozostałe analizy meczu (rozwijalne) */}
-            {otherPreds.length > 0 && (
-              <div className="mt-4 border-t border-[color:var(--border-soft)] pt-3">
-                <button
-                  type="button"
-                  onClick={() => setOthersOpen((o) => !o)}
-                  className="flex w-full items-center justify-between text-sm font-medium text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
-                >
-                  <span>Pozostałe analizy ({otherPreds.length})</span>
-                  <ChevronDown className={`h-4 w-4 transition ${othersOpen ? "rotate-180" : ""}`} />
-                </button>
-                {othersOpen && (
-                  <div className="mt-3 space-y-2">
-                    {otherPreds.map((p, i) => {
-                      const pm = getMarketLabel(p.bet_type_raw ?? p.bet_type, p.bet_side_raw ?? p.bet_side, match.home, match.away)
-                      return (
-                        <div key={i} className="flex items-center gap-2 rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] p-2.5 text-xs">
-                          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${pm.badge}`}>{pm.short}</span>
-                          <TierBadge tier={p.tier} />
-                          <span className="ml-auto flex items-center gap-3 tnum">
-                            <span className="text-[color:var(--text-secondary)]">Q {p.q_score != null ? Math.round(p.q_score) : "—"}</span>
-                            <span className="text-[color:var(--text-secondary)]">{fmtProb(p.model_prob)}</span>
-                            <span className="font-bold text-[color:var(--cyan)]">{fmtOdds(p.odds)}</span>
-                            <span className={`font-semibold ${p.edge == null ? "text-[color:var(--text-muted)]" : p.edge >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>{fmtEdge(p.edge)}</span>
-                          </span>
-                          <TrackTipButton data={trackDataFor(p)} loggedIn tracked={isTracked(p)} variant="icon" />
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+          {/* [D] HEATMAPA */}
+          <Card hover={false}>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona/Dixon-Coles)</h2>
+            {match.score_matrix ? (
+              <LazyMount height={360}>
+                <ScoreHeatmap matrix={match.score_matrix} home={match.home} away={match.away} highlightThriller={hasThriller} />
+              </LazyMount>
+            ) : (
+              <EmptyState icon={BarChart3} title="Brak macierzy" description="Dostępna tylko dla meczów z pełnym modelem (np. MŚ)." />
             )}
           </Card>
         </motion.div>
       )}
 
-      {/* [H] Q-SCORE BREAKDOWN — tylko gdy Oracle podał rozbicie */}
-      {best?.q_score_breakdown && (
-        <motion.div {...reveal(0.05)}>
-          <QScoreBreakdownCard breakdown={best.q_score_breakdown} />
-        </motion.div>
-      )}
-
-      {/* [C] KURSY RYNKÓW */}
-      <motion.div {...reveal(0.05)}>
-        <Card hover={false}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Kursy rynków</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {MARKET_CELLS.map((c) => {
-              const val = om ? om[c.key] : null
-              const chosen = chosenKey === c.key
-              return (
-                <div
-                  key={c.key}
-                  className={`rounded-xl border p-2.5 text-center ${chosen ? "border-[color:var(--border-strong)] bg-[var(--cyan-soft)]" : "border-[color:var(--border-soft)] bg-[var(--surface-2)]"}`}
-                >
-                  <p className="flex items-center justify-center gap-1 text-[11px] text-[color:var(--text-secondary)]">
-                    {c.label}
-                    {c.thriller && <Badge tone="warning" className="px-1.5 py-0">THR</Badge>}
-                  </p>
-                  <p className={`mt-0.5 text-lg font-bold tnum ${val == null ? "text-[color:var(--text-muted)]" : chosen ? "text-[color:var(--cyan)]" : "text-[color:var(--text-primary)]"}`}>
-                    {val != null ? val.toFixed(2) : "—"}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* [D] HEATMAPA */}
-      <motion.div {...reveal(0.05)} className="lg:col-span-2">
-        <Card hover={false}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona/Dixon-Coles)</h2>
-          {match.score_matrix ? (
-            <LazyMount height={360}>
-              <ScoreHeatmap matrix={match.score_matrix} home={match.home} away={match.away} highlightThriller={hasThriller} />
-            </LazyMount>
+      {/* ── LIGA: [G] [I] ── */}
+      {tab === "liga" && (
+        <motion.div key="liga" {...fade} className="space-y-5">
+          {match.leagueCode ? (
+            <>
+              {/* [G] TABELA LIGOWA */}
+              <div>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Tabela ligowa</h2>
+                <StandingsTable leagueCode={match.leagueCode} homeName={match.home} awayName={match.away} />
+              </div>
+              {/* [I] TOP STRZELCY LIGI (sekcja sama ukrywa się, gdy brak danych) */}
+              <TopScorers leagueCode={match.leagueCode} leagueName={leagueText} homeName={match.home} awayName={match.away} />
+            </>
           ) : (
-            <EmptyState icon={BarChart3} title="Brak macierzy" description="Dostępna tylko dla meczów z pełnym modelem (np. MŚ)." />
+            <EmptyState icon={BarChart3} title="Brak danych ligowych" description="Nie znamy kodu ligi dla tego meczu." />
           )}
-        </Card>
-      </motion.div>
-
-      {/* [E] FORMA (przełącznik 5/10/15 w FormPanel) */}
-      <motion.div {...reveal(0.05)} className="lg:col-span-2">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Forma — ostatnie mecze</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormPanel teamId={match.home_id} teamName={match.home} />
-          <FormPanel teamId={match.away_id} teamName={match.away} />
-        </div>
-      </motion.div>
-
-      {/* [J] STATYSTYKI DOM/WYJAZD — ukryte gdy brak splitu */}
-      {(homeSide || awaySide) && (
-        <motion.div {...reveal(0.05)}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Statystyki: forma u siebie / na wyjeździe</h2>
-          <HomeAwayStats
-            homeName={match.home}
-            homeLogo={match.homeLogo}
-            homeStats={homeSide}
-            awayName={match.away}
-            awayLogo={match.awayLogo}
-            awayStats={awaySide}
-          />
         </motion.div>
       )}
 
-      {/* [F] H2H */}
-      <motion.div {...reveal(0.05)}>
-        <Card hover={false}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Ostatnie spotkania (H2H)</h2>
-          {match.h2h_matches.length === 0 ? (
-            <EmptyState icon={BarChart3} title="Brak historycznych spotkań" description="Te drużyny nie grały ze sobą w dostępnym zakresie danych." />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-[color:var(--border-soft)] text-xs uppercase tracking-wide text-[color:var(--text-muted)]">
-                  <tr>
-                    <th className="px-2 py-2 text-left">Data</th>
-                    <th className="px-2 py-2 text-left">Mecz</th>
-                    <th className="px-2 py-2 text-right">Wynik</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {match.h2h_matches.slice(0, 5).map((h, i) => {
-                    const sc = parseScore(h.score)
-                    let tone = "text-[color:var(--text-primary)]"
-                    if (sc) {
-                      const homeIsCurrentHome = h.home === match.home
-                      const myGoals = homeIsCurrentHome ? sc[0] : sc[1]
-                      const oppGoals = homeIsCurrentHome ? sc[1] : sc[0]
-                      tone = myGoals > oppGoals ? "text-[color:var(--cyan)]" : myGoals < oppGoals ? "text-[color:var(--danger)]" : "text-[color:var(--text-secondary)]"
-                    }
-                    return (
-                      <tr key={i} className="border-b border-[color:var(--border-soft)] last:border-0">
-                        <td className="whitespace-nowrap px-2 py-2 text-[color:var(--text-muted)] tnum">{h.date ? h.date.slice(0, 10) : "—"}</td>
-                        <td className="px-2 py-2">
-                          <span className="flex min-w-0 items-center gap-1.5">
-                            <TeamBadge teamName={h.home} size="sm" />
-                            <span className="truncate text-[color:var(--text-secondary)]">{h.home}</span>
-                            <span className="text-[color:var(--text-muted)]">–</span>
-                            <TeamBadge teamName={h.away} size="sm" />
-                            <span className="truncate text-[color:var(--text-secondary)]">{h.away}</span>
-                          </span>
-                        </td>
-                        <td className={`whitespace-nowrap px-2 py-2 text-right font-bold tnum ${tone}`}>{h.score}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-      </motion.div>
-
-      {/* [G] TABELA LIGOWA — tylko gdy znamy kod ligi */}
-      {match.leagueCode && (
-        <motion.div {...reveal(0.05)}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Tabela ligowa</h2>
-          <StandingsTable leagueCode={match.leagueCode} homeName={match.home} awayName={match.away} />
+      {/* ── H2H: [F] ── */}
+      {tab === "h2h" && (
+        <motion.div key="h2h" {...fade} className="space-y-5">
+          <Card hover={false}>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Ostatnie spotkania (H2H)</h2>
+            {match.h2h_matches.length === 0 ? (
+              <EmptyState icon={BarChart3} title="Brak historycznych spotkań" description="Te drużyny nie grały ze sobą w dostępnym zakresie danych." />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-[color:var(--border-soft)] text-xs uppercase tracking-wide text-[color:var(--text-muted)]">
+                    <tr>
+                      <th className="px-2 py-2 text-left">Data</th>
+                      <th className="px-2 py-2 text-left">Mecz</th>
+                      <th className="px-2 py-2 text-right">Wynik</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {match.h2h_matches.slice(0, 5).map((h, i) => {
+                      const sc = parseScore(h.score)
+                      let tone = "text-[color:var(--text-primary)]"
+                      if (sc) {
+                        const homeIsCurrentHome = h.home === match.home
+                        const myGoals = homeIsCurrentHome ? sc[0] : sc[1]
+                        const oppGoals = homeIsCurrentHome ? sc[1] : sc[0]
+                        tone = myGoals > oppGoals ? "text-[color:var(--cyan)]" : myGoals < oppGoals ? "text-[color:var(--danger)]" : "text-[color:var(--text-secondary)]"
+                      }
+                      return (
+                        <tr key={i} className="border-b border-[color:var(--border-soft)] last:border-0">
+                          <td className="whitespace-nowrap px-2 py-2 text-[color:var(--text-muted)] tnum">{h.date ? h.date.slice(0, 10) : "—"}</td>
+                          <td className="px-2 py-2">
+                            <span className="flex min-w-0 items-center gap-1.5">
+                              <TeamBadge teamName={h.home} size="sm" />
+                              <span className="truncate text-[color:var(--text-secondary)]">{h.home}</span>
+                              <span className="text-[color:var(--text-muted)]">–</span>
+                              <TeamBadge teamName={h.away} size="sm" />
+                              <span className="truncate text-[color:var(--text-secondary)]">{h.away}</span>
+                            </span>
+                          </td>
+                          <td className={`whitespace-nowrap px-2 py-2 text-right font-bold tnum ${tone}`}>{h.score}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
         </motion.div>
       )}
-
-      {/* [I] TOP STRZELCY LIGI — tylko gdy znamy kod ligi (sekcja sama ukrywa się, gdy brak danych) */}
-      {match.leagueCode && (
-        <motion.div {...reveal(0.05)}>
-          <TopScorers leagueCode={match.leagueCode} leagueName={leagueText} homeName={match.home} awayName={match.away} />
-        </motion.div>
-      )}
-      </div>
     </div>
   )
 }
