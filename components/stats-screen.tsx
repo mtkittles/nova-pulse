@@ -26,18 +26,14 @@ function fmtDay(val: string): string {
     : d.toLocaleDateString("pl-PL", { day: "numeric", month: "short" })
 }
 
-// roi z Oracle to ułamek (0.4263 = 42.63%) — formatujemy ×100 ze znakiem.
-function fmtRoi(v: number): string {
-  return `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`
-}
-
 function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: { date: string; roi: number } }[] }) {
   if (!active || !payload?.length) return null
   const p = payload[0].payload
+  // p.roi jest już w procentach (znormalizowane niżej)
   return (
     <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-3 py-2 text-xs">
       <p className="text-[color:var(--text-muted)]">{fmtDay(p.date)}</p>
-      <p className="font-semibold text-[color:var(--cyan)] tnum">ROI {fmtRoi(p.roi)}</p>
+      <p className="font-semibold text-[color:var(--cyan)] tnum">ROI {p.roi >= 0 ? "+" : ""}{p.roi.toFixed(1)}%</p>
     </div>
   )
 }
@@ -70,10 +66,12 @@ export function StatsScreen({
 
   const s = data.summary
   const roiPositive = s.roi >= 0
-  // roi to ułamek (0.4263) — surowy; formatowanie ×100 w osi/tooltipie. Sortuj po dacie.
+  // Oracle bywa niespójny: timeline.roi raz jako ułamek (0.24), raz już procent (24.0/2.24).
+  // Wykryj skalę i znormalizuj wykres do PROCENTÓW (oś/tooltip bez dodatkowego ×100).
+  const roiAlreadyPct = data.timeline.some((t) => Math.abs(t.roi) > 1)
   const chart = [...data.timeline]
     .sort((a, b) => a.date.localeCompare(b.date))
-    .map((t) => ({ date: t.date, roi: t.roi }))
+    .map((t) => ({ date: t.date, roi: roiAlreadyPct ? t.roi : t.roi * 100 }))
   const hasData = s.total_tips > 0
 
   const periodBtn = (p: Period) =>
@@ -139,7 +137,7 @@ export function StatsScreen({
                       tick={{ fontSize: 12 }}
                       width={48}
                       domain={["dataMin", "dataMax"]}
-                      tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                      tickFormatter={(v: number) => `${v.toFixed(0)}%`}
                     />
                     <Tooltip content={<ChartTooltip />} />
                     <Line type="monotone" dataKey="roi" stroke="var(--cyan)" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
