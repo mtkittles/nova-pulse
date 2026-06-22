@@ -21,11 +21,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nova-pulse-sage.ve
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "LUPUS BETS — predykcje piłkarskie napędzane modelem",
+    default: "LUPUS BETS — Analiza, nie przeczucie",
     template: "%s · LUPUS BETS",
   },
   description:
-    "Mądrzejsze typy zamiast przeczucia. Predykcje BTTS, Over 1.5, Mix i Thriller z oceną Q-Score i automatycznie weryfikowaną skutecznością. Napędzane silnikiem Lupus Bot.",
+    "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score. Typy z przewagą nad bukmacherem.",
   applicationName: "LUPUS BETS",
   authors: [{ name: "LUPUS BETS" }],
   icons: {
@@ -35,13 +35,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "LUPUS BETS",
-    title: "LUPUS BETS — predykcje piłkarskie napędzane modelem",
-    description: "Predykcje BTTS, Over 1.5, Mix i Thriller z oceną Q-Score i realną skutecznością.",
+    url: SITE_URL,
+    title: "LUPUS BETS — Analiza, nie przeczucie",
+    description:
+      "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score. Typy z przewagą nad bukmacherem.",
+    // Obraz OG: dynamiczny app/opengraph-image.tsx (konwencja Next, auto-dołączany).
   },
   twitter: {
     card: "summary_large_image",
-    title: "LUPUS BETS",
-    description: "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score.",
+    title: "LUPUS BETS — Analiza, nie przeczucie",
+    description:
+      "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score. Typy z przewagą nad bukmacherem.",
   },
 }
 
