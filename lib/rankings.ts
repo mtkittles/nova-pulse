@@ -104,6 +104,9 @@ export async function getUserRankings(): Promise<UserRankings> {
         total_picks: total,
         won_picks: won,
         win_rate: Number.isFinite(wr) ? Math.round((wr <= 1 ? wr * 100 : wr) * 10) / 10 : 0,
+        roi: numOrNull(o.roi),
+        avg_odds: numOrNull(o.avg_odds ?? o.average_odds ?? o.avg_odd),
+        current_streak: numOrNull(o.current_streak ?? o.streak),
       }
     })
     return { users, updated_at: r.updated_at != null ? String(r.updated_at) : null, error: false }
