@@ -19,6 +19,33 @@ const SQUARE: Record<"W" | "D" | "L", { label: string; cls: string }> = {
   L: { label: FORM_COLOR.L.label, cls: `${FORM_COLOR.L.bg} ${FORM_COLOR.L.text}` },
 }
 
+// Rynki rozliczane per mecz (✓/✗ w wierszu i w podsumowaniu).
+const MARKETS = [
+  { key: "btts", label: "BTTS" },
+  { key: "over15", label: "O1.5" },
+  { key: "over25", label: "O2.5" },
+  { key: "teamOver15", label: "T.O1.5" },
+] as const
+
+// kolor odsetka: ≥60% zielony, 40-59% żółty, <40% czerwony
+function pctColor(pct: number | null): string {
+  if (pct == null) return "text-white/50"
+  if (pct >= 60) return "text-emerald-300"
+  if (pct >= 40) return "text-amber-300"
+  return "text-rose-300"
+}
+
+// Mała plakietka rynku: ✓ zielony / ✗ czerwony / — muted (null).
+function MarketFlag({ label, v }: { label: string; v: boolean | null | undefined }) {
+  const cls =
+    v == null
+      ? "border-white/10 bg-white/[0.04] text-white/45"
+      : v
+        ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+        : "border-rose-400/30 bg-rose-400/10 text-rose-300"
+  return <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${cls}`}>{label} {v == null ? "—" : v ? "✓" : "✗"}</span>
+}
+
 export function FormPanel({ teamId, teamName }: { teamId: string | number | null; teamName: string }) {
   const [scope, setScope] = useState<FormScope>("all")
   const [count, setCount] = useState(10)
@@ -83,24 +110,66 @@ export function FormPanel({ teamId, teamName }: { teamId: string | number | null
             ))}
           </div>
 
-          <div className={`flex flex-wrap gap-1.5 ${loading ? "opacity-50" : ""}`}>
-            {form && form.matches.length > 0 ? (
-              form.matches.map((m, i) => {
-                const sq = SQUARE[m.result]
-                return (
-                  <span
-                    key={i}
-                    title={[m.opponent, m.score, m.date].filter(Boolean).join(" · ")}
-                    className={`grid h-8 w-8 place-items-center rounded-lg text-sm font-bold ${sq.cls}`}
-                  >
-                    {sq.label}
-                  </span>
-                )
-              })
-            ) : (
-              <p className="text-sm text-white/60">{loading ? "Ładowanie…" : "Brak danych o formie."}</p>
-            )}
-          </div>
+          {form && form.matches.length > 0 ? (
+            <div className={loading ? "opacity-50" : ""}>
+              {/* skróty W/D/L (szybki rzut oka) */}
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {form.matches.map((m, i) => {
+                  const sq = SQUARE[m.result]
+                  return (
+                    <span
+                      key={i}
+                      title={[m.opponent, m.score, m.date].filter(Boolean).join(" · ")}
+                      className={`grid h-7 w-7 place-items-center rounded-lg text-xs font-bold ${sq.cls}`}
+                    >
+                      {sq.label}
+                    </span>
+                  )
+                })}
+              </div>
+
+              {/* podsumowanie rynków z aktualnego zakresu (5/10/15) */}
+              <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                {MARKETS.slice(0, 3).map((mk) => {
+                  const known = form.matches.filter((m) => m[mk.key] != null)
+                  const hit = known.filter((m) => m[mk.key]).length
+                  const pp = known.length ? Math.round((hit / known.length) * 100) : null
+                  return (
+                    <span key={mk.key} className="text-white/55">
+                      {mk.label}:{" "}
+                      <span className={`font-semibold tnum ${pctColor(pp)}`}>
+                        {hit}/{known.length} ({pp == null ? "—" : `${pp}%`})
+                      </span>
+                    </span>
+                  )
+                })}
+              </div>
+
+              {/* wiersze meczów: wynik + rynki ✓/✗ */}
+              <div className="space-y-1.5">
+                {form.matches.map((m, i) => {
+                  const sq = SQUARE[m.result]
+                  return (
+                    <div key={i} className="rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className={`grid h-6 w-6 shrink-0 place-items-center rounded text-[11px] font-bold ${sq.cls}`}>{sq.label}</span>
+                        <span className="w-10 shrink-0 text-white/50 tnum">{m.date ? m.date.slice(5, 10) : "—"}</span>
+                        <span className="min-w-0 flex-1 truncate text-white/80">{m.opponent ?? "—"}</span>
+                        <span className="shrink-0 text-white/70 tnum">{m.score ?? "—"}</span>
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {MARKETS.map((mk) => (
+                          <MarketFlag key={mk.key} label={mk.label} v={m[mk.key]} />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-white/60">{loading ? "Ładowanie…" : "Brak danych o formie."}</p>
+          )}
 
           {form && (form.btts_pct != null || form.avg_gf != null || form.avg_ga != null) && (
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
