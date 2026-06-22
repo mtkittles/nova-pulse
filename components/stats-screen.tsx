@@ -15,6 +15,7 @@ import { Skeleton } from "./ui/skeleton"
 import { EmptyState } from "./ui/empty-state"
 import { StatusPill, type PillStatus } from "./ui/status-pill"
 import { TeamBadge } from "./team-badge"
+import { ScrollReveal } from "./scroll-reveal"
 
 type Period = "7" | "30" | "all"
 
@@ -160,6 +161,7 @@ export function StatsScreen({
           </section>
 
           {/* [C] WYKRES ROI W CZASIE */}
+          <ScrollReveal>
           <section>
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
               <TrendingUp className="h-4 w-4 text-[color:var(--cyan)]" /> Skumulowany ROI
@@ -202,6 +204,7 @@ export function StatsScreen({
               )}
             </Card>
           </section>
+          </ScrollReveal>
 
           {/* [C2] SKUTECZNOŚĆ WG Q-SCORE */}
           {data.q_score_buckets.length > 0 && (
@@ -254,6 +257,7 @@ export function StatsScreen({
           )}
 
           {/* [D] PODZIAŁ PO RYNKACH */}
+          <ScrollReveal>
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Podział po rynkach</h2>
             <Card hover={false}>
@@ -290,6 +294,7 @@ export function StatsScreen({
               )}
             </Card>
           </section>
+          </ScrollReveal>
 
           {/* [D2] NAJLEPSZE LIGI (sort po ROI malejąco) */}
           {data.by_league.length > 0 && (
@@ -331,6 +336,7 @@ export function StatsScreen({
           )}
 
           {/* [E] OSTATNIE TYPY */}
+          <ScrollReveal>
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Ostatnie rozliczone typy</h2>
             {recentTips.length === 0 ? (
@@ -366,6 +372,7 @@ export function StatsScreen({
               </div>
             )}
           </section>
+          </ScrollReveal>
 
           {/* TELEGRAM — panel użytkownika */}
           <section>

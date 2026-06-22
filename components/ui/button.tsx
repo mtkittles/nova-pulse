@@ -7,14 +7,14 @@ export type ButtonVariant = "primary" | "secondary" | "ghost"
 export type ButtonSize = "sm" | "md" | "lg"
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.97]"
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: "bg-[var(--cyan)] text-[color:var(--bg-0)] hover:bg-[var(--cyan-strong)] hover:scale-[1.02]",
   secondary:
-    "border border-[color:var(--border-strong)] bg-transparent text-[color:var(--text-primary)] hover:bg-[var(--cyan-soft)]",
+    "border border-[color:var(--border-strong)] bg-transparent text-[color:var(--text-primary)] hover:bg-[var(--cyan-soft)] hover:scale-[1.02]",
   ghost:
-    "bg-transparent text-[color:var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)]",
+    "bg-transparent text-[color:var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)] hover:scale-[1.02]",
 }
 
 const SIZES: Record<ButtonSize, string> = {
