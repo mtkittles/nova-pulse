@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth"
 import { AppShell } from "@/components/app-shell"
 import { EmptyState } from "@/components/ui/empty-state"
 import { LocalDateTime } from "@/components/local-time"
+import { ScrollReveal } from "@/components/scroll-reveal"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Ranking typerów", description: "Ranking najlepszych typerów społeczności Lupus Bets." }
@@ -84,8 +85,8 @@ export default async function RankingPage() {
             {/* MOBILE: karty (tabela byłaby za szeroka) */}
             <div className="space-y-3 md:hidden">
               {users.map((u, i) => (
+                <ScrollReveal key={`${u.display_id}-${i}`} delay={Math.min(i, 8) * 30}>
                 <div
-                  key={`${u.display_id}-${i}`}
                   className="relative rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-4"
                   style={i < 3 ? { backgroundImage: PODIUM_BG[i] } : undefined}
                 >
@@ -117,6 +118,7 @@ export default async function RankingPage() {
                     </div>
                   </div>
                 </div>
+                </ScrollReveal>
               ))}
             </div>
 

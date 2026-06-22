@@ -11,6 +11,7 @@ import { formatKickoff } from "@/lib/time"
 import { fmtProb, fmtOdds, fmtEdge } from "@/lib/format"
 import { TierBadge } from "./ui/tier-badge"
 import { TrackTipButton, type TrackTipData } from "./track-tip-button"
+import { AnimatedCollapse } from "./animated-collapse"
 import { MeczTabs, type MeczTab } from "./mecz-tabs"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { TeamBadge } from "./team-badge"
@@ -251,7 +252,7 @@ export function MatchDetail({
                     <span>Pozostałe analizy ({otherPreds.length})</span>
                     <ChevronDown className={`h-4 w-4 transition ${othersOpen ? "rotate-180" : ""}`} />
                   </button>
-                  {othersOpen && (
+                  <AnimatedCollapse open={othersOpen}>
                     <div className="mt-3 space-y-2">
                       {otherPreds.map((p, i) => {
                         const pm = getMarketLabel(p.bet_type_raw ?? p.bet_type, p.bet_side_raw ?? p.bet_side, match.home, match.away)
@@ -270,7 +271,7 @@ export function MatchDetail({
                         )
                       })}
                     </div>
-                  )}
+                  </AnimatedCollapse>
                 </div>
               )}
             </Card>

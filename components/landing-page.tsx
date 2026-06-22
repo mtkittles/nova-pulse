@@ -29,6 +29,7 @@ import { CountUp } from "./ui/count-up"
 import TipCard from "./tip-card"
 import { CardsCarousel } from "./cards-carousel"
 import { LiveTicker } from "./live-ticker"
+import { ScrollReveal } from "./scroll-reveal"
 import { useLiveMatches } from "@/hooks/use-live-matches"
 import type { TimelinePoint } from "@/lib/stats-types"
 import type { WCPhase } from "@/lib/extra-types"
@@ -281,7 +282,7 @@ export default function LandingPage({
           {EDU.map((e, i) => {
             const Icon = e.icon
             return (
-              <motion.div key={e.title} {...reveal(i * 0.05)} className="h-full">
+              <ScrollReveal key={e.title} delay={i * 60} className="h-full">
                 <Card className="h-full">
                   <div className={`grid h-10 w-10 place-items-center rounded-xl border border-[color:var(--border-strong)] bg-[var(--surface-2)] ${e.tone}`}>
                     <Icon className="h-5 w-5" />
@@ -289,7 +290,7 @@ export default function LandingPage({
                   <h3 className="mt-3 text-sm font-semibold">{e.title}</h3>
                   <p className="mt-1.5 text-xs leading-6 text-[color:var(--text-secondary)]">{e.text}</p>
                 </Card>
-              </motion.div>
+              </ScrollReveal>
             )
           })}
         </div>
@@ -455,7 +456,7 @@ export default function LandingPage({
         </motion.div>
         <div className="grid gap-5 md:grid-cols-3">
           {PLANS.map((plan, i) => (
-            <motion.div key={plan.name} {...reveal(i * 0.08)} className="h-full">
+            <ScrollReveal key={plan.name} delay={i * 80} className="h-full">
               <Card
                 hover={false}
                 active={plan.highlight}
@@ -482,7 +483,7 @@ export default function LandingPage({
                   </Button>
                 </div>
               </Card>
-            </motion.div>
+            </ScrollReveal>
           ))}
         </div>
         <p className="mt-5 text-center text-xs text-[color:var(--text-muted)]">

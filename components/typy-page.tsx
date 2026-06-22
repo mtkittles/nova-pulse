@@ -11,6 +11,7 @@ import MatchTipCard, { type MatchGroup } from "./match-tip-card"
 import { DateStrip } from "./date-strip"
 import { CalendarModal } from "./calendar-modal"
 import { TypyTable } from "./typy-table"
+import { ScrollReveal } from "./scroll-reveal"
 import { AnimatedTabs } from "./ui/tabs"
 import { TipGridSkeleton } from "./ui/skeletons"
 import { EmptyState } from "./ui/empty-state"
@@ -358,15 +359,16 @@ export default function TypyPage({
           {view === "cards" ? (
             // Mobile: lista pionowa (1 kolumna). Desktop: grid 2/3 kolumny (bez karuzeli dla długich list).
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {groups.map((g) => (
-                <MatchTipCard
-                  key={g.key}
-                  group={g}
-                  href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined}
-                  locked={!loggedIn}
-                  loggedIn={loggedIn}
-                  trackedKeys={trackedKeys}
-                />
+              {groups.map((g, i) => (
+                <ScrollReveal key={g.key} delay={Math.min(i, 8) * 40} className="h-full">
+                  <MatchTipCard
+                    group={g}
+                    href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined}
+                    locked={!loggedIn}
+                    loggedIn={loggedIn}
+                    trackedKeys={trackedKeys}
+                  />
+                </ScrollReveal>
               ))}
             </div>
           ) : (
