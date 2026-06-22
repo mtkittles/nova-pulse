@@ -211,6 +211,9 @@ export interface RankingUser {
   total_picks: number
   won_picks: number
   win_rate: number // 0..100
+  roi: number | null // ułamek (0.42 = +42%); null gdy brak
+  avg_odds: number | null // średni kurs, np. 1.85; null gdy brak
+  current_streak: number | null // seria wygranych; null gdy brak
 }
 
 export interface UserRankings {
