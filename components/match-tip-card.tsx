@@ -11,6 +11,7 @@ import { fmtProb, fmtOdds, fmtEdge, fmtQ, sortKey } from "@/lib/format"
 import { DEMO_UNLOCK_PREMIUM } from "@/lib/demo-mode"
 import { QRing } from "./ui/q-ring"
 import { TierBadge } from "./ui/tier-badge"
+import { TrackTipButton, type TrackTipData } from "./track-tip-button"
 import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { ArrowRight, ChevronDown, Lock } from "lucide-react"
@@ -48,6 +49,8 @@ function MarketRow({
   finished,
   homeScore,
   awayScore,
+  loggedIn,
+  tracked,
 }: {
   tip: Tip
   home: string
@@ -55,6 +58,8 @@ function MarketRow({
   finished: boolean
   homeScore: number | null
   awayScore: number | null
+  loggedIn: boolean
+  tracked: boolean
 }) {
   const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, home, away)
   const settlement: Settlement = finished ? settleTip(tip, homeScore, awayScore) : "pending"
@@ -62,9 +67,20 @@ function MarketRow({
   const edgeClass = edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-emerald-300" : "text-rose-300"
   // Mobile: zwięzły wiersz + rozwijane szczegóły (edge, pełna nazwa). Desktop: pełne dane od razu.
   const [open, setOpen] = useState(false)
+  const trackData: TrackTipData = {
+    event_id: tip.event_id,
+    bet_type: tip.bet_type_raw ?? tip.bet_type,
+    bet_side: tip.bet_side_raw ?? tip.bet_side,
+    odds: tip.odds,
+    home_team: home,
+    away_team: away,
+    match_date: tip.kickoff_utc,
+    league_code: tip.leagueCode ?? "",
+  }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.035]">
+    <div className="flex items-stretch rounded-2xl border border-white/10 bg-white/[0.035]">
+      <div className="min-w-0 flex-1">
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 p-3 text-left">
         <QRing value={tip.q_score} size={42} stroke={4} />
         <div className="min-w-0 flex-1">
@@ -112,6 +128,11 @@ function MarketRow({
           </div>
         </div>
       )}
+      </div>
+      {/* Śledź typ — poza przyciskiem-togglem (brak zagnieżdżenia button) */}
+      <div className="flex shrink-0 items-center pr-2.5">
+        <TrackTipButton data={trackData} loggedIn={loggedIn} tracked={tracked} variant="icon" />
+      </div>
     </div>
   )
 }
@@ -120,10 +141,14 @@ export default function MatchTipCard({
   group,
   href,
   locked = false,
+  loggedIn = false,
+  trackedKeys,
 }: {
   group: MatchGroup
   href?: string
   locked?: boolean
+  loggedIn?: boolean
+  trackedKeys?: Set<string>
 }) {
   const { liveMatches } = useLiveMatches()
   const [now, setNow] = useState<number | null>(null)
@@ -245,6 +270,8 @@ export default function MatchTipCard({
             finished={finished}
             homeScore={homeScore}
             awayScore={awayScore}
+            loggedIn={loggedIn}
+            tracked={Boolean(trackedKeys?.has(`${tip.event_id}|${tip.bet_type}`))}
           />
         ))}
       </div>
