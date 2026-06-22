@@ -213,7 +213,8 @@ export function adaptStats(raw: unknown): StatsResponse {
 
   const by_league: LeagueStat[] = (Array.isArray(r.by_league) ? r.by_league : []).map((l) => {
     const o = (l ?? {}) as Record<string, unknown>
-    return { league: String(o.league ?? o.name ?? "—"), tips: pickCount(o), win_rate: pickWinRate(o), roi: pickRoi(o) }
+    // Oracle zwraca league_name (np. "Superettan"); zachowaj fallbacki.
+    return { league: String(o.league_name ?? o.league ?? o.name ?? "—"), tips: pickCount(o), win_rate: pickWinRate(o), roi: pickRoi(o) }
   })
 
   const timeline: TimelinePoint[] = (Array.isArray(r.timeline) ? r.timeline : []).map((p) => {
@@ -221,12 +222,24 @@ export function adaptStats(raw: unknown): StatsResponse {
     return { date: String(o.date ?? ""), win_rate: pickWinRate(o), roi: pickRoi(o), tips: pickCount(o) }
   })
 
-  const q_score_buckets: QScoreBucket[] = asEntries(r.q_score_buckets).map(([k, v]) => ({
-    bucket: String(k).replace(/-/g, "–"),
-    tips: pickCount(v),
-    win_rate: pickWinRate(v),
-    roi: pickRoi(v),
-  }))
+  // Oracle zwraca tablicę obiektów z polem "range" ("50-59", "60-69"...).
+  const rawBuckets = r.q_score_buckets
+  const bucketRows: { o: Record<string, unknown>; key: string }[] = Array.isArray(rawBuckets)
+    ? (rawBuckets as unknown[]).map((v) => {
+        const o = (v ?? {}) as Record<string, unknown>
+        return { o, key: String(o.range ?? o.bucket ?? o.band ?? o.label ?? "") }
+      })
+    : rawBuckets && typeof rawBuckets === "object"
+      ? Object.entries(rawBuckets as Record<string, unknown>).map(([k, v]) => ({ o: (v ?? {}) as Record<string, unknown>, key: k }))
+      : []
+  const q_score_buckets: QScoreBucket[] = bucketRows
+    .filter((b) => b.key)
+    .map((b) => ({
+      bucket: b.key.replace(/-/g, "–"),
+      tips: pickCount(b.o),
+      win_rate: pickWinRate(b.o),
+      roi: pickRoi(b.o),
+    }))
 
   return {
     generated_at: String(r.generated_at ?? new Date().toISOString()),
