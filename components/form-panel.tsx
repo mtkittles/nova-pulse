@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import type { FormScope, TeamForm } from "@/lib/extra-types"
+import { Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from "recharts"
+import type { FormMatch, FormScope, TeamForm } from "@/lib/extra-types"
 
 const SCOPES: { k: FormScope; l: string }[] = [
   { k: "all", l: "Ogólna" },
@@ -33,6 +34,35 @@ function pctColor(pct: number | null): string {
   if (pct >= 60) return "text-emerald-300"
   if (pct >= 40) return "text-amber-300"
   return "text-rose-300"
+}
+
+// Sparkline trendu formy: W=1, D=0.5, L=0 (chronologicznie, najnowszy z prawej).
+function SparkTooltip({ active, payload }: { active?: boolean; payload?: { payload: { label: string } }[] }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="rounded-lg border border-white/12 bg-[var(--bg-soft)] px-2 py-1 text-[11px] text-white/80">
+      {payload[0].payload.label}
+    </div>
+  )
+}
+
+function FormSparkline({ matches }: { matches: FormMatch[] }) {
+  const data = [...matches].reverse().map((m) => ({
+    v: m.result === "W" ? 1 : m.result === "D" ? 0.5 : 0,
+    label: `${m.date ? m.date.slice(5, 10) : "—"} ${m.result}${m.opponent ? ` vs ${m.opponent}` : ""}${m.score ? ` ${m.score}` : ""}`,
+  }))
+  if (data.length < 2) return null
+  return (
+    <div className="mb-3 h-12 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 6, right: 4, bottom: 6, left: 4 }}>
+          <YAxis hide domain={[-0.1, 1.1]} />
+          <Tooltip content={<SparkTooltip />} cursor={{ stroke: "rgba(255,255,255,0.15)" }} />
+          <Line type="monotone" dataKey="v" stroke="#58E6F5" strokeWidth={2} dot={false} isAnimationActive={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
 }
 
 // Mała plakietka rynku: ✓ zielony / ✗ czerwony / — muted (null).
@@ -127,6 +157,9 @@ export function FormPanel({ teamId, teamName }: { teamId: string | number | null
                   )
                 })}
               </div>
+
+              {/* sparkline trendu formy (W=1/D=0.5/L=0) */}
+              <FormSparkline matches={form.matches} />
 
               {/* podsumowanie rynków z aktualnego zakresu (5/10/15) */}
               <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-xs">

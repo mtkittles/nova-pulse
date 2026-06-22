@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { useEffect, useState } from "react"
+import { Bar, BarChart, Brush, CartesianGrid, Cell, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { BarChart3, Send, TrendingUp } from "lucide-react"
 import type { StatsResponse } from "@/lib/stats-types"
 import type { Tip } from "@/lib/types"
@@ -26,14 +26,45 @@ function fmtDay(val: string): string {
     : d.toLocaleDateString("pl-PL", { day: "numeric", month: "short" })
 }
 
-function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: { date: string; roi: number } }[] }) {
+function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: { date: string; roi: number; tips: number } }[] }) {
   if (!active || !payload?.length) return null
   const p = payload[0].payload
   // p.roi jest już w procentach (znormalizowane niżej)
   return (
     <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-3 py-2 text-xs">
       <p className="text-[color:var(--text-muted)]">{fmtDay(p.date)}</p>
-      <p className="font-semibold text-[color:var(--cyan)] tnum">ROI {p.roi >= 0 ? "+" : ""}{p.roi.toFixed(1)}%</p>
+      <p className="font-semibold text-[color:var(--cyan)] tnum">
+        ROI {p.roi >= 0 ? "+" : ""}{p.roi.toFixed(1)}% · {p.tips} {plTips(p.tips)}
+      </p>
+    </div>
+  )
+}
+
+// pl-PL liczba mnoga „typ/typy/typów"
+function plTips(n: number): string {
+  const a = Math.abs(n)
+  if (a === 1) return "typ"
+  const d = a % 10
+  const dd = a % 100
+  return d >= 2 && d <= 4 && (dd < 10 || dd >= 20) ? "typy" : "typów"
+}
+
+// Kolor baru Q-Score wg trafialności: <60% czerwony, 60-69% żółty, ≥70% zielony.
+function qBarColor(wrPct: number): string {
+  if (wrPct >= 70) return "#22C55E"
+  if (wrPct >= 60) return "#EAB308"
+  return "#EF4444"
+}
+
+function QBucketTooltip({ active, payload }: { active?: boolean; payload?: { payload: { bucket: string; wr: number; roi: number; tips: number } }[] }) {
+  if (!active || !payload?.length) return null
+  const b = payload[0].payload
+  return (
+    <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-3 py-2 text-xs">
+      <p className="font-semibold text-[color:var(--text-primary)]">Q {b.bucket}</p>
+      <p className="mt-0.5 text-[color:var(--text-secondary)] tnum">
+        {Math.round(b.wr)}% trafień · {b.roi >= 0 ? "+" : ""}{(b.roi * 100).toFixed(0)}% ROI · {b.tips} {plTips(b.tips)}
+      </p>
     </div>
   )
 }
@@ -71,8 +102,19 @@ export function StatsScreen({
   const roiAlreadyPct = data.timeline.some((t) => Math.abs(t.roi) > 1)
   const chart = [...data.timeline]
     .sort((a, b) => a.date.localeCompare(b.date))
-    .map((t) => ({ date: t.date, roi: roiAlreadyPct ? t.roi : t.roi * 100 }))
+    .map((t) => ({ date: t.date, roi: roiAlreadyPct ? t.roi : t.roi * 100, tips: t.tips }))
   const hasData = s.total_tips > 0
+
+  // Brush kontrolowany — domyślnie okno wg wybranego okresu; user może przeciągać.
+  const [brush, setBrush] = useState<{ start: number; end: number }>({ start: 0, end: 0 })
+  useEffect(() => {
+    const len = chart.length
+    if (len === 0) return
+    const n = period === "7" ? 7 : period === "30" ? 30 : len
+    setBrush({ start: Math.max(0, len - n), end: len - 1 })
+    // zależność po długości i okresie (nie po referencji tablicy)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chart.length, period])
 
   const periodBtn = (p: Period) =>
     `rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
@@ -128,7 +170,7 @@ export function StatsScreen({
               ) : chart.length === 0 ? (
                 <p className="py-12 text-center text-sm text-[color:var(--text-muted)]">Brak punktów w tym zakresie.</p>
               ) : (
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={chart} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                     <CartesianGrid stroke="var(--border-soft)" vertical={false} />
                     <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} minTickGap={24} tickFormatter={fmtDay} />
@@ -136,11 +178,25 @@ export function StatsScreen({
                       stroke="var(--text-muted)"
                       tick={{ fontSize: 12 }}
                       width={48}
-                      domain={["dataMin", "dataMax"]}
+                      domain={["dataMin - 2", "dataMax + 2"]}
                       tickFormatter={(v: number) => `${v.toFixed(0)}%`}
                     />
+                    <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" />
                     <Tooltip content={<ChartTooltip />} />
-                    <Line type="monotone" dataKey="roi" stroke="var(--cyan)" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="roi" stroke="#58E6F5" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                    <Brush
+                      dataKey="date"
+                      height={24}
+                      stroke="#58E6F5"
+                      fill="var(--surface-1)"
+                      travellerWidth={8}
+                      tickFormatter={(v: string) => fmtDay(v)}
+                      startIndex={brush.start}
+                      endIndex={brush.end}
+                      onChange={(r: { startIndex?: number; endIndex?: number }) => {
+                        if (r.startIndex != null && r.endIndex != null) setBrush({ start: r.startIndex, end: r.endIndex })
+                      }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -152,7 +208,26 @@ export function StatsScreen({
             <section>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Skuteczność wg Q-Score</h2>
               <Card hover={false}>
-                <table className="w-full text-sm">
+                {/* mini bar chart: trafialność per zakres Q (kolor wg progu) */}
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart
+                    data={data.q_score_buckets.map((b) => ({ bucket: b.bucket, wr: Math.round(b.win_rate * 100), roi: b.roi, tips: b.tips }))}
+                    layout="vertical"
+                    margin={{ top: 4, right: 12, left: 4, bottom: 4 }}
+                  >
+                    <CartesianGrid stroke="var(--border-soft)" horizontal={false} />
+                    <XAxis type="number" domain={[0, 100]} stroke="var(--text-muted)" tick={{ fontSize: 11 }} tickFormatter={(v: number) => `${v}%`} />
+                    <YAxis type="category" dataKey="bucket" stroke="var(--text-muted)" tick={{ fontSize: 11 }} width={52} />
+                    <Tooltip content={<QBucketTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+                    <Bar dataKey="wr" radius={[0, 6, 6, 0]}>
+                      {data.q_score_buckets.map((b, i) => (
+                        <Cell key={i} fill={qBarColor(Math.round(b.win_rate * 100))} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+
+                <table className="mt-4 w-full text-sm">
                   <thead className="border-b border-[color:var(--border-soft)] text-xs uppercase tracking-wide text-[color:var(--text-muted)]">
                     <tr>
                       <th className="px-2 py-2 text-left">Zakres Q</th>
