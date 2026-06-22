@@ -6,7 +6,7 @@ import { StatsScreen } from "@/components/stats-screen"
 
 export const dynamic = "force-dynamic"
 
-export const metadata = { title: "Statystyki", description: "Skuteczność modelu: trafialność, ROI, kalibracja Q-Score i podział po rynkach." }
+export const metadata = { title: "Statystyki", description: "Statystyki skuteczności modelu — ROI, trafienia, Q-Score buckets." }
 
 export default async function StatsPage() {
   // „Ostatnie rozliczone typy" z dedykowanego endpointu historii (zamiast sklejania ostatnich dni).

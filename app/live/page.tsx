@@ -8,7 +8,7 @@ export const revalidate = 60
 
 export const metadata = {
   title: "Na żywo",
-  description: "Typy na żywo — aktywne mecze, nadchodzące i rozliczone dziś.",
+  description: "Mecze na żywo — śledź typy Lupus Bets w czasie rzeczywistym.",
 }
 
 export default async function LivePage() {

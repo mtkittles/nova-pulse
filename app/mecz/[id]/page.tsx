@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import type { Metadata } from "next"
 import { SearchX } from "lucide-react"
 import { getMatchDetailed } from "@/lib/match"
 import { getStandings } from "@/lib/league"
@@ -12,7 +13,17 @@ import { EmptyState } from "@/components/ui/empty-state"
 
 export const dynamic = "force-dynamic"
 
-export const metadata = { title: "Szczegóły meczu", description: "Predykcje, forma, H2H i rozkład wyników dla meczu." }
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nova-pulse-sage.vercel.app"
+
+// Canonical per dynamiczny URL meczu (ryzyko duplikatów). OG zostaje z konwencji pliku.
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  return {
+    title: "Szczegóły meczu",
+    description: "Predykcje, forma, H2H i rozkład wyników dla meczu.",
+    alternates: { canonical: `${SITE_URL.replace(/\/$/, "")}/mecz/${id}` },
+  }
+}
 
 
 const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim()
@@ -52,8 +63,25 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   // klucze już śledzonych typów: "event_id|bet_type"
   const trackedKeys = picks.map((p) => `${p.event_id}|${p.bet_type}`)
 
+  // Structured data (Schema.org SportsEvent) — tylko gdy mecz istnieje.
+  const structuredData = match.found
+    ? {
+        "@context": "https://schema.org",
+        "@type": "SportsEvent",
+        name: `${match.home} vs ${match.away}`,
+        startDate: match.kickoff_utc || undefined,
+        location: { "@type": "Place", name: match.league || "Football" },
+        sport: "Football",
+        homeTeam: { "@type": "SportsTeam", name: match.home },
+        awayTeam: { "@type": "SportsTeam", name: match.away },
+      }
+    : null
+
   return (
     <AppShell loggedIn isAdmin={session.isAdmin}>
+      {structuredData && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      )}
       {match.found ? (
         <MatchDetail
           match={match}

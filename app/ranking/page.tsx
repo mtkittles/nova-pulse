@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { LocalDateTime } from "@/components/local-time"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Ranking typerów", description: "Najlepsi typerzy społeczności Lupus Bets." }
+export const metadata = { title: "Ranking typerów", description: "Ranking najlepszych typerów społeczności Lupus Bets." }
 
 const MEDAL = ["🥇", "🥈", "🥉"]
 // subtelne tła dla podium (gold / silver / bronze)
