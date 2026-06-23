@@ -12,6 +12,7 @@ import { DEMO_UNLOCK_PREMIUM } from "@/lib/demo-mode"
 import { QRing } from "./ui/q-ring"
 import { TierBadge } from "./ui/tier-badge"
 import { TrackTipButton, type TrackTipData } from "./track-tip-button"
+import { AnimatedCollapse } from "./animated-collapse"
 import { TeamBadge } from "./team-badge"
 import { findLive, mapLiveStatus, useLiveMatches } from "@/hooks/use-live-matches"
 import { ArrowRight, ChevronDown, Lock } from "lucide-react"
@@ -119,15 +120,15 @@ function MarketRow({
       </button>
 
       {/* rozwinięcie (tylko mobile): edge + pełna nazwa rynku */}
-      {open && (
-        <div className="space-y-1 border-t border-white/10 px-3 py-2 text-xs sm:hidden">
+      <AnimatedCollapse open={open} className="sm:hidden">
+        <div className="space-y-1 border-t border-white/10 px-3 py-2 text-xs">
           <p className="text-white/70">{m.full}</p>
           <div className="flex items-center justify-between">
             <span className="text-white/50">Edge</span>
             <span className={`font-semibold tnum ${edgeClass}`}>{fmtEdge(tip.edge)}</span>
           </div>
         </div>
-      )}
+      </AnimatedCollapse>
       </div>
       {/* Śledź typ — poza przyciskiem-togglem (brak zagnieżdżenia button) */}
       <div className="flex shrink-0 items-center pr-2.5">
@@ -192,7 +193,7 @@ export default function MatchTipCard({
   )
 
   const cardClass =
-    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(88,230,245,0.08)]"
+    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)]"
 
   const header = (
     <>
