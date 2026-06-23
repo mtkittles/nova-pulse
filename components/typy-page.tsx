@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import type { BetType, DataSourceStatus, Tip } from "@/lib/types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
-import { AlertTriangle, CalendarOff } from "lucide-react"
+import { AlertTriangle, CalendarOff, Database, TriangleAlert } from "lucide-react"
 import TipCard from "./tip-card"
 import { Calendar } from "./calendar"
 
@@ -117,17 +117,28 @@ export default function TypyPage({
         ? "border-amber-300/30 bg-amber-300/10 text-amber-100"
         : "border-rose-300/30 bg-rose-300/10 text-rose-100"
   const sourceLabel = source === "live" ? "live" : source === "mock" ? "mock" : "error"
+  const sourceTitle = source === "live" ? "Dane realne" : source === "mock" ? "Dane testowe" : "Błąd źródła"
+  const sourceHint =
+    source === "live"
+      ? "Pobieram typy z Oracle."
+      : source === "mock"
+        ? "Wyświetlam fallback, bo Oracle nie jest skonfigurowane."
+        : sourceMessage || "Oracle zwróciło błąd lub jest niedostępne."
 
   return (
     <div>
       <header className="mb-8">
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Typy meczowe</h1>
         <p className="mt-3 text-lg capitalize text-white/55">{dateLabel(date)}</p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${sourceClass}`}>
+        <div className={`mt-4 flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3 ${sourceClass}`}>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em]">
+            {source === "error" ? <TriangleAlert className="h-4 w-4" /> : <Database className="h-4 w-4" />}
+            {sourceTitle}
+          </span>
+          <span className="rounded-full bg-black/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
             {sourceLabel}
           </span>
-          {sourceMessage && <span className="text-sm text-white/45">{sourceMessage}</span>}
+          <span className="text-sm text-white/80">{sourceHint}</span>
         </div>
       </header>
 
@@ -204,9 +215,12 @@ export default function TypyPage({
               ))}
             </div>
           ) : source === "error" ? (
-            <div className="rounded-[1.8rem] border border-rose-300/25 bg-rose-300/[0.08] p-10 text-center text-rose-100/85">
+            <div className="rounded-[1.8rem] border border-rose-300/25 bg-rose-300/[0.08] p-10 text-center text-rose-100/90">
+              <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-rose-300/30 bg-rose-300/10 text-rose-100">
+                <TriangleAlert className="h-6 w-6" />
+              </div>
               <h3 className="text-xl font-semibold">Oracle niedostępne</h3>
-              <p className="mt-2 text-sm text-rose-100/75">
+              <p className="mt-2 text-sm text-rose-100/80">
                 {sourceMessage || "Nie udało się pobrać typów. Spróbuj ponownie później."}
               </p>
             </div>
