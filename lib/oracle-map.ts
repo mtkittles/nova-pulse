@@ -46,6 +46,28 @@ function num(x: unknown, def = 0): number {
   return Number.isFinite(n) ? n : def
 }
 
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n))
+}
+
+function text(x: unknown, def = ""): string {
+  const s = String(x ?? "").trim()
+  if (!s || s === "null" || s === "undefined") return def
+  return s
+}
+
+function qScore(x: unknown): number {
+  return clamp(Math.round(num(x) * 10) / 10, 0, 100)
+}
+
+function prob(x: unknown): number {
+  return clamp(num(x), 0, 1)
+}
+
+function oddsValue(x: unknown): number {
+  return Math.max(0, num(x))
+}
+
 // bet_type Oracle → wewnętrzny enum (tolerancyjnie, z obsługą starych wartości)
 function mapBetType(raw: unknown): BetType {
   const k = String(raw ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "")
@@ -57,54 +79,66 @@ function mapBetType(raw: unknown): BetType {
 }
 
 function mapBetSide(raw: unknown): string {
-  const s = String(raw ?? "").trim()
+  const s = text(raw)
   const low = s.toLowerCase()
   if (low === "yes") return "TAK"
   if (low === "no") return "NIE"
   if (low === "32_or_23" || low === "3:2/2:3" || low === "exact_32_23") return "3:2 / 2:3"
-  return s
+  return s || "—"
 }
 
 // Bezpieczne ISO: spacja → "T" (Safari!), usuń mikrosekundy, dodaj "Z" gdy brak strefy.
 function normalizeIso(d: unknown): string {
-  let s = String(d ?? "").trim()
+  let s = text(d)
   if (!s) return ""
   s = s.replace(" ", "T").replace(/\.\d+/, "")
   if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += "Z"
+  if (Number.isNaN(Date.parse(s))) return ""
   return s
 }
 
 function mapResult(t: Record<string, unknown>): 0 | 1 | null {
   const r = t.actual_result
+  if (r === true) return 1
+  if (r === false) return 0
   if (r === 1 || r === "1") return 1
   if (r === 0 || r === "0") return 0
   // fallback dla starego kształtu ze "status"
-  const s = String(t.status ?? "").toLowerCase()
-  if (s === "won" || s === "win") return 1
-  if (s === "lost" || s === "lose") return 0
+  const s = text(t.status).toLowerCase()
+  if (
+    s.includes("pending") ||
+    s.includes("live") ||
+    s.includes("void") ||
+    s.includes("unknown") ||
+    s.includes("push")
+  ) {
+    return null
+  }
+  if (s.includes("won") || s.includes("win")) return 1
+  if (s.includes("lost") || s.includes("lose")) return 0
   return null
 }
 
 export function adaptTip(raw: unknown): Tip {
   const t = (raw ?? {}) as Record<string, unknown>
-  const model_prob = num(t.model_prob)
-  const odds = num(t.odds)
+  const model_prob = prob(t.model_prob)
+  const odds = oddsValue(t.odds)
   // użyj realnego edge (może być ujemny); gdy brak — policz przewagę nad kursem
   const rawEdge = Number(t.edge)
   const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
 
   return {
     event_id: (t.event_id as string | number) ?? "",
-    league: String(t.league ?? "—"),
-    home: String(t.home ?? t.home_team ?? ""),
-    away: String(t.away ?? t.away_team ?? ""),
+    league: text(t.league, "—"),
+    home: text(t.home ?? t.home_team, "—"),
+    away: text(t.away ?? t.away_team, "—"),
     kickoff_utc: normalizeIso(t.kickoff_utc ?? t.match_date),
     bet_type: mapBetType(t.bet_type),
     bet_side: mapBetSide(t.bet_side),
     model_prob,
     odds,
     edge,
-    q_score: num(t.q_score),
+    q_score: qScore(t.q_score),
     actual_result: mapResult(t),
   }
 }
@@ -113,7 +147,7 @@ export function adaptTips(raw: unknown): TipsResponse {
   const r = (raw ?? {}) as Record<string, unknown>
   const list = Array.isArray(r.tips) ? r.tips : []
   return {
-    date: String(r.date ?? new Date().toISOString().slice(0, 10)),
+    date: text(r.date, new Date().toISOString().slice(0, 10)),
     tips: list.map(adaptTip),
     source: "live",
   }
@@ -127,7 +161,7 @@ function pickCount(o: unknown): number {
 }
 function pickWinRate(o: unknown): number {
   const r = (o ?? {}) as Record<string, unknown>
-  return num(r.win_rate ?? r.winrate ?? 0)
+  return prob(r.win_rate ?? r.winrate ?? 0)
 }
 function pickRoi(o: unknown): number {
   const r = (o ?? {}) as Record<string, unknown>
@@ -148,6 +182,7 @@ function asEntries(x: unknown): [string, unknown][] {
 // Nowy Oracle zwraca już gotowe etykiety (BTTS, Team O1.5, Over, 1X2, Handicap) —
 // przepuszczamy je bez konwersji; stare klucze (Mix, O15) mapujemy przez getMarketLabel.
 function oracleMarketLabel(key: string): string {
+  if (!key.trim()) return "Inne"
   const KNOWN = new Set(["BTTS", "Team O1.5", "Over", "1X2", "Handicap"])
   if (KNOWN.has(key)) return key
   return getMarketLabel(key)
@@ -190,7 +225,7 @@ export function adaptStats(raw: unknown): StatsResponse {
     settled_tips: num(sum.settled_tips ?? wins + losses),
     wins,
     losses,
-    win_rate: num(sum.win_rate),
+    win_rate: pickWinRate(sum),
     roi: sum.roi == null ? 0 : num(sum.roi),
     current_streak: num(sum.current_streak),
     avg_q_score,
@@ -214,7 +249,7 @@ export function adaptStats(raw: unknown): StatsResponse {
 
   const by_league: LeagueStat[] = (Array.isArray(r.by_league) ? r.by_league : []).map((l) => {
     const o = (l ?? {}) as Record<string, unknown>
-    return { league: String(o.league ?? o.name ?? "—"), tips: pickCount(o), win_rate: pickWinRate(o) }
+    return { league: text(o.league ?? o.name, "—"), tips: pickCount(o), win_rate: pickWinRate(o) }
   })
 
   // Timeline: Oracle teraz zwraca skumulowane win_rate + roi (nowe pola)
@@ -222,7 +257,7 @@ export function adaptStats(raw: unknown): StatsResponse {
     const o = (p ?? {}) as Record<string, unknown>
     const roiRaw = o.roi
     return {
-      date: String(o.date ?? ""),
+      date: text(o.date),
       win_rate: pickWinRate(o),
       roi: roiRaw == null ? 0 : num(roiRaw),
       tips: pickCount(o),
@@ -260,7 +295,7 @@ function pct(x: unknown): number | null {
   if (x == null) return null
   const n = Number(x)
   if (!Number.isFinite(n)) return null
-  return Math.round((n <= 1 ? n * 100 : n) * 10) / 10
+  return clamp(Math.round((n <= 1 ? n * 100 : n) * 10) / 10, 0, 100)
 }
 
 function numOrNull(x: unknown): number | null {
@@ -269,20 +304,28 @@ function numOrNull(x: unknown): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+function scoreLine(home: unknown, away: unknown, fallback?: unknown): string | undefined {
+  const h = numOrNull(home)
+  const a = numOrNull(away)
+  if (h != null && a != null) return `${h}:${a}`
+  const raw = text(fallback)
+  return raw || undefined
+}
+
 function adaptPrediction(raw: unknown): MatchPrediction {
   const p = rec(raw)
-  const model_prob = num(p.model_prob)
-  const odds = num(p.odds)
+  const model_prob = prob(p.model_prob)
+  const odds = oddsValue(p.odds)
   const rawEdge = Number(p.edge)
   const edge = Number.isFinite(rawEdge) ? rawEdge : odds > 0 ? model_prob - 1 / odds : 0
   // Oracle podaje gotowy market_label (np. "O1.5 Gość") — użyj go, inaczej mapuj bet_side.
-  const label = p.market_label != null ? String(p.market_label) : mapBetSide(p.bet_side)
+  const label = text(p.market_label) || mapBetSide(p.bet_side)
   return {
     bet_type: mapBetType(p.bet_type),
-    bet_side: label,
+    bet_side: label || "—",
     model_prob,
     odds,
-    q_score: num(p.q_score),
+    q_score: qScore(p.q_score),
     edge,
     actual_result: mapResult(p),
   }
@@ -296,25 +339,27 @@ export function adaptMatch(raw: unknown): MatchInfo {
     : Array.isArray(m.predictions)
       ? (m.predictions as unknown[])
       : []
-  const found = r.found === true || (r.found !== false && r.match != null)
+  const found =
+    r.found === true ||
+    (r.found !== false && (r.match != null || m.event_id != null || m.id != null || m.home_team != null || m.home != null))
 
   const h2hArr = Array.isArray(r.h2h) ? (r.h2h as unknown[]) : []
   const h2h_matches = h2hArr.map((x) => {
     const o = rec(x)
     return {
-      home: String(o.home_team ?? o.home ?? "—"),
-      away: String(o.away_team ?? o.away ?? "—"),
-      score: `${num(o.home_score)}:${num(o.away_score)}`,
-      date: o.date != null ? String(o.date) : "",
+      home: text(o.home_team ?? o.home, "—"),
+      away: text(o.away_team ?? o.away, "—"),
+      score: scoreLine(o.home_score, o.away_score, o.score) ?? "—",
+      date: text(o.date),
     }
   })
 
   return {
     found: Boolean(found),
     event_id: (r.event_id ?? m.event_id ?? m.id ?? "") as string | number,
-    home: String(m.home_team ?? m.home ?? "—"),
-    away: String(m.away_team ?? m.away ?? "—"),
-    league: String(m.league ?? "—"),
+    home: text(m.home_team ?? m.home, "—"),
+    away: text(m.away_team ?? m.away, "—"),
+    league: text(m.league, "—"),
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
     // ID nie ma w /match — ustawiane później ze standings (po team_id).
     home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
@@ -352,16 +397,16 @@ export function adaptForm(raw: unknown): TeamForm {
     const m = rec(mm)
     const gf = m.goals_for
     const ga = m.goals_against
-    const score = gf != null && ga != null ? `${num(gf)}:${num(ga)}` : m.score != null ? String(m.score) : undefined
+    const score = scoreLine(gf, ga, m.score)
     return {
       result: formResult(m),
-      opponent: m.opponent != null ? String(m.opponent) : undefined,
+      opponent: text(m.opponent) || undefined,
       score,
-      date: m.date != null ? String(m.date) : undefined,
+      date: text(m.date) || undefined,
     }
   })
   return {
-    team: String(r.team_name ?? r.team ?? "—"),
+    team: text(r.team_name ?? r.team, "—"),
     matches,
     btts_pct: pct(r.btts_pct),
     avg_gf: numOrNull(r.avg_goals_for ?? r.avg_gf),
@@ -377,7 +422,7 @@ export function adaptStandings(raw: unknown): StandingRow[] {
     return {
       position: num(o.position ?? o.pos ?? o.rank ?? i + 1),
       team_id: pickId(o, ["team_id", "teamId", "id"]),
-      team: String(o.team ?? o.name ?? o.team_name ?? "—"),
+      team: text(o.team ?? o.name ?? o.team_name, "—"),
       played: num(o.played ?? o.mp ?? o.games ?? o.matches),
       points: num(o.points ?? o.pts),
       gf: num(o.gf ?? o.goals_for ?? o.scored),
@@ -392,8 +437,8 @@ export function adaptScorers(raw: unknown): Scorer[] {
   return (list as unknown[]).map((row) => {
     const o = rec(row)
     return {
-      player: String(o.player ?? o.name ?? o.player_name ?? "—"),
-      team: String(o.team ?? o.team_name ?? "—"),
+      player: text(o.player ?? o.name ?? o.player_name, "—"),
+      team: text(o.team ?? o.team_name, "—"),
       goals: num(o.goals ?? o.g),
       assists: num(o.assists ?? o.a),
       appearances: o.appearances != null ? num(o.appearances) : undefined,
