@@ -20,6 +20,10 @@ function hasTipsArray(x: unknown): boolean {
   return !!x && typeof x === "object" && Array.isArray((x as { tips?: unknown }).tips)
 }
 
+function isDev(): boolean {
+  return process.env.NODE_ENV !== "production"
+}
+
 // Typy dla konkretnego dnia (domyślnie dziś). Wyłącznie server-side.
 // - Oracle skonfigurowane → realne dane z `/tips?date=` (mapowane adapterem)
 // - Oracle niedostępne / zła odpowiedź → pusta lista (NIE crash)
@@ -29,14 +33,15 @@ export async function getTips(date?: string): Promise<TipsResponse> {
   if (!isOracleConfigured()) return { ...mockTips, date: d, source: "mock" }
   try {
     const data = await oracleFetch<unknown>(`/tips?date=${encodeURIComponent(d)}`)
-    console.log(`[oracle] /tips?date=${d} raw:`, JSON.stringify(data).slice(0, 500))
+    if (isDev()) console.log(`[oracle] /tips?date=${d} received`)
     if (!hasTipsArray(data)) {
-      console.error("getTips: odpowiedź Oracle niezgodna z kontraktem")
+      console.error("getTips: Oracle response mismatch")
       return emptyTips(d, "Odpowiedź Oracle niezgodna z kontraktem.")
     }
     return adaptTips(data)
   } catch (err) {
-    console.error("getTips: Oracle niedostępne →", err)
+    console.error("getTips: Oracle unavailable")
+    if (isDev() && err instanceof Error) console.error(err.message)
     return emptyTips(d, "Oracle niedostępne lub błąd pobierania danych.")
   }
 }

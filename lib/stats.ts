@@ -34,6 +34,10 @@ function hasSummary(x: unknown): boolean {
   return !!x && typeof x === "object" && !!(x as { summary?: unknown }).summary
 }
 
+function isDev(): boolean {
+  return process.env.NODE_ENV !== "production"
+}
+
 /** Ostatnie rozliczone typy (actual_result != null). Max `limit` rekordów. */
 export async function getSettledTips(limit = 15): Promise<Tip[]> {
   if (!isOracleConfigured()) return []
@@ -50,7 +54,8 @@ export async function getSettledTips(limit = 15): Promise<Tip[]> {
       .sort((a, b) => (b.kickoff_utc > a.kickoff_utc ? 1 : -1))
       .slice(0, limit)
   } catch (err) {
-    console.error("getSettledTips: błąd →", err)
+    console.error("getSettledTips: Oracle unavailable")
+    if (isDev() && err instanceof Error) console.error(err.message)
     return []
   }
 }
@@ -61,14 +66,15 @@ export async function getStats(period?: string): Promise<StatsResponse> {
   const path = period ? `/stats?period=${encodeURIComponent(period)}` : "/stats"
   try {
     const data = await oracleFetch<unknown>(path)
-    console.log(`[oracle] /stats?period=${period ?? ""} raw:`, JSON.stringify(data).slice(0, 500))
+    if (isDev()) console.log(`[oracle] /stats?period=${period ?? ""} received`)
     if (!hasSummary(data)) {
-      console.error("getStats: odpowiedź Oracle niezgodna z kontraktem")
+      console.error("getStats: Oracle response mismatch")
       return errorStats("Odpowiedź Oracle niezgodna z kontraktem.")
     }
     return adaptStats(data)
   } catch (err) {
-    console.error("getStats: Oracle niedostępne →", err)
+    console.error("getStats: Oracle unavailable")
+    if (isDev() && err instanceof Error) console.error(err.message)
     return errorStats("Oracle niedostępne lub błąd pobierania danych.")
   }
 }
