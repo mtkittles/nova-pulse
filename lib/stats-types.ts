@@ -1,6 +1,6 @@
-import type { BetType } from "./types"
+import type { BetType, DataSourceMeta } from "./types"
 
-export type DataSourceStatus = "live" | "mock" | "error"
+export type { DataSourceStatus } from "./types"
 
 // Kontrakt statystyk skuteczności — GOTOWE AGREGATY liczone po stronie bota
 // (z tabeli `bot_predictions`, pole `actual_result`). Strona tylko rysuje.
@@ -56,13 +56,11 @@ export interface QScoreBucket {
   win_rate: number
 }
 
-export interface StatsResponse {
+export interface StatsResponse extends DataSourceMeta {
   /** ISO — kiedy bot policzył agregaty */
   generated_at: string
   /** okno analizy w dniach */
   range_days: number
-  source: DataSourceStatus
-  source_message?: string
   summary: StatsSummary
   timeline: TimelinePoint[]
   by_market: MarketStat[]

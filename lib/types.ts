@@ -4,6 +4,11 @@
 
 export type DataSourceStatus = "live" | "mock" | "error"
 
+export interface DataSourceMeta {
+  source: DataSourceStatus
+  source_message?: string
+}
+
 export type BetType = "BTTS" | "OVER_1_5" | "MIX" | "THRILLER"
 
 export interface Tip {
@@ -28,10 +33,8 @@ export interface Tip {
   actual_result: 0 | 1 | null
 }
 
-export interface TipsResponse {
+export interface TipsResponse extends DataSourceMeta {
   /** data dnia w formacie YYYY-MM-DD */
   date: string
   tips: Tip[]
-  source: DataSourceStatus
-  source_message?: string
 }
