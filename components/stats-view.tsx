@@ -70,7 +70,7 @@ export function StatsView({
     source === "live"
       ? "Statystyki pobrane z Oracle."
       : source === "mock"
-        ? "Pokazuję mock, bo Oracle nie jest skonfigurowane."
+        ? "Pokazuję dane testowe, bo Oracle nie jest skonfigurowane. Nie interpretuj tych KPI jako realnej skuteczności."
         : sourceMessage || "Oracle zwróciło błąd lub jest niedostępne."
   const kpis = [
     { icon: Target, label: "Typy", value: `${s.total_tips}`, tone: "text-[color:var(--accent)]" },
@@ -143,6 +143,15 @@ export function StatsView({
         })}
       </div>
 
+      {source === "mock" && (
+        <div className="mb-8 rounded-[1.6rem] border border-amber-300/25 bg-amber-300/[0.08] p-5 text-amber-100/90">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em]">Mock</p>
+          <p className="mt-2 text-sm text-amber-100/75">
+            KPI, wykresy i podsumowania pochodzą z danych testowych. Służą do podglądu UI, nie do oceny realnej skuteczności modelu.
+          </p>
+        </div>
+      )}
+
       {source === "error" ? (
         <div className="rounded-[1.8rem] border border-rose-300/25 bg-rose-300/[0.08] p-12 text-center text-rose-100/90">
           <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-rose-300/30 bg-rose-300/10 text-rose-100">
@@ -156,27 +165,30 @@ export function StatsView({
           <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[color:var(--accent)]/30 bg-[var(--accent)]/10 text-[color:var(--accent)]">
             <Hourglass className="h-6 w-6" />
           </div>
-          <h3 className="text-xl font-semibold">Statystyki pojawią się po rozegraniu meczów</h3>
+          <h3 className="text-xl font-semibold">
+            {source === "mock" ? "Brak danych testowych dla tego okresu" : "Brak rozliczonych typów w wybranym okresie"}
+          </h3>
           <p className="mt-2 text-white/55">
-            Baza typów dopiero się zapełnia. Po zakończeniu meczów bot automatycznie zweryfikuje wyniki
-            i wykresy ożyją.
+            {source === "mock"
+              ? "Widok działa na mocku, ale w tym zakresie nie ma rekordów do agregacji."
+              : "Mecze nie zostały jeszcze rozliczone albo wybrany zakres nie zawiera gotowych wyników."}
           </p>
         </div>
       ) : loggedIn ? (
         <div className={loading ? "opacity-50 transition" : "transition"}>
           <StatsCharts data={data} />
 
-          {settledTips.length > 0 && (
-            <div className="mt-8 rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
-              <h3 className="text-lg font-semibold">Ostatnie rozliczone typy</h3>
-              <p className="mt-1 text-sm text-white/45">
-                {settledTips.length} ostatnich typów z weryfikacją wyniku
-              </p>
-              <div className="mt-5">
-                <SettledTips tips={settledTips} />
-              </div>
+          <div className="mt-8 rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
+            <h3 className="text-lg font-semibold">Ostatnie rozliczone typy</h3>
+            <p className="mt-1 text-sm text-white/45">
+              {source === "mock"
+                ? "Sekcja ukrywa mocki i pokazuje tylko realnie rozliczone rekordy z Oracle."
+                : `${settledTips.length} ostatnich typów z weryfikacją wyniku`}
+            </p>
+            <div className="mt-5">
+              <SettledTips tips={settledTips} />
             </div>
-          )}
+          </div>
         </div>
       ) : (
         <LockedSection />
