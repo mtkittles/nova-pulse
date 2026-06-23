@@ -32,7 +32,7 @@ export async function getDates(): Promise<DatesResponse> {
   if (!isOracleConfigured()) return mockDates()
   try {
     const data = await oracleFetch<unknown>("/dates")
-    if (isDev()) console.log("[oracle] /dates received")
+    if (isDev()) console.log("[oracle] dates received")
     const d = data as Record<string, unknown>
     if (d && Array.isArray(d.dates)) {
       const dates = (d.dates as unknown[]).map(String).sort()

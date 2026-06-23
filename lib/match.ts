@@ -31,7 +31,7 @@ export async function getMatch(id: string): Promise<MatchInfo> {
   if (!isOracleConfigured()) return notFound(id)
   try {
     const data = await oracleFetch<unknown>(`/match/${encodeURIComponent(id)}`)
-    if (isDev()) console.log(`[oracle] /match/${id} received`)
+    if (isDev()) console.log("[oracle] match received")
     if (data && typeof data === "object" && (data as { found?: unknown }).found === false) {
       return notFound(id)
     }

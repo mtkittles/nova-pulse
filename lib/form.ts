@@ -17,7 +17,7 @@ export async function getTeamForm(id: string, scope: FormScope, count: number): 
     const data = await oracleFetch<unknown>(
       `/team/${encodeURIComponent(id)}/form?scope=${scope}&count=${count}`,
     )
-    if (isDev()) console.log(`[oracle] /team/${id}/form received`)
+    if (isDev()) console.log("[oracle] team form received")
     return adaptForm(data)
   } catch (err) {
     console.error("getTeamForm: Oracle unavailable")

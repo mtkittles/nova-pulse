@@ -33,7 +33,7 @@ export async function getTips(date?: string): Promise<TipsResponse> {
   if (!isOracleConfigured()) return { ...mockTips, date: d, source: "mock" }
   try {
     const data = await oracleFetch<unknown>(`/tips?date=${encodeURIComponent(d)}`)
-    if (isDev()) console.log(`[oracle] /tips?date=${d} received`)
+    if (isDev()) console.log("[oracle] tips received")
     if (!hasTipsArray(data)) {
       console.error("getTips: Oracle response mismatch")
       return emptyTips(d, "Odpowiedź Oracle niezgodna z kontraktem.")
