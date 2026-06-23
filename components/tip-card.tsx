@@ -103,7 +103,7 @@ export default function TipCard({
   if (locked) {
     return (
       <article className="relative flex flex-col overflow-hidden rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
-        <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
+        <div className="absolute right-[-40px] top-[-40px] hidden h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl sm:block" />
         <div className="relative flex items-center justify-between">
           <span className="truncate text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
           <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
@@ -135,7 +135,7 @@ export default function TipCard({
 
   const inner = (
     <>
-      <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
+      <div className="absolute right-[-40px] top-[-40px] hidden h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl sm:block" />
 
       <div className="relative flex items-center justify-between">
         <span className="truncate text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>

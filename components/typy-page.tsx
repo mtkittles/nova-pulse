@@ -9,12 +9,12 @@ import { Calendar } from "./calendar"
 
 type Sort = "q" | "date" | "odds"
 
-const MODES: { key: "ALL" | BetType; label: string }[] = [
+const MODES: { key: "ALL" | BetType; label: string; disabled?: boolean; suffix?: string }[] = [
   { key: "ALL", label: "Wszystkie" },
   { key: "BTTS", label: BET_TYPE_SHORT.BTTS },
   { key: "OVER_1_5", label: BET_TYPE_SHORT.OVER_1_5 },
   { key: "MIX", label: BET_TYPE_SHORT.MIX },
-  { key: "THRILLER", label: BET_TYPE_SHORT.THRILLER },
+  { key: "THRILLER", label: BET_TYPE_SHORT.THRILLER, disabled: true, suffix: "wkrótce" },
 ]
 
 function dateLabel(d: string): string {
@@ -122,7 +122,7 @@ export default function TypyPage({
     source === "live"
       ? "Pobieram typy z Oracle."
       : source === "mock"
-        ? "Wyświetlam fallback, bo Oracle nie jest skonfigurowane."
+        ? "Dane demo/mock do podglądu UI — nie traktuj ich jako realnych typów."
         : sourceMessage || "Oracle zwróciło błąd lub jest niedostępne."
 
   return (
@@ -130,7 +130,7 @@ export default function TypyPage({
       <header className="mb-8">
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Typy meczowe</h1>
         <p className="mt-3 text-lg capitalize text-white/55">{dateLabel(date)}</p>
-        <div className={`mt-4 flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3 ${sourceClass}`}>
+        <div className={`mt-4 flex flex-wrap items-center gap-2 rounded-2xl border px-3 py-2.5 ${sourceClass}`}>
           <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em]">
             {source === "error" ? <TriangleAlert className="h-4 w-4" /> : <Database className="h-4 w-4" />}
             {sourceTitle}
@@ -138,7 +138,7 @@ export default function TypyPage({
           <span className="rounded-full bg-black/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
             {sourceLabel}
           </span>
-          <span className="text-sm text-white/80">{sourceHint}</span>
+          <span className="text-xs leading-relaxed text-white/75 sm:text-sm">{sourceHint}</span>
         </div>
       </header>
 
@@ -154,14 +154,19 @@ export default function TypyPage({
               <button
                 key={m.key}
                 type="button"
-                onClick={() => setMode(m.key)}
+                onClick={() => !m.disabled && setMode(m.key)}
+                disabled={m.disabled}
+                aria-disabled={m.disabled}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
-                  mode === m.key
-                    ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
-                    : "border-white/12 bg-white/[0.05] text-white/60 hover:bg-white/10"
+                  m.disabled
+                    ? "cursor-not-allowed border-white/10 bg-white/[0.03] text-white/30"
+                    : mode === m.key
+                      ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
+                      : "border-white/12 bg-white/[0.05] text-white/60 hover:bg-white/10"
                 }`}
               >
                 {m.label}
+                {m.suffix && <span className="ml-1 text-[10px] uppercase tracking-[0.16em]">{m.suffix}</span>}
               </button>
             ))}
           </div>

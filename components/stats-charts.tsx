@@ -38,11 +38,15 @@ const MARKET_COLOR: Record<string, string> = {
 }
 
 const tooltipStyle = {
-  background: "#10111d",
-  border: "1px solid rgba(255,255,255,0.12)",
+  background: "#f8fafc",
+  border: "1px solid rgba(255,255,255,0.18)",
   borderRadius: "0.75rem",
-  color: "#fff",
+  boxShadow: "0 20px 45px rgba(0,0,0,0.35)",
+  color: "#0f172a",
 } as const
+
+const tooltipLabelStyle = { color: "#334155", fontWeight: 700 } as const
+const tooltipItemStyle = { color: "#0f172a", fontWeight: 600 } as const
 
 function pct(v: number, digits = 0): string {
   return `${(v * 100).toFixed(digits)}%`
@@ -154,6 +158,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
               />
               <Tooltip
                 contentStyle={tooltipStyle}
+                labelStyle={tooltipLabelStyle}
+                itemStyle={tooltipItemStyle}
                 formatter={(value: unknown, name: unknown) => [
                   `${value}%`,
                   name === "wr" ? "Trafialność" : "ROI",
@@ -198,6 +204,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
             <Tooltip
               cursor={{ fill: "rgba(255,255,255,0.04)" }}
               contentStyle={tooltipStyle}
+              labelStyle={tooltipLabelStyle}
+              itemStyle={tooltipItemStyle}
               formatter={(value: unknown, _n: unknown, item: unknown) => {
                 const p = (item as { payload?: { tips?: number; roi?: number | null } })?.payload
                 const roiStr = p?.roi != null ? ` | ROI ${p.roi >= 0 ? "+" : ""}${p.roi}%` : " | ROI —"
@@ -229,7 +237,7 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 <Cell key={entry.name} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip contentStyle={tooltipStyle} />
+            <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} />
             <Legend wrapperStyle={{ fontSize: 13 }} />
           </PieChart>
         </ResponsiveContainer>
@@ -260,6 +268,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
             <Tooltip
               cursor={{ fill: "rgba(255,255,255,0.04)" }}
               contentStyle={tooltipStyle}
+              labelStyle={tooltipLabelStyle}
+              itemStyle={tooltipItemStyle}
               formatter={(value: unknown, _n: unknown, item: unknown) => [
                 `${value}% (${(item as { payload?: { tips?: number } })?.payload?.tips} typów)`,
                 "Trafialność",
@@ -287,6 +297,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
             <Tooltip
               cursor={{ fill: "rgba(255,255,255,0.04)" }}
               contentStyle={tooltipStyle}
+              labelStyle={tooltipLabelStyle}
+              itemStyle={tooltipItemStyle}
               formatter={(value: unknown, _n: unknown, item: unknown) => [
                 `${value}% (${(item as { payload?: { tips?: number } })?.payload?.tips} typów)`,
                 "Trafialność",

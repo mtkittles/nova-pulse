@@ -70,7 +70,7 @@ export function StatsView({
     source === "live"
       ? "Statystyki pobrane z Oracle."
       : source === "mock"
-        ? "Pokazuję dane testowe, bo Oracle nie jest skonfigurowane. Nie interpretuj tych KPI jako realnej skuteczności."
+        ? "Dane demo/mock do podglądu UI — nie interpretuj KPI jako realnej skuteczności."
         : sourceMessage || "Oracle zwróciło błąd lub jest niedostępne."
   const kpis = [
     { icon: Target, label: "Typy", value: `${s.total_tips}`, tone: "text-[color:var(--accent)]" },
@@ -96,7 +96,7 @@ export function StatsView({
         <div>
           <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Statystyki skuteczności</h1>
           <p className="mt-3 text-white/55">Trafialność, ROI i kalibracja Q-Score — z auto-weryfikacji wyników.</p>
-          <div className={`mt-4 flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3 ${sourceClass}`}>
+          <div className={`mt-4 flex flex-wrap items-center gap-2 rounded-2xl border px-3 py-2.5 ${sourceClass}`}>
             <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em]">
               {source === "error" ? <TriangleAlert className="h-4 w-4" /> : <Database className="h-4 w-4" />}
               {sourceTitle}
@@ -104,7 +104,7 @@ export function StatsView({
             <span className="rounded-full bg-black/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
               {sourceLabel}
             </span>
-            <span className="text-sm text-white/80">{sourceHint}</span>
+            <span className="text-xs leading-relaxed text-white/75 sm:text-sm">{sourceHint}</span>
           </div>
         </div>
         <div className="flex gap-2">
@@ -142,15 +142,6 @@ export function StatsView({
           )
         })}
       </div>
-
-      {source === "mock" && (
-        <div className="mb-8 rounded-[1.6rem] border border-amber-300/25 bg-amber-300/[0.08] p-5 text-amber-100/90">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em]">Mock</p>
-          <p className="mt-2 text-sm text-amber-100/75">
-            KPI, wykresy i podsumowania pochodzą z danych testowych. Służą do podglądu UI, nie do oceny realnej skuteczności modelu.
-          </p>
-        </div>
-      )}
 
       {source === "error" ? (
         <div className="rounded-[1.8rem] border border-rose-300/25 bg-rose-300/[0.08] p-12 text-center text-rose-100/90">

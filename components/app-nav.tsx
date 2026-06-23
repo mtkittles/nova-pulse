@@ -64,7 +64,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
       </header>
 
       {/* dolny tab-bar (mobile) */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[var(--bg-soft)]/95 backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[var(--bg-soft)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
         <div
           className="mx-auto grid max-w-md"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
