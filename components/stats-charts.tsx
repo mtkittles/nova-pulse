@@ -20,13 +20,14 @@ import {
 import type { StatsResponse } from "@/lib/stats-types"
 
 const COLORS = {
-  cyan: "#67e8f9",
-  violet: "#c4b5fd",
-  emerald: "#6ee7b7",
-  amber: "#fcd34d",
-  rose: "#fda4af",
-  grid: "rgba(255,255,255,0.08)",
-  axis: "rgba(255,255,255,0.45)",
+  cyan: "#5eead4",
+  violet: "#a78bfa",
+  blue: "#60a5fa",
+  emerald: "#34d399",
+  amber: "#fbbf24",
+  rose: "#fb7185",
+  grid: "rgba(255,255,255,0.06)",
+  axis: "rgba(248,250,252,0.52)",
 }
 
 const MARKET_COLOR: Record<string, string> = {
@@ -38,15 +39,15 @@ const MARKET_COLOR: Record<string, string> = {
 }
 
 const tooltipStyle = {
-  background: "#f8fafc",
-  border: "1px solid rgba(255,255,255,0.18)",
-  borderRadius: "0.75rem",
-  boxShadow: "0 20px 45px rgba(0,0,0,0.35)",
-  color: "#0f172a",
+  background: "var(--tooltip-bg)",
+  border: "1px solid rgba(15,23,42,0.08)",
+  borderRadius: "0.9rem",
+  boxShadow: "0 24px 60px rgba(0,0,0,0.34)",
+  color: "var(--tooltip-text)",
 } as const
 
-const tooltipLabelStyle = { color: "#334155", fontWeight: 700 } as const
-const tooltipItemStyle = { color: "#0f172a", fontWeight: 600 } as const
+const tooltipLabelStyle = { color: "var(--tooltip-muted)", fontWeight: 700 } as const
+const tooltipItemStyle = { color: "var(--tooltip-text)", fontWeight: 600 } as const
 
 function pct(v: number, digits = 0): string {
   return `${(v * 100).toFixed(digits)}%`
@@ -62,9 +63,9 @@ function ChartCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
+    <div className="signal-card rounded-[1.55rem] p-5 sm:p-6">
       <h3 className="text-lg font-semibold">{title}</h3>
-      {subtitle && <p className="mt-1 text-sm text-white/45">{subtitle}</p>}
+      {subtitle && <p className="signal-muted mt-1 text-sm">{subtitle}</p>}
       <div className="mt-5 h-72 w-full">{children}</div>
     </div>
   )

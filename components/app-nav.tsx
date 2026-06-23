@@ -22,8 +22,8 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[var(--bg)]/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4">
+      <header className="sticky top-0 z-30 border-b border-[color:var(--line-soft)] bg-[var(--bg)]/82 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-6">
           <Brand />
 
           <nav className="hidden items-center gap-1 lg:flex">
@@ -35,7 +35,9 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
                   key={item.href}
                   href={item.href}
                   className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
-                    active ? "bg-[var(--accent)]/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
+                    active
+                      ? "bg-[var(--accent)]/14 text-[color:var(--text-primary)] ring-1 ring-[var(--accent)]/20"
+                      : "text-[color:var(--text-muted)] hover:bg-white/[0.06] hover:text-[color:var(--text-primary)]"
                   }`}
                 >
                   <Icon className={`h-4 w-4 ${active ? "text-[color:var(--accent)]" : ""}`} />
@@ -54,7 +56,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
             ) : (
               <Link
                 href="/login"
-                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
+                className="rounded-full bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[color:var(--on-accent)] shadow-[0_10px_28px_rgba(0,0,0,0.22)] transition hover:scale-[1.03]"
               >
                 Zaloguj
               </Link>
@@ -64,7 +66,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
       </header>
 
       {/* dolny tab-bar (mobile) */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[var(--bg-soft)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[color:var(--line-soft)] bg-[var(--bg-soft)]/96 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_rgba(0,0,0,0.32)] backdrop-blur-xl lg:hidden">
         <div
           className="mx-auto grid max-w-md"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -77,7 +79,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-1 py-2.5 text-[11px] transition ${
-                  active ? "text-[color:var(--accent)]" : "text-white/55"
+                  active ? "text-[color:var(--accent)]" : "text-[color:var(--text-muted)]"
                 }`}
               >
                 <Icon className="h-5 w-5" />

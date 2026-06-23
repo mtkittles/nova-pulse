@@ -60,10 +60,10 @@ export function StatsView({
   const avgQ = s.avg_q_score
   const sourceClass =
     source === "live"
-      ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
+      ? "signal-badge-live"
       : source === "mock"
-        ? "border-amber-300/30 bg-amber-300/10 text-amber-100"
-        : "border-rose-300/30 bg-rose-300/10 text-rose-100"
+        ? "signal-badge-mock"
+        : "signal-badge-error"
   const sourceLabel = source === "live" ? "live" : source === "mock" ? "mock" : "error"
   const sourceTitle = source === "live" ? "Dane realne" : source === "mock" ? "Dane testowe" : "Błąd źródła"
   const sourceHint =
@@ -115,8 +115,8 @@ export function StatsView({
               onClick={() => pick(p.k)}
               className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                 period === p.k
-                  ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
-                  : "border-white/12 bg-white/[0.05] text-white/60 hover:bg-white/10"
+                  ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/14 text-[color:var(--text-primary)]"
+                  : "border-[color:var(--line-soft)] bg-white/[0.045] text-[color:var(--text-muted)] hover:bg-white/[0.07] hover:text-[color:var(--text-primary)]"
               }`}
             >
               {p.l}
@@ -131,12 +131,12 @@ export function StatsView({
           return (
             <div
               key={kpi.label}
-              className="rounded-[1.6rem] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur"
+              className="signal-card rounded-[1.45rem] p-5"
             >
               <div className="mb-4 grid h-10 w-10 place-items-center rounded-2xl bg-white/10 text-white/70">
                 <Icon className="h-5 w-5" />
               </div>
-              <p className="text-sm text-white/45">{kpi.label}</p>
+              <p className="signal-muted text-sm">{kpi.label}</p>
               <p className={`mt-1 text-3xl font-semibold ${kpi.tone}`}>{kpi.value}</p>
             </div>
           )
@@ -169,9 +169,9 @@ export function StatsView({
         <div className={loading ? "opacity-50 transition" : "transition"}>
           <StatsCharts data={data} />
 
-          <div className="mt-8 rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
+          <div className="signal-card mt-8 rounded-[1.55rem] p-6">
             <h3 className="text-lg font-semibold">Ostatnie rozliczone typy</h3>
-            <p className="mt-1 text-sm text-white/45">
+            <p className="signal-muted mt-1 text-sm">
               {source === "mock"
                 ? "Sekcja ukrywa mocki i pokazuje tylko realnie rozliczone rekordy z Oracle."
                 : `${settledTips.length} ostatnich typów z weryfikacją wyniku`}

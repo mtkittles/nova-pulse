@@ -1,30 +1,49 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
-/* ===== Motywy (zmienne CSS, przełączane przez [data-theme]) ===== */
-/* Domyślny: Nova (cyan + violet) */
+/* ===== Lupus Signal OS tokens ===== */
 :root,
 [data-theme="nova"] {
-  --bg: #070812;
-  --bg-soft: #0d0e1a;
-  --accent: #67e8f9; /* cyan-300 */
-  --accent-2: #c4b5fd; /* violet-300 */
-  --accent-strong: #22d3ee; /* cyan-400 */
-  --on-accent: #070812;
-  --glow-1: rgba(34, 211, 238, 0.3);
-  --glow-2: rgba(124, 58, 237, 0.3);
+  --bg: #05070d;
+  --bg-soft: #080b14;
+  --surface: #101522;
+  --surface-raised: #182033;
+  --surface-glass: rgba(16, 21, 34, 0.78);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text-primary: #f8fafc;
+  --text-secondary: rgba(248, 250, 252, 0.72);
+  --text-muted: rgba(248, 250, 252, 0.48);
+  --text-faint: rgba(248, 250, 252, 0.32);
+  --accent: #5eead4;
+  --accent-2: #60a5fa;
+  --accent-strong: #2dd4bf;
+  --on-accent: #04110f;
+  --signal-violet: #a78bfa;
+  --signal-emerald: #34d399;
+  --signal-amber: #fbbf24;
+  --signal-rose: #fb7185;
+  --glow-1: rgba(94, 234, 212, 0.16);
+  --glow-2: rgba(96, 165, 250, 0.14);
+  --shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.28);
+  --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.18);
+  --tooltip-bg: #f8fafc;
+  --tooltip-text: #0f172a;
+  --tooltip-muted: #334155;
 }
 
-/* Lupus: wilczy granat + neon lime */
 [data-theme="lupus"] {
-  --bg: #07100b;
-  --bg-soft: #0c1510;
-  --accent: #a3e635; /* lime-400 */
-  --accent-2: #34d399; /* emerald-400 */
-  --accent-strong: #84cc16; /* lime-500 */
+  --bg: #050b08;
+  --bg-soft: #07110c;
+  --surface: #0d1912;
+  --surface-raised: #14251a;
+  --surface-glass: rgba(13, 25, 18, 0.78);
+  --accent: #a3e635;
+  --accent-2: #34d399;
+  --accent-strong: #84cc16;
   --on-accent: #06120a;
-  --glow-1: rgba(163, 230, 53, 0.26);
-  --glow-2: rgba(16, 185, 129, 0.28);
+  --glow-1: rgba(163, 230, 53, 0.14);
+  --glow-2: rgba(52, 211, 153, 0.12);
 }
 
 html {
@@ -34,6 +53,86 @@ html {
 body {
   font-family: "Inter", system-ui, sans-serif;
   background-color: var(--bg);
+  color: var(--text-primary);
+  color-scheme: dark;
+  text-rendering: geometricPrecision;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+  color: var(--text-primary);
+}
+
+.signal-bg {
+  background:
+    radial-gradient(circle at top left, var(--glow-1), transparent 34rem),
+    radial-gradient(circle at 85% 12%, var(--glow-2), transparent 30rem),
+    linear-gradient(180deg, var(--bg), var(--bg-soft));
+}
+
+.signal-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+.signal-card {
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent), color-mix(in srgb, var(--bg-soft) 82%, transparent));
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(18px);
+}
+
+.signal-panel {
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--surface-raised) 76%, transparent), color-mix(in srgb, var(--surface) 88%, transparent));
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(20px);
+}
+
+.signal-muted {
+  color: var(--text-muted);
+}
+
+.signal-faint {
+  color: var(--text-faint);
+}
+
+.signal-badge {
+  border: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--surface-raised) 70%, transparent);
+  color: var(--text-secondary);
+}
+
+.signal-badge-live {
+  border-color: color-mix(in srgb, var(--signal-emerald) 34%, transparent);
+  background: color-mix(in srgb, var(--signal-emerald) 12%, transparent);
+  color: #bbf7d0;
+}
+
+.signal-badge-mock {
+  border-color: color-mix(in srgb, var(--signal-amber) 34%, transparent);
+  background: color-mix(in srgb, var(--signal-amber) 12%, transparent);
+  color: #fde68a;
+}
+
+.signal-badge-error {
+  border-color: color-mix(in srgb, var(--signal-rose) 34%, transparent);
+  background: color-mix(in srgb, var(--signal-rose) 12%, transparent);
+  color: #fecdd3;
+}
+
+.signal-tooltip {
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  background: var(--tooltip-bg) !important;
+  color: var(--tooltip-text) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34) !important;
+}
+
+.signal-bottom-safe {
+  padding-bottom: calc(7rem + env(safe-area-inset-bottom));
 }
 
 /* płynne przejście kolorów przy zmianie motywu */

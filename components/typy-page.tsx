@@ -109,13 +109,13 @@ export default function TypyPage({
   }, [tips.length, date, availableDates])
 
   const selectClass =
-    "rounded-full border border-white/12 bg-[var(--bg-soft)] px-4 py-2 text-sm text-white/80 outline-none focus:border-[color:var(--accent)]/40"
+    "rounded-full border border-[color:var(--line-soft)] bg-[var(--surface-glass)] px-4 py-2 text-sm text-[color:var(--text-secondary)] outline-none transition focus:border-[color:var(--accent)]/45"
   const sourceClass =
     source === "live"
-      ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
+      ? "signal-badge-live"
       : source === "mock"
-        ? "border-amber-300/30 bg-amber-300/10 text-amber-100"
-        : "border-rose-300/30 bg-rose-300/10 text-rose-100"
+        ? "signal-badge-mock"
+        : "signal-badge-error"
   const sourceLabel = source === "live" ? "live" : source === "mock" ? "mock" : "error"
   const sourceTitle = source === "live" ? "Dane realne" : source === "mock" ? "Dane testowe" : "Błąd źródła"
   const sourceHint =
@@ -159,10 +159,10 @@ export default function TypyPage({
                 aria-disabled={m.disabled}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                   m.disabled
-                    ? "cursor-not-allowed border-white/10 bg-white/[0.03] text-white/30"
+                    ? "cursor-not-allowed border-[color:var(--line-soft)] bg-white/[0.025] text-[color:var(--text-faint)]"
                     : mode === m.key
-                      ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/15 text-white"
-                      : "border-white/12 bg-white/[0.05] text-white/60 hover:bg-white/10"
+                      ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/14 text-[color:var(--text-primary)]"
+                      : "border-[color:var(--line-soft)] bg-white/[0.045] text-[color:var(--text-muted)] hover:bg-white/[0.07] hover:text-[color:var(--text-primary)]"
                 }`}
               >
                 {m.label}
