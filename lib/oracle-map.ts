@@ -115,6 +115,7 @@ export function adaptTips(raw: unknown): TipsResponse {
   return {
     date: String(r.date ?? new Date().toISOString().slice(0, 10)),
     tips: list.map(adaptTip),
+    source: "live",
   }
 }
 
@@ -231,6 +232,7 @@ export function adaptStats(raw: unknown): StatsResponse {
   return {
     generated_at: String(r.generated_at ?? new Date().toISOString()),
     range_days: num(sum.period_days, 30),
+    source: "live",
     summary,
     timeline,
     by_market,

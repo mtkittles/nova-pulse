@@ -1,5 +1,7 @@
 import type { BetType } from "./types"
 
+export type DataSourceStatus = "live" | "mock" | "error"
+
 // Kontrakt statystyk skuteczności — GOTOWE AGREGATY liczone po stronie bota
 // (z tabeli `bot_predictions`, pole `actual_result`). Strona tylko rysuje.
 // Docelowo: GET /public-api/stats (patrz lib/stats.ts).
@@ -59,6 +61,8 @@ export interface StatsResponse {
   generated_at: string
   /** okno analizy w dniach */
   range_days: number
+  source: DataSourceStatus
+  source_message?: string
   summary: StatsSummary
   timeline: TimelinePoint[]
   by_market: MarketStat[]

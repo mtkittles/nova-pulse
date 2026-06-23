@@ -12,8 +12,8 @@ function todayWarsaw(): string {
   }).format(new Date())
 }
 
-function emptyTips(date: string): TipsResponse {
-  return { date, tips: [] }
+function emptyTips(date: string, source_message?: string): TipsResponse {
+  return { date, tips: [], source: "error", source_message }
 }
 
 function hasTipsArray(x: unknown): boolean {
@@ -26,18 +26,18 @@ function hasTipsArray(x: unknown): boolean {
 // - brak konfiguracji → dane testowe
 export async function getTips(date?: string): Promise<TipsResponse> {
   const d = date || todayWarsaw()
-  if (!isOracleConfigured()) return { ...mockTips, date: d }
+  if (!isOracleConfigured()) return { ...mockTips, date: d, source: "mock" }
   try {
     const data = await oracleFetch<unknown>(`/tips?date=${encodeURIComponent(d)}`)
     console.log(`[oracle] /tips?date=${d} raw:`, JSON.stringify(data).slice(0, 500))
     if (!hasTipsArray(data)) {
       console.error("getTips: odpowiedź Oracle niezgodna z kontraktem")
-      return emptyTips(d)
+      return emptyTips(d, "Odpowiedź Oracle niezgodna z kontraktem.")
     }
     return adaptTips(data)
   } catch (err) {
     console.error("getTips: Oracle niedostępne →", err)
-    return emptyTips(d)
+    return emptyTips(d, "Oracle niedostępne lub błąd pobierania danych.")
   }
 }
 

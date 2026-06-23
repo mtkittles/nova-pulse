@@ -38,6 +38,8 @@ export default async function Page() {
       <TypyPage
         initialDate={defaultDate}
         initialTips={tips.tips}
+        initialSource={tips.source}
+        initialSourceMessage={tips.source_message}
         availableDates={dates.dates}
         loggedIn={loggedIn}
       />

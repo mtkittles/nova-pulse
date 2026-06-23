@@ -12,8 +12,15 @@ export default async function StatsPage() {
     getSettledTips(15),
   ])
   return (
-    <AppShell loggedIn={Boolean(session)} isAdmin={session?.isAdmin}>
-      <StatsView initial={data} initialPeriod="30" loggedIn={Boolean(session)} settledTips={settledTips} />
-    </AppShell>
-  )
+      <AppShell loggedIn={Boolean(session)} isAdmin={session?.isAdmin}>
+      <StatsView
+        initial={data}
+        initialPeriod="30"
+        initialSource={data.source}
+        initialSourceMessage={data.source_message}
+        loggedIn={Boolean(session)}
+        settledTips={settledTips}
+      />
+      </AppShell>
+    )
 }

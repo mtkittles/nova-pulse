@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { StatsResponse } from "@/lib/stats-types"
+import type { DataSourceStatus, StatsResponse } from "@/lib/stats-types"
 import type { Tip } from "@/lib/types"
 import { CheckCircle2, Hourglass, Percent, Star, Target, TrendingUp } from "lucide-react"
 import StatsCharts from "./stats-charts"
@@ -17,16 +17,22 @@ const PERIODS = [
 export function StatsView({
   initial,
   initialPeriod,
+  initialSource,
+  initialSourceMessage,
   loggedIn,
   settledTips = [],
 }: {
   initial: StatsResponse
   initialPeriod: string
+  initialSource: DataSourceStatus
+  initialSourceMessage?: string
   loggedIn: boolean
   settledTips?: Tip[]
 }) {
   const [period, setPeriod] = useState(initialPeriod)
   const [data, setData] = useState(initial)
+  const [source, setSource] = useState<DataSourceStatus>(initialSource)
+  const [sourceMessage, setSourceMessage] = useState<string | undefined>(initialSourceMessage)
   const [loading, setLoading] = useState(false)
 
   async function pick(p: string) {
@@ -36,8 +42,12 @@ export function StatsView({
     try {
       const res = await fetch(`/api/stats?period=${p}`)
       const j = await res.json()
+      setSource(j?.source === "live" || j?.source === "mock" || j?.source === "error" ? j.source : "error")
+      setSourceMessage(typeof j?.source_message === "string" ? j.source_message : undefined)
       if (j && j.summary) setData(j)
     } catch {
+      setSource("error")
+      setSourceMessage("Nie udało się odczytać odpowiedzi API.")
       /* zostaw poprzednie */
     } finally {
       setLoading(false)
@@ -48,6 +58,13 @@ export function StatsView({
   const empty = s.total_tips === 0
 
   const avgQ = s.avg_q_score
+  const sourceClass =
+    source === "live"
+      ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
+      : source === "mock"
+        ? "border-amber-300/30 bg-amber-300/10 text-amber-100"
+        : "border-rose-300/30 bg-rose-300/10 text-rose-100"
+  const sourceLabel = source === "live" ? "live" : source === "mock" ? "mock" : "error"
   const kpis = [
     { icon: Target, label: "Typy", value: `${s.total_tips}`, tone: "text-[color:var(--accent)]" },
     { icon: CheckCircle2, label: "Trafione", value: `${s.wins}`, tone: "text-emerald-300" },
@@ -72,6 +89,12 @@ export function StatsView({
         <div>
           <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Statystyki skuteczności</h1>
           <p className="mt-3 text-white/55">Trafialność, ROI i kalibracja Q-Score — z auto-weryfikacji wyników.</p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${sourceClass}`}>
+              {sourceLabel}
+            </span>
+            {sourceMessage && <span className="text-sm text-white/45">{sourceMessage}</span>}
+          </div>
         </div>
         <div className="flex gap-2">
           {PERIODS.map((p) => (
@@ -109,7 +132,15 @@ export function StatsView({
         })}
       </div>
 
-      {empty ? (
+      {source === "error" ? (
+        <div className="rounded-[1.8rem] border border-rose-300/25 bg-rose-300/[0.08] p-12 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-rose-300/30 bg-rose-300/10 text-rose-100">
+            <Hourglass className="h-6 w-6" />
+          </div>
+          <h3 className="text-xl font-semibold">Nie udało się pobrać statystyk</h3>
+          <p className="mt-2 text-rose-100/75">{sourceMessage || "Oracle zwróciło błąd lub jest niedostępne."}</p>
+        </div>
+      ) : empty ? (
         <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-12 text-center">
           <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-[color:var(--accent)]/30 bg-[var(--accent)]/10 text-[color:var(--accent)]">
             <Hourglass className="h-6 w-6" />

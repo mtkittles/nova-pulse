@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import type { BetType, Tip } from "@/lib/types"
+import type { BetType, DataSourceStatus, Tip } from "@/lib/types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
 import { AlertTriangle, CalendarOff } from "lucide-react"
 import TipCard from "./tip-card"
@@ -45,16 +45,22 @@ function nearest(target: string, dates: string[]): string | null {
 export default function TypyPage({
   initialDate,
   initialTips,
+  initialSource,
+  initialSourceMessage,
   availableDates,
   loggedIn = false,
 }: {
   initialDate: string
   initialTips: Tip[]
+  initialSource: DataSourceStatus
+  initialSourceMessage?: string
   availableDates: string[]
   loggedIn?: boolean
 }) {
   const [date, setDate] = useState(initialDate)
   const [tips, setTips] = useState<Tip[]>(initialTips)
+  const [source, setSource] = useState<DataSourceStatus>(initialSource)
+  const [sourceMessage, setSourceMessage] = useState<string | undefined>(initialSourceMessage)
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState<"ALL" | BetType>("ALL")
   const [league, setLeague] = useState("ALL")
@@ -69,8 +75,12 @@ export default function TypyPage({
     try {
       const res = await fetch(`/api/tips?date=${d}`)
       const data = await res.json()
+      setSource(data?.source === "live" || data?.source === "mock" || data?.source === "error" ? data.source : "error")
+      setSourceMessage(typeof data?.source_message === "string" ? data.source_message : undefined)
       setTips(Array.isArray(data?.tips) ? data.tips : [])
     } catch {
+      setSource("error")
+      setSourceMessage("Nie udało się odczytać odpowiedzi API.")
       setTips([])
     } finally {
       setLoading(false)
@@ -100,12 +110,25 @@ export default function TypyPage({
 
   const selectClass =
     "rounded-full border border-white/12 bg-[var(--bg-soft)] px-4 py-2 text-sm text-white/80 outline-none focus:border-[color:var(--accent)]/40"
+  const sourceClass =
+    source === "live"
+      ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
+      : source === "mock"
+        ? "border-amber-300/30 bg-amber-300/10 text-amber-100"
+        : "border-rose-300/30 bg-rose-300/10 text-rose-100"
+  const sourceLabel = source === "live" ? "live" : source === "mock" ? "mock" : "error"
 
   return (
     <div>
       <header className="mb-8">
         <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Typy meczowe</h1>
         <p className="mt-3 text-lg capitalize text-white/55">{dateLabel(date)}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${sourceClass}`}>
+            {sourceLabel}
+          </span>
+          {sourceMessage && <span className="text-sm text-white/45">{sourceMessage}</span>}
+        </div>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -179,6 +202,13 @@ export default function TypyPage({
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="h-72 animate-pulse rounded-[1.8rem] border border-white/12 bg-white/[0.04]" />
               ))}
+            </div>
+          ) : source === "error" ? (
+            <div className="rounded-[1.8rem] border border-rose-300/25 bg-rose-300/[0.08] p-10 text-center text-rose-100/85">
+              <h3 className="text-xl font-semibold">Oracle niedostępne</h3>
+              <p className="mt-2 text-sm text-rose-100/75">
+                {sourceMessage || "Nie udało się pobrać typów. Spróbuj ponownie później."}
+              </p>
             </div>
           ) : tips.length === 0 ? (
             <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-12 text-center">

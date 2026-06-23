@@ -5,6 +5,7 @@ import type { TipsResponse } from "./types"
 // Thriller celowo obecny w danych — UI ukrywa go w MVP.
 export const mockTips: TipsResponse = {
   date: "2026-06-03",
+  source: "mock",
   tips: [
     {
       event_id: 1001,

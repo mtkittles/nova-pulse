@@ -8,6 +8,7 @@ function emptyStats(): StatsResponse {
   return {
     generated_at: new Date().toISOString(),
     range_days: 30,
+    source: "error",
     summary: {
       total_tips: 0,
       settled_tips: 0,
@@ -21,8 +22,12 @@ function emptyStats(): StatsResponse {
     timeline: [],
     by_market: [],
     by_league: [],
-    q_score_buckets: [],
+      q_score_buckets: [],
   }
+}
+
+function errorStats(source_message: string): StatsResponse {
+  return { ...emptyStats(), source_message }
 }
 
 function hasSummary(x: unknown): boolean {
@@ -52,18 +57,18 @@ export async function getSettledTips(limit = 15): Promise<Tip[]> {
 
 // period: "7" | "30" | "all"
 export async function getStats(period?: string): Promise<StatsResponse> {
-  if (!isOracleConfigured()) return mockStats
+  if (!isOracleConfigured()) return { ...mockStats, source: "mock" }
   const path = period ? `/stats?period=${encodeURIComponent(period)}` : "/stats"
   try {
     const data = await oracleFetch<unknown>(path)
     console.log(`[oracle] /stats?period=${period ?? ""} raw:`, JSON.stringify(data).slice(0, 500))
     if (!hasSummary(data)) {
       console.error("getStats: odpowiedź Oracle niezgodna z kontraktem")
-      return emptyStats()
+      return errorStats("Odpowiedź Oracle niezgodna z kontraktem.")
     }
     return adaptStats(data)
   } catch (err) {
     console.error("getStats: Oracle niedostępne →", err)
-    return emptyStats()
+    return errorStats("Oracle niedostępne lub błąd pobierania danych.")
   }
 }

@@ -76,6 +76,7 @@ const losses = built.totalTips - wins
 export const mockStats: StatsResponse = {
   generated_at: "2026-06-03T11:30:00Z",
   range_days: RANGE_DAYS,
+  source: "mock",
   summary: {
     total_tips: built.totalTips,
     settled_tips: built.totalTips,
