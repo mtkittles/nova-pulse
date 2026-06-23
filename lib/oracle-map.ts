@@ -1,5 +1,5 @@
 import "server-only"
-import type { BetType, Tip, TipsResponse } from "./types"
+import type { BetType, MatchStatus, SettlementStatus, Tip, TipsResponse } from "./types"
 import type {
   LeagueStat,
   MarketStat,
@@ -31,6 +31,14 @@ export interface OracleTip {
   edge: number // może być ujemny
   q_score: number
   actual_result: 0 | 1 | null
+  status?: string
+  match_status?: string
+  minute?: number | string | null
+  live_minute?: number | string | null
+  match_minute?: number | string | null
+  home_score?: number | string | null
+  away_score?: number | string | null
+  score?: string | null
 }
 
 export interface OracleTipsResponse {
@@ -119,6 +127,38 @@ function mapResult(t: Record<string, unknown>): 0 | 1 | null {
   return null
 }
 
+function mapSettlementStatus(t: Record<string, unknown>): SettlementStatus {
+  const result = mapResult(t)
+  if (result === 1) return "won"
+  if (result === 0) return "lost"
+  const s = text(t.status).toLowerCase()
+  if (s.includes("void")) return "void"
+  if (s.includes("push")) return "push"
+  if (s.includes("pending") || s.includes("live")) return "pending"
+  return "unknown"
+}
+
+function mapMatchStatus(t: Record<string, unknown>): MatchStatus {
+  const s = text(t.match_status ?? t.status).toLowerCase()
+  if (s.includes("live") || s.includes("inplay") || s.includes("in_play")) return "LIVE"
+  if (s.includes("finish") || s.includes("ended") || s.includes("complete") || s.includes("ft")) return "FINISHED"
+  if (s.includes("sched") || s.includes("not_started") || s.includes("notstarted") || s.includes("pending")) {
+    return "SCHEDULED"
+  }
+  return "UNKNOWN"
+}
+
+function matchMinute(t: Record<string, unknown>): number | null {
+  const raw = t.match_minute ?? t.live_minute ?? t.minute
+  const n = numOrNull(raw)
+  if (n == null) return null
+  return clamp(Math.round(n), 0, 130)
+}
+
+function matchScore(t: Record<string, unknown>): string | null {
+  return scoreLine(t.home_score, t.away_score, t.score) ?? null
+}
+
 export function adaptTip(raw: unknown): Tip {
   const t = (raw ?? {}) as Record<string, unknown>
   const model_prob = prob(t.model_prob)
@@ -140,6 +180,10 @@ export function adaptTip(raw: unknown): Tip {
     edge,
     q_score: qScore(t.q_score),
     actual_result: mapResult(t),
+    match_status: mapMatchStatus(t),
+    match_minute: matchMinute(t),
+    match_score: matchScore(t),
+    settlement_status: mapSettlementStatus(t),
   }
 }
 

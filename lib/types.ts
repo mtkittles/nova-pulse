@@ -10,6 +10,8 @@ export interface DataSourceMeta {
 }
 
 export type BetType = "BTTS" | "OVER_1_5" | "MIX" | "THRILLER"
+export type MatchStatus = "SCHEDULED" | "LIVE" | "FINISHED" | "UNKNOWN"
+export type SettlementStatus = "pending" | "won" | "lost" | "void" | "push" | "unknown"
 
 export interface Tip {
   event_id: string | number
@@ -31,6 +33,10 @@ export interface Tip {
   q_score: number
   /** NULL przed meczem, 1 = trafione, 0 = pudło (weryfikuje live_tracker) */
   actual_result: 0 | 1 | null
+  match_status?: MatchStatus
+  match_minute?: number | null
+  match_score?: string | null
+  settlement_status?: SettlementStatus
 }
 
 export interface TipsResponse extends DataSourceMeta {

@@ -1,7 +1,7 @@
 import Link from "next/link"
-import type { BetType, Tip } from "@/lib/types"
+import type { BetType, MatchStatus, SettlementStatus, Tip } from "@/lib/types"
 import { BET_TYPE_PL, BET_TYPE_SHORT, statusInfo } from "@/lib/labels"
-import { AlertTriangle, Lock, Minus, Plus } from "lucide-react"
+import { AlertTriangle, Clock3, Lock, Minus, Plus, Radio, Trophy } from "lucide-react"
 
 const MARKET_BADGE: Record<BetType, string> = {
   BTTS: "border-cyan-300/30 bg-cyan-300/10 text-cyan-200",
@@ -32,6 +32,47 @@ function formatKickoff(iso: string): string {
     minute: "2-digit",
     timeZone: "Europe/Warsaw",
   }).format(d)
+}
+
+function matchStatusInfo(status?: MatchStatus, minute?: number | null) {
+  if (status === "LIVE") {
+    return {
+      label: minute != null ? `LIVE ${minute}'` : "LIVE",
+      classes: "border-rose-300/30 bg-rose-300/10 text-rose-200",
+      icon: Radio,
+    }
+  }
+  if (status === "FINISHED") {
+    return {
+      label: "Koniec",
+      classes: "border-emerald-300/30 bg-emerald-300/10 text-emerald-200",
+      icon: Trophy,
+    }
+  }
+  return {
+    label: "Zaplanowany",
+    classes: "border-white/15 bg-white/[0.06] text-white/65",
+    icon: Clock3,
+  }
+}
+
+function settlementInfo(status?: SettlementStatus, actualResult?: 0 | 1 | null) {
+  if (status === "void") {
+    return { label: "void", classes: "border-amber-300/30 bg-amber-300/10 text-amber-200" }
+  }
+  if (status === "push") {
+    return { label: "push", classes: "border-sky-300/30 bg-sky-300/10 text-sky-200" }
+  }
+  if (status === "won" || actualResult === 1) {
+    return { label: "won", classes: "border-emerald-300/30 bg-emerald-300/10 text-emerald-200" }
+  }
+  if (status === "lost" || actualResult === 0) {
+    return { label: "lost", classes: "border-rose-300/30 bg-rose-300/10 text-rose-200" }
+  }
+  if (status === "unknown") {
+    return { label: "unknown", classes: "border-white/15 bg-white/[0.06] text-white/55" }
+  }
+  return { label: "pending", classes: "border-white/15 bg-white/[0.06] text-white/55" }
 }
 
 export default function TipCard({
@@ -87,6 +128,9 @@ export default function TipCard({
   const prob = Math.round(tip.model_prob * 100)
   const edgePct = (tip.edge * 100).toFixed(1)
   const status = statusInfo(tip.actual_result)
+  const settlement = settlementInfo(tip.settlement_status, tip.actual_result)
+  const match = matchStatusInfo(tip.match_status, tip.match_minute)
+  const MatchIcon = match.icon
   const isThriller = tip.bet_type === "THRILLER"
 
   const inner = (
@@ -106,8 +150,12 @@ export default function TipCard({
         <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${MARKET_BADGE[tip.bet_type]}`}>
           {BET_TYPE_SHORT[tip.bet_type]}
         </span>
-        <span className={`rounded-full border px-3 py-1 text-xs font-medium ${status.classes}`}>
-          {status.label}
+        <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${match.classes}`}>
+          <MatchIcon className="h-3.5 w-3.5" />
+          {match.label}
+        </span>
+        <span className={`rounded-full border px-3 py-1 text-xs font-medium ${settlement.classes}`}>
+          typ: {settlement.label}
         </span>
         {isThriller && (
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-200">
@@ -119,6 +167,22 @@ export default function TipCard({
       <p className="relative mt-3 text-sm text-white/65">
         {BET_TYPE_PL[tip.bet_type]} — <span className="font-medium text-white/85">{tip.bet_side}</span>
       </p>
+
+      {(tip.match_score || tip.match_status === "LIVE" || tip.match_status === "FINISHED") && (
+        <div className="relative mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <span className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1 text-white/80">
+            wynik: <span className="font-semibold text-white">{tip.match_score || "—"}</span>
+          </span>
+          {tip.match_status === "LIVE" && tip.match_minute != null && (
+            <span className="rounded-full border border-rose-300/30 bg-rose-300/10 px-3 py-1 text-rose-200">
+              minuta {tip.match_minute}'
+            </span>
+          )}
+          {tip.match_status === "FINISHED" && (
+            <span className={`rounded-full border px-3 py-1 ${status.classes}`}>{status.label}</span>
+          )}
+        </div>
+      )}
 
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
