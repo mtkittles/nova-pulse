@@ -1,7 +1,8 @@
 import type { StatsResponse } from "./stats-types"
+import type { Tip } from "./types"
 import { mockStats } from "./mock-stats"
 import { isOracleConfigured, oracleFetch } from "./oracle"
-import { adaptStats } from "./oracle-map"
+import { adaptStats, adaptTips } from "./oracle-map"
 
 function emptyStats(): StatsResponse {
   return {
@@ -15,7 +16,7 @@ function emptyStats(): StatsResponse {
       win_rate: 0,
       roi: 0,
       current_streak: 0,
-      avg_q_score: 0,
+      avg_q_score: null,
     },
     timeline: [],
     by_market: [],
@@ -26,6 +27,27 @@ function emptyStats(): StatsResponse {
 
 function hasSummary(x: unknown): boolean {
   return !!x && typeof x === "object" && !!(x as { summary?: unknown }).summary
+}
+
+/** Ostatnie rozliczone typy (actual_result != null). Max `limit` rekordów. */
+export async function getSettledTips(limit = 15): Promise<Tip[]> {
+  if (!isOracleConfigured()) return []
+  try {
+    const today = new Date()
+    const from = new Date(today)
+    from.setDate(today.getDate() - 30)
+    const fromStr = from.toISOString().slice(0, 10)
+    const toStr = today.toISOString().slice(0, 10)
+    const data = await oracleFetch<unknown>(`/tips?from_date=${fromStr}&to_date=${toStr}`, 0)
+    const { tips } = adaptTips(data)
+    return tips
+      .filter((t) => t.actual_result !== null)
+      .sort((a, b) => (b.kickoff_utc > a.kickoff_utc ? 1 : -1))
+      .slice(0, limit)
+  } catch (err) {
+    console.error("getSettledTips: błąd →", err)
+    return []
+  }
 }
 
 // period: "7" | "30" | "all"

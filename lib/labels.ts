@@ -16,6 +16,30 @@ export const BET_TYPE_SHORT: Record<BetType, string> = {
   THRILLER: "Thriller",
 }
 
+/**
+ * Mapuje bet_type (i opcjonalnie bet_side) na czytelną kategorię rynku.
+ * Używana w /stats, /typy i /mecz — jedyne miejsce mapowania.
+ * Wynikowe kategorie: BTTS | Team O1.5 | Over | 1X2 | Handicap
+ */
+export function getMarketLabel(betType: string, betSide?: string): string {
+  const k = betType.toUpperCase().replace(/[^A-Z0-9]/g, "")
+  if (k === "BTTS" || k === "O15BTTS") return "BTTS"
+  if (k.includes("HANDICAP") || k.startsWith("AH") || k.startsWith("HC")) return "Handicap"
+  if (k.includes("OVER") || k === "O15" || k === "O25" || k === "OVER15" || k === "OVER25") {
+    const side = (betSide ?? "").toLowerCase()
+    // "team" / team-specific oznacza Team O1.5
+    if (side.includes("team") || side.includes("home") || side.includes("away") ||
+        side.includes("gosp") || side.includes("gość") || side.includes("gos")) {
+      return "Team O1.5"
+    }
+    return "Over"
+  }
+  // Oracle _market_key grupuje nieskategoryzowane jako "Mix" → u nas 1X2
+  if (k === "MIX" || k === "1X2" || k === "1X" || k === "12") return "1X2"
+  if (k.includes("THRILLER") || k.includes("EXACT")) return "Thriller"
+  return "1X2"
+}
+
 export type StatusInfo = { label: string; classes: string }
 
 // actual_result: null = oczekuje, 1 = trafiony, 0 = nietrafiony

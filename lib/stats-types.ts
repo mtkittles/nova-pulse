@@ -15,8 +15,8 @@ export interface StatsSummary {
   roi: number
   /** seria: dodatnia = wygrane z rzędu, ujemna = przegrane */
   current_streak: number
-  /** średni Q-Score, 0..100 */
-  avg_q_score: number
+  /** średni Q-Score, 0..100; null gdy brak danych */
+  avg_q_score: number | null
 }
 
 export interface TimelinePoint {
@@ -31,12 +31,12 @@ export interface TimelinePoint {
 }
 
 export interface MarketStat {
-  bet_type: Exclude<BetType, "THRILLER">
+  market: string
   tips: number
   /** 0..1 */
   win_rate: number
-  /** np. 0.09 */
-  roi: number
+  /** np. 0.09; null gdy brak kursów w Oracle */
+  roi: number | null
 }
 
 export interface LeagueStat {

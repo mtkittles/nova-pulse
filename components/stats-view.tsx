@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import type { StatsResponse } from "@/lib/stats-types"
-import { CheckCircle2, Hourglass, Percent, Target, TrendingUp } from "lucide-react"
+import type { Tip } from "@/lib/types"
+import { CheckCircle2, Hourglass, Percent, Star, Target, TrendingUp } from "lucide-react"
 import StatsCharts from "./stats-charts"
+import { SettledTips } from "./settled-tips"
 import { LockedSection } from "./locked-section"
 
 const PERIODS = [
@@ -16,10 +18,12 @@ export function StatsView({
   initial,
   initialPeriod,
   loggedIn,
+  settledTips = [],
 }: {
   initial: StatsResponse
   initialPeriod: string
   loggedIn: boolean
+  settledTips?: Tip[]
 }) {
   const [period, setPeriod] = useState(initialPeriod)
   const [data, setData] = useState(initial)
@@ -43,6 +47,7 @@ export function StatsView({
   const s = data.summary
   const empty = s.total_tips === 0
 
+  const avgQ = s.avg_q_score
   const kpis = [
     { icon: Target, label: "Typy", value: `${s.total_tips}`, tone: "text-[color:var(--accent)]" },
     { icon: CheckCircle2, label: "Trafione", value: `${s.wins}`, tone: "text-emerald-300" },
@@ -52,6 +57,12 @@ export function StatsView({
       label: "ROI",
       value: `${s.roi >= 0 ? "+" : ""}${(s.roi * 100).toFixed(1)}%`,
       tone: s.roi >= 0 ? "text-emerald-300" : "text-rose-300",
+    },
+    {
+      icon: Star,
+      label: "Śr. Q-Score",
+      value: avgQ != null && avgQ > 0 ? avgQ.toFixed(1) : "—",
+      tone: avgQ != null && avgQ >= 65 ? "text-amber-300" : "text-white/60",
     },
   ]
 
@@ -80,7 +91,7 @@ export function StatsView({
         </div>
       </div>
 
-      <div className={`mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4 ${loading ? "opacity-50" : ""}`}>
+      <div className={`mb-8 grid grid-cols-2 gap-4 lg:grid-cols-5 ${loading ? "opacity-50" : ""}`}>
         {kpis.map((kpi) => {
           const Icon = kpi.icon
           return (
@@ -112,6 +123,18 @@ export function StatsView({
       ) : loggedIn ? (
         <div className={loading ? "opacity-50 transition" : "transition"}>
           <StatsCharts data={data} />
+
+          {settledTips.length > 0 && (
+            <div className="mt-8 rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
+              <h3 className="text-lg font-semibold">Ostatnie rozliczone typy</h3>
+              <p className="mt-1 text-sm text-white/45">
+                {settledTips.length} ostatnich typów z weryfikacją wyniku
+              </p>
+              <div className="mt-5">
+                <SettledTips tips={settledTips} />
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <LockedSection />

@@ -31,14 +31,10 @@ const COLORS = {
 
 const MARKET_COLOR: Record<string, string> = {
   BTTS: COLORS.cyan,
-  OVER_1_5: COLORS.violet,
-  MIX: COLORS.emerald,
-}
-
-const MARKET_LABEL: Record<string, string> = {
-  BTTS: "BTTS",
-  OVER_1_5: "Over 1.5",
-  MIX: "Mix",
+  "Team O1.5": COLORS.violet,
+  Over: COLORS.amber,
+  "1X2": COLORS.emerald,
+  Handicap: COLORS.rose,
 }
 
 const tooltipStyle = {
@@ -103,9 +99,10 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
   }))
 
   const markets = data.by_market.map((m) => ({
-    name: MARKET_LABEL[m.bet_type] ?? m.bet_type,
-    key: m.bet_type,
+    name: m.market,
+    key: m.market,
     wr: +(m.win_rate * 100).toFixed(1),
+    roi: m.roi != null ? +(m.roi * 100).toFixed(1) : null,
     tips: m.tips,
   }))
 
@@ -187,7 +184,7 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
         </ChartCard>
       </div>
 
-      <ChartCard title="Trafialność per rynek" subtitle="BTTS vs Over 1.5 vs Mix">
+      <ChartCard title="Trafialność per rynek" subtitle="BTTS · Over · Team O1.5 · 1X2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={markets} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <CartesianGrid stroke={COLORS.grid} vertical={false} />
@@ -201,10 +198,11 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
             <Tooltip
               cursor={{ fill: "rgba(255,255,255,0.04)" }}
               contentStyle={tooltipStyle}
-              formatter={(value: unknown, _n: unknown, item: unknown) => [
-                `${value}% (${(item as { payload?: { tips?: number } })?.payload?.tips} typów)`,
-                "Trafialność",
-              ]}
+              formatter={(value: unknown, _n: unknown, item: unknown) => {
+                const p = (item as { payload?: { tips?: number; roi?: number | null } })?.payload
+                const roiStr = p?.roi != null ? ` | ROI ${p.roi >= 0 ? "+" : ""}${p.roi}%` : " | ROI —"
+                return [`${value}% (${p?.tips} typów${roiStr})`, "Trafialność"]
+              }}
             />
             <Bar dataKey="wr" radius={[8, 8, 0, 0]}>
               {markets.map((m) => (

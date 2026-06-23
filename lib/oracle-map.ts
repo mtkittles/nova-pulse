@@ -7,6 +7,7 @@ import type {
   StatsResponse,
   TimelinePoint,
 } from "./stats-types"
+import { getMarketLabel } from "./labels"
 import type {
   FormMatch,
   MatchInfo,
@@ -142,12 +143,46 @@ function asEntries(x: unknown): [string, unknown][] {
   return []
 }
 
+// Mapowanie klucza Oracle → etykieta UI.
+// Nowy Oracle zwraca już gotowe etykiety (BTTS, Team O1.5, Over, 1X2, Handicap) —
+// przepuszczamy je bez konwersji; stare klucze (Mix, O15) mapujemy przez getMarketLabel.
+function oracleMarketLabel(key: string): string {
+  const KNOWN = new Set(["BTTS", "Team O1.5", "Over", "1X2", "Handicap"])
+  if (KNOWN.has(key)) return key
+  return getMarketLabel(key)
+}
+
 export function adaptStats(raw: unknown): StatsResponse {
   const r = (raw ?? {}) as Record<string, unknown>
   const sum = (r.summary ?? {}) as Record<string, unknown>
   const wins = num(sum.won ?? sum.wins)
   const losses = num(sum.lost ?? sum.losses)
   const total = num(sum.total ?? sum.total_tips ?? wins + losses)
+
+  // avg_q_score: z Oracle (nowe pole) lub z q_score_buckets (fallback)
+  let avg_q_score: number | null =
+    sum.avg_q_score != null ? num(sum.avg_q_score) || null : null
+
+  const q_score_buckets: QScoreBucket[] = asEntries(r.q_score_buckets).map(([k, v]) => {
+    const vr = (v ?? {}) as Record<string, unknown>
+    const tips = pickCount(v)
+    const won = num(vr.won)
+    const win_rate =
+      vr.win_rate != null ? num(vr.win_rate) : tips > 0 ? won / tips : 0
+    return { bucket: String(k).replace(/-/g, "–"), tips, win_rate }
+  })
+
+  // Fallback: ważona średnia z buckets gdy Oracle nie zwróciło avg_q_score
+  if (avg_q_score == null && q_score_buckets.some((b) => b.tips > 0)) {
+    const MID: Record<string, number> = { "50–60": 55, "60–70": 65, "70–80": 75, "80+": 82.5 }
+    let wsum = 0, wcount = 0
+    for (const b of q_score_buckets) {
+      const mid = MID[b.bucket] ?? 77.5
+      wsum += mid * b.tips
+      wcount += b.tips
+    }
+    avg_q_score = wcount > 0 ? Math.round((wsum / wcount) * 10) / 10 : null
+  }
 
   const summary = {
     total_tips: total,
@@ -157,14 +192,23 @@ export function adaptStats(raw: unknown): StatsResponse {
     win_rate: num(sum.win_rate),
     roi: sum.roi == null ? 0 : num(sum.roi),
     current_streak: num(sum.current_streak),
-    avg_q_score: num(sum.avg_q_score),
+    avg_q_score,
   }
 
+  // by_market: Oracle zwraca obiekt { "BTTS": {...}, "O15": {...}, "Mix": {...} }
+  // Filtrujemy Thriller, mapujemy klucze na czytelne etykiety
   const by_market: MarketStat[] = []
   for (const [k, v] of asEntries(r.by_market)) {
-    const bt = mapBetType(k)
-    if (bt === "THRILLER") continue
-    by_market.push({ bet_type: bt as MarketStat["bet_type"], tips: pickCount(v), win_rate: pickWinRate(v), roi: pickRoi(v) })
+    const label = oracleMarketLabel(k)
+    if (label === "Thriller") continue
+    const vr = (v ?? {}) as Record<string, unknown>
+    const roiRaw = vr.roi
+    by_market.push({
+      market: label,
+      tips: pickCount(v),
+      win_rate: pickWinRate(v),
+      roi: roiRaw == null ? null : num(roiRaw),
+    })
   }
 
   const by_league: LeagueStat[] = (Array.isArray(r.by_league) ? r.by_league : []).map((l) => {
@@ -172,16 +216,17 @@ export function adaptStats(raw: unknown): StatsResponse {
     return { league: String(o.league ?? o.name ?? "—"), tips: pickCount(o), win_rate: pickWinRate(o) }
   })
 
+  // Timeline: Oracle teraz zwraca skumulowane win_rate + roi (nowe pola)
   const timeline: TimelinePoint[] = (Array.isArray(r.timeline) ? r.timeline : []).map((p) => {
     const o = (p ?? {}) as Record<string, unknown>
-    return { date: String(o.date ?? ""), win_rate: pickWinRate(o), roi: pickRoi(o), tips: pickCount(o) }
+    const roiRaw = o.roi
+    return {
+      date: String(o.date ?? ""),
+      win_rate: pickWinRate(o),
+      roi: roiRaw == null ? 0 : num(roiRaw),
+      tips: pickCount(o),
+    }
   })
-
-  const q_score_buckets: QScoreBucket[] = asEntries(r.q_score_buckets).map(([k, v]) => ({
-    bucket: String(k).replace(/-/g, "–"),
-    tips: pickCount(v),
-    win_rate: pickWinRate(v),
-  }))
 
   return {
     generated_at: String(r.generated_at ?? new Date().toISOString()),
