@@ -2,6 +2,8 @@
 // Źródło docelowe: tabela `bot_predictions` na Oracle (przez Cloudflare Tunnel).
 // Patrz kontrakt API w PLAN.md.
 
+export type DataSourceStatus = "live" | "mock" | "error"
+
 export type BetType = "BTTS" | "OVER_1_5" | "MIX" | "THRILLER"
 
 export interface Tip {
@@ -30,4 +32,6 @@ export interface TipsResponse {
   /** data dnia w formacie YYYY-MM-DD */
   date: string
   tips: Tip[]
+  source: DataSourceStatus
+  source_message?: string
 }
