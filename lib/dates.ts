@@ -1,6 +1,10 @@
 import "server-only"
 import { isOracleConfigured, oracleFetch } from "./oracle"
 
+function isDev(): boolean {
+  return process.env.NODE_ENV !== "production"
+}
+
 export interface DatesResponse {
   dates: string[] // YYYY-MM-DD, posortowane rosnąco
   min: string | null
@@ -28,8 +32,7 @@ export async function getDates(): Promise<DatesResponse> {
   if (!isOracleConfigured()) return mockDates()
   try {
     const data = await oracleFetch<unknown>("/dates")
-    // surowy log do weryfikacji kształtu (widoczny w logach Vercela)
-    console.log("[oracle] /dates raw:", JSON.stringify(data).slice(0, 500))
+    if (isDev()) console.log("[oracle] /dates received")
     const d = data as Record<string, unknown>
     if (d && Array.isArray(d.dates)) {
       const dates = (d.dates as unknown[]).map(String).sort()
@@ -41,7 +44,8 @@ export async function getDates(): Promise<DatesResponse> {
     }
     return emptyDates()
   } catch (err) {
-    console.error("getDates: Oracle niedostępne →", err)
+    console.error("getDates: Oracle unavailable")
+    if (isDev() && err instanceof Error) console.error(err.message)
     return emptyDates()
   }
 }
