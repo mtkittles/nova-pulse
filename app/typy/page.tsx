@@ -1,6 +1,8 @@
 import { getDates } from "@/lib/dates"
 import { getTips } from "@/lib/tips"
 import { getSession } from "@/lib/auth"
+import { mockTips } from "@/lib/mock-tips"
+import { isPreviewDemoMode } from "@/lib/preview-mode"
 import { AppShell } from "@/components/app-shell"
 import TypyPage from "@/components/typy-page"
 
@@ -16,16 +18,24 @@ function todayWarsaw(): string {
 }
 
 export default async function Page() {
-  const [dates, session] = await Promise.all([getDates(), getSession()])
+  const previewDemo = isPreviewDemoMode()
+  const [dates, session] = await Promise.all([previewDemo ? Promise.resolve({ dates: [mockTips.date] }) : getDates(), getSession()])
   const today = todayWarsaw()
   // domyślnie: najbliższy dzień z typami >= dziś, inaczej ostatni dostępny, inaczej dziś
   const defaultDate =
     dates.dates.find((d) => d >= today) ?? dates.dates[dates.dates.length - 1] ?? today
-  const tips = await getTips(defaultDate)
-  const loggedIn = Boolean(session)
+  const tips = previewDemo
+    ? { ...mockTips, source: "mock" as const, source_message: "DEMO / Preview data — logowanie Telegram jest wyłączone dla QA." }
+    : await getTips(defaultDate)
+  const loggedIn = Boolean(session) || previewDemo
 
   return (
     <AppShell loggedIn={loggedIn} isAdmin={session?.isAdmin}>
+      {previewDemo && (
+        <div className="mb-6 rounded-2xl border border-amber-300/25 bg-amber-300/[0.08] px-5 py-4 text-sm text-amber-100/85">
+          DEMO / Preview: widok odblokowany bez Telegram login, dane są mockowe.
+        </div>
+      )}
       {!loggedIn && (
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[color:var(--accent)]/25 bg-[var(--accent)]/10 px-5 py-4">
           <p className="text-sm text-white/80">
