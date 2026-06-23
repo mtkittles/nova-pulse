@@ -7,14 +7,14 @@ export type ButtonVariant = "primary" | "secondary" | "ghost"
 export type ButtonSize = "sm" | "md" | "lg"
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.97]"
+  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-[transform,box-shadow,background-color,color] duration-150 ease-out focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 will-change-transform hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(88,230,245,0.15)] active:translate-y-0 active:scale-[0.97] active:shadow-none"
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-[var(--cyan)] text-[color:var(--bg-0)] hover:bg-[var(--cyan-strong)] hover:scale-[1.02]",
+  primary: "bg-[var(--cyan)] text-[color:var(--bg-0)] hover:bg-[var(--cyan-strong)]",
   secondary:
-    "border border-[color:var(--border-strong)] bg-transparent text-[color:var(--text-primary)] hover:bg-[var(--cyan-soft)] hover:scale-[1.02]",
+    "border border-[color:var(--border-strong)] bg-transparent text-[color:var(--text-primary)] hover:bg-[var(--cyan-soft)]",
   ghost:
-    "bg-transparent text-[color:var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)] hover:scale-[1.02]",
+    "bg-transparent text-[color:var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-[color:var(--text-primary)]",
 }
 
 const SIZES: Record<ButtonSize, string> = {

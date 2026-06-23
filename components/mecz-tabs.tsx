@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
 export type MeczTab = "prognoza" | "analiza" | "liga" | "h2h"
 
@@ -11,8 +11,11 @@ const TABS: { key: MeczTab; emoji: string; label: string }[] = [
   { key: "h2h", emoji: "⚔️", label: "H2H" },
 ]
 
+// SSR-safe layout effect (bez ostrzeżeń przy renderze serwerowym).
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect
+
 // Pasek zakładek /mecz — sticky pod headerem, poziomy scroll na mobile.
-// Aktywna: cyan tekst + cyan underline; aktywna zakładka wjeżdża na środek.
+// Aktywna: cyan tekst + przesuwany (sliding) underline animowany left/width.
 export function MeczTabs({
   active,
   onChange,
@@ -23,13 +26,27 @@ export function MeczTabs({
   h2hCount?: number
 }) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const [ind, setInd] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
+
+  useIsoLayoutEffect(() => {
+    const el = refs.current[active]
+    if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth })
+  }, [active])
+
   useEffect(() => {
-    refs.current[active]?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" })
+    const el = refs.current[active]
+    el?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" })
+    const onResize = () => {
+      const a = refs.current[active]
+      if (a) setInd({ left: a.offsetLeft, width: a.offsetWidth })
+    }
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
   }, [active])
 
   return (
     <div className="sticky top-16 z-20 -mx-4 mb-5 border-b border-[color:var(--border-soft)] bg-[var(--bg-0)]/90 px-4 backdrop-blur">
-      <div className="flex gap-1 overflow-x-auto" role="tablist" aria-label="Sekcje meczu">
+      <div className="relative flex gap-1 overflow-x-auto" role="tablist" aria-label="Sekcje meczu">
         {TABS.map((t) => {
           const on = active === t.key
           return (
@@ -42,10 +59,8 @@ export function MeczTabs({
               role="tab"
               aria-selected={on}
               onClick={() => onChange(t.key)}
-              className={`flex min-w-[72px] shrink-0 items-center justify-center gap-1.5 border-b-2 px-4 py-3 text-sm font-medium transition ${
-                on
-                  ? "border-[color:var(--cyan)] text-[color:var(--cyan)]"
-                  : "border-transparent text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"
+              className={`flex min-w-[72px] shrink-0 items-center justify-center gap-1.5 px-4 py-3 text-sm font-medium transition-colors ${
+                on ? "text-[color:var(--cyan)]" : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"
               }`}
             >
               <span aria-hidden>{t.emoji}</span>
@@ -58,6 +73,12 @@ export function MeczTabs({
             </button>
           )
         })}
+        {/* przesuwany underline */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-[color:var(--cyan)] transition-[left,width] duration-[250ms] ease-out"
+          style={{ left: ind.left, width: ind.width }}
+        />
       </div>
     </div>
   )

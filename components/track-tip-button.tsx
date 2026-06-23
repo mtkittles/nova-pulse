@@ -71,8 +71,10 @@ export function TrackTipButton({
       status === "tracked"
         ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300"
         : status === "error"
-          ? "border-rose-400/40 bg-rose-400/10 text-rose-300"
-          : "border-white/15 bg-white/[0.04] text-white/60 hover:bg-white/10 hover:text-white"
+          ? "border-rose-400/40 bg-rose-400/10 text-rose-300 active:scale-90"
+          : status === "loading"
+            ? "border-white/15 bg-white/[0.04] text-white/60 animate-pulse"
+            : "border-white/15 bg-white/[0.04] text-white/60 hover:bg-white/10 hover:text-white hover:border-[color:var(--cyan)]/50 active:scale-90"
     return (
       <span className="relative">
         <button
@@ -80,7 +82,7 @@ export function TrackTipButton({
           onClick={onTrack}
           disabled={status === "loading"}
           aria-label={status === "tracked" ? "Typ śledzony" : "Śledź typ"}
-          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border transition ${cls}`}
+          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border transition-[transform,background-color,border-color,color] duration-150 ${cls}`}
         >
           {status === "loading" ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -104,15 +106,17 @@ export function TrackTipButton({
     status === "tracked"
       ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-300"
       : status === "error"
-        ? "border-rose-400/40 bg-rose-400/10 text-rose-300 hover:bg-rose-400/15"
-        : "border-[color:var(--border-soft)] bg-[var(--surface-2)] text-[color:var(--text-secondary)] hover:bg-[var(--surface-3)] hover:text-[color:var(--text-primary)]"
+        ? "border-rose-400/40 bg-rose-400/10 text-rose-300 hover:bg-rose-400/15 active:scale-[0.97]"
+        : status === "loading"
+          ? "border-[color:var(--border-soft)] bg-[var(--surface-2)] text-[color:var(--text-secondary)] animate-pulse"
+          : "border-[color:var(--border-soft)] bg-[var(--surface-2)] text-[color:var(--text-secondary)] hover:bg-[var(--surface-3)] hover:text-[color:var(--text-primary)] hover:border-[color:var(--cyan)]/50 hover:shadow-[0_4px_14px_rgba(88,230,245,0.18)] active:scale-[0.97]"
   return (
     <span className="relative inline-flex">
       <button
         type="button"
         onClick={onTrack}
         disabled={status === "loading" || status === "tracked"}
-        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${cls}`}
+        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-[transform,box-shadow,background-color,border-color,color] duration-150 ${cls}`}
       >
         {status === "loading" ? (
           <Loader2 className="h-4 w-4 animate-spin" />

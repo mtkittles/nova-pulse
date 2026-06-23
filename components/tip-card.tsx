@@ -266,7 +266,7 @@ export default function TipCard({
           : selected
             ? "border-[color:var(--accent)]/60"
             : "border-white/12"
-  const cardClass = `group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition duration-300 hover:-translate-y-1 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(88,230,245,0.08)] ${tint}`
+  const cardClass = `group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)] ${tint}`
 
   if (selectable) {
     return (
