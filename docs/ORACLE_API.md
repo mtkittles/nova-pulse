@@ -1,20 +1,21 @@
-# Kontrakt API Oracle (Lupus Bot → LUPUS BETS)
+# Kontrakt API Oracle (V2)
 
-Strona czyta dane przez **dwa endpointy** wystawione przez `lupus-api` (FastAPI)
-na Oracle. To dokumentacja **realnego** kształtu odpowiedzi. Strona mapuje go na
-swoje typy w `lib/oracle-map.ts` (adapter), więc różnice nazw pól są obsłużone.
+Strona czyta dane wyłącznie **server-side** przez `lib/oracle.ts` i adapter
+`lib/oracle-map.ts`. Ten dokument opisuje aktualny kontrakt API Oracle oraz
+aliasy, które adapter nadal akceptuje.
 
 ## Połączenie
 
-- **Base URL:** `http://92.5.152.209:8088` (stały IP Oracle; zastąpił Cloudflare Tunnel)
-- **Auth:** nagłówek `X-API-Key: <ORACLE_API_KEY>` (= `PUBLIC_API_KEY` z `.env` na Oracle)
-- **`GET /health`** → `{"status":"ok"}` (bez klucza)
+- **Base URL:** wartość `ORACLE_API_URL` ustawiana w środowisku serwera.
+- **Auth:** nagłówek `X-API-Key: <ORACLE_API_KEY>`.
+- **`GET /health`** → `{"status":"ok"}` (bez klucza).
 
-> Bot na Oracle jest **nienaruszalny**. Strona łączy się tylko przez to HTTP API.
+> Oracle nie jest wystawiany do przeglądarki. Strona korzysta wyłącznie z
+> serwerowego proxy i nie liczy predykcji po swojej stronie.
 
 ## GET /public-api/tips/today
 
-Typy na dziś + następne dni, sort `match_date ASC, q_score DESC`.
+Typy na dziś, sort `match_date ASC, q_score DESC`.
 
 ```jsonc
 {
@@ -23,15 +24,17 @@ Typy na dziś + następne dni, sort `match_date ASC, q_score DESC`.
   "tips": [
     {
       "event_id": "af_991",
-      "home_team": "…", "away_team": "…",
       "league": "…",
-      "match_date": "2026-06-06T18:00:00",   // bez strefy → traktowane jako UTC
-      "bet_type": "BTTS|O15|Mix|thriller",
+      "home": "…",
+      "away": "…",
+      "kickoff_utc": "2026-06-06T18:00:00Z",
+      "bet_type": "BTTS|OVER_1_5|MIX|EXACT_32_23",
       "bet_side": "yes|no|32_or_23",
       "model_prob": 0.72,
       "odds": 1.85,
+      "edge": 0.09,
       "q_score": 78,
-      "status": "pending|won|lost"
+      "actual_result": null
     }
   ]
 }
@@ -41,37 +44,50 @@ Typy na dziś + następne dni, sort `match_date ASC, q_score DESC`.
 
 | Oracle           | Strona (`Tip`)        | Uwagi |
 |------------------|-----------------------|-------|
-| `home_team`      | `home`                | |
-| `away_team`      | `away`                | |
-| `match_date`     | `kickoff_utc`         | dodaje `Z`, jeśli brak strefy |
+| `home` / `home_team` | `home`            | alias history |
+| `away` / `away_team` | `away`            | alias history |
+| `kickoff_utc` / `match_date` | `kickoff_utc` | bez strefy adapter dopisuje `Z` |
 | `bet_type`       | `bet_type`            | `O15`→`OVER_1_5`, `Mix`→`MIX`, `thriller`→`THRILLER` |
 | `bet_side`       | `bet_side`            | `yes`→`TAK`, `no`→`NIE`, `32_or_23`→`3:2 / 2:3` |
-| `status`         | `actual_result`       | `pending`→`null`, `won`→`1`, `lost`→`0` |
+| `actual_result` / `status` | `actual_result` | `pending`→`null`, `won`→`1`, `lost`→`0` |
 | (brak)           | `edge`                | liczone: `model_prob − 1/odds` |
 
 ## GET /public-api/stats
 
 ```jsonc
 {
-  "summary": { "total": 0, "won": 0, "lost": 0, "win_rate": 0.0, "roi": null, "period_days": 30 },
-  "by_market": { "BTTS": {…}, "O15": {…}, "Mix": {…}, "thriller": {…} },  // OBIEKT
-  "by_league": [ … ],                                                      // tablica
-  "timeline":  [ … ],                                                      // tablica
-  "q_score_buckets": { "50-60": {…}, "60-70": {…}, "70-80": {…}, "80+": {…} } // OBIEKT
+  "generated_at": "2026-06-04T12:00:00Z",
+  "range_days": 30,
+  "summary": {
+    "total_tips": 0,
+    "settled_tips": 0,
+    "wins": 0,
+    "losses": 0,
+    "win_rate": 0.0,
+    "roi": 0,
+    "current_streak": 0,
+    "avg_q_score": null
+  },
+  "by_market": { "BTTS": {…}, "O15": {…}, "Mix": {…}, "thriller": {…} },
+  "by_league": [ … ],
+  "timeline": [ … ],
+  "q_score_buckets": { "50-60": {…}, "60-70": {…}, "70-80": {…}, "80+": {…} }
 }
 ```
 
-Adapter konwertuje `by_market` i `q_score_buckets` z obiektu na tablice, `roi:null`
-na `0`, i pomija `thriller` w `by_market`. Gdy baza się zapełni (auto-weryfikacja
-po rozegranych meczach), wartości przestaną być zerowe.
+Adapter konwertuje odpowiedź Oracle do typów używanych przez UI:
 
-## Zmienne na Vercel
+- `roi:null` przechodzi na `0`.
+- `by_market` i `q_score_buckets` mogą przyjść jako obiekt albo tablica.
+- `thriller` jest pomijany w widoku `by_market`.
+- Legacy aliasy dalej działają, żeby nie psuć starego payloadu.
 
-Ustaw dla **Production + Preview + Development** (Settings → Environment Variables),
-potem **Redeploy**:
+## Zmienne środowiskowe
 
-- `ORACLE_API_URL` = `http://92.5.152.209:8088` (bez końcowego `/`)
+Ustaw po stronie hostingu serwera:
+
+- `ORACLE_API_URL` = baza Oracle ustawiona na serwerze (bez końcowego `/`)
 - `ORACLE_API_KEY` = klucz z Oracle (`PUBLIC_API_KEY`)
 
-> Jeśli `/health` nie odpowiada: otwórz port 8088 (Oracle Cloud → VCN → Security
-> Lists → Ingress TCP 8088, `0.0.0.0/0`) oraz `sudo iptables -I INPUT -p tcp --dport 8088 -j ACCEPT`.
+> Jeśli `ORACLE_API_URL` wskazuje inny host, dokument powinien zostać
+> zaktualizowany razem z audytem i planem.
