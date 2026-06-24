@@ -26,8 +26,8 @@ const COLORS = {
   emerald: "#34d399",
   amber: "#fbbf24",
   rose: "#fb7185",
-  grid: "rgba(255,255,255,0.06)",
-  axis: "rgba(248,250,252,0.52)",
+  grid: "rgba(255,255,255,0.045)",
+  axis: "rgba(248,250,252,0.46)",
 }
 
 const MARKET_COLOR: Record<string, string> = {
@@ -58,16 +58,21 @@ function ChartCard({
   title,
   subtitle,
   children,
+  featured = false,
 }: {
   title: string
   subtitle?: string
   children: React.ReactNode
+  featured?: boolean
 }) {
   return (
-    <div className="signal-card signal-card-hover rounded-[1.55rem] p-5 sm:p-6">
-      <h3 className="text-lg font-semibold">{title}</h3>
+    <div className={`signal-card signal-card-hover rounded-[1.55rem] p-5 sm:p-6 ${featured ? "signal-panel-accent" : ""}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--text-faint)]">
+        {featured ? "Primary insight" : "Analysis"}
+      </p>
+      <h3 className="mt-1 text-xl font-semibold tracking-[-0.02em]">{title}</h3>
       {subtitle && <p className="signal-muted mt-1 text-sm">{subtitle}</p>}
-      <div className="mt-5 h-72 w-full">{children}</div>
+      <div className={`mt-5 w-full ${featured ? "h-80 sm:h-96" : "h-72"}`}>{children}</div>
     </div>
   )
 }
@@ -133,9 +138,10 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
         <ChartCard
           title="Skuteczność i ROI w czasie"
           subtitle={`Skumulowane, ostatnie ${data.range_days} dni`}
+          featured
         >
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={timeline} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <ComposedChart data={timeline} margin={{ top: 12, right: 8, left: -12, bottom: 0 }}>
               <defs>
                 <linearGradient id="roiFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={COLORS.cyan} stopOpacity={0.35} />
@@ -143,13 +149,15 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 </linearGradient>
               </defs>
               <CartesianGrid stroke={COLORS.grid} vertical={false} />
-              <XAxis dataKey="date" stroke={COLORS.axis} tick={{ fontSize: 12 }} minTickGap={24} />
+              <XAxis dataKey="date" stroke={COLORS.axis} tick={{ fontSize: 12 }} minTickGap={28} axisLine={false} tickLine={false} />
               <YAxis
                 yAxisId="left"
                 stroke={COLORS.axis}
                 tick={{ fontSize: 12 }}
                 tickFormatter={(v) => `${v}%`}
                 domain={[40, 80]}
+                axisLine={false}
+                tickLine={false}
               />
               <YAxis
                 yAxisId="right"
@@ -157,6 +165,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 stroke={COLORS.axis}
                 tick={{ fontSize: 12 }}
                 tickFormatter={(v) => `${v}%`}
+                axisLine={false}
+                tickLine={false}
               />
               <Tooltip
                 contentStyle={tooltipStyle}
@@ -169,14 +179,14 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
               />
               <Legend
                 formatter={(value) => (value === "wr" ? "Trafialność" : "ROI")}
-                wrapperStyle={{ fontSize: 13 }}
+                wrapperStyle={{ fontSize: 13, color: "var(--text-muted)" }}
               />
               <Area
                 yAxisId="right"
                 type="monotone"
                 dataKey="roi"
                 stroke={COLORS.cyan}
-                strokeWidth={2}
+                strokeWidth={2.5}
                 fill="url(#roiFill)"
               />
               <Line
@@ -184,7 +194,7 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 type="monotone"
                 dataKey="wr"
                 stroke={COLORS.violet}
-                strokeWidth={2}
+                strokeWidth={2.5}
                 dot={false}
               />
             </ComposedChart>
@@ -192,16 +202,56 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
         </ChartCard>
       </div>
 
-      <ChartCard title="Trafialność per rynek" subtitle="BTTS · Over · Team O1.5 · 1X2">
+      <ChartCard
+        title="Kalibracja Q-Score"
+        subtitle="Wyższy Q-Score powinien prowadzić do wyższej trafialności"
+      >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={markets} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <BarChart data={buckets} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
             <CartesianGrid stroke={COLORS.grid} vertical={false} />
-            <XAxis dataKey="name" stroke={COLORS.axis} tick={{ fontSize: 12 }} />
+            <XAxis dataKey="name" stroke={COLORS.axis} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
             <YAxis
               stroke={COLORS.axis}
               tick={{ fontSize: 12 }}
               tickFormatter={(v) => `${v}%`}
               domain={[0, 100]}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip
+              cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              contentStyle={tooltipStyle}
+              labelStyle={tooltipLabelStyle}
+              itemStyle={tooltipItemStyle}
+              formatter={(value: unknown, _n: unknown, item: unknown) => [
+                `${value}% (${(item as { payload?: { tips?: number } })?.payload?.tips} typów)`,
+                "Trafialność",
+              ]}
+            />
+            <Bar dataKey="wr" radius={[10, 10, 3, 3]} barSize={34}>
+              {buckets.map((b, i) => (
+                <Cell
+                  key={b.name}
+                  fill={i >= 3 ? COLORS.emerald : i >= 1 ? COLORS.amber : COLORS.rose}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <ChartCard title="Trafialność per rynek" subtitle="BTTS · Over · Team O1.5 · 1X2">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={markets} margin={{ top: 10, right: 8, left: -12, bottom: 0 }}>
+            <CartesianGrid stroke={COLORS.grid} vertical={false} />
+            <XAxis dataKey="name" stroke={COLORS.axis} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis
+              stroke={COLORS.axis}
+              tick={{ fontSize: 12 }}
+              tickFormatter={(v) => `${v}%`}
+              domain={[0, 100]}
+              axisLine={false}
+              tickLine={false}
             />
             <Tooltip
               cursor={{ fill: "rgba(255,255,255,0.04)" }}
@@ -214,34 +264,12 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 return [`${value}% (${p?.tips} typów${roiStr})`, "Trafialność"]
               }}
             />
-            <Bar dataKey="wr" radius={[8, 8, 0, 0]}>
+            <Bar dataKey="wr" radius={[10, 10, 3, 3]} barSize={34}>
               {markets.map((m) => (
                 <Cell key={m.key} fill={MARKET_COLOR[m.key] ?? COLORS.cyan} />
               ))}
             </Bar>
           </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
-
-      <ChartCard title="Bilans typów" subtitle={`${data.summary.settled_tips} rozliczonych`}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={winLoss}
-              dataKey="value"
-              nameKey="name"
-              innerRadius={70}
-              outerRadius={100}
-              paddingAngle={3}
-              stroke="none"
-            >
-              {winLoss.map((entry) => (
-                <Cell key={entry.name} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} />
-            <Legend wrapperStyle={{ fontSize: 13 }} />
-          </PieChart>
         </ResponsiveContainer>
       </ChartCard>
 
@@ -259,6 +287,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
               tick={{ fontSize: 12 }}
               tickFormatter={(v) => `${v}%`}
               domain={[0, 100]}
+              axisLine={false}
+              tickLine={false}
             />
             <YAxis
               type="category"
@@ -266,6 +296,8 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
               stroke={COLORS.axis}
               tick={{ fontSize: 12 }}
               width={96}
+              axisLine={false}
+              tickLine={false}
             />
             <Tooltip
               cursor={{ fill: "rgba(255,255,255,0.04)" }}
@@ -277,44 +309,30 @@ export default function StatsCharts({ data }: { data: StatsResponse }) {
                 "Trafialność",
               ]}
             />
-            <Bar dataKey="wr" fill={COLORS.cyan} radius={[0, 8, 8, 0]} />
+            <Bar dataKey="wr" fill={COLORS.cyan} radius={[0, 10, 10, 0]} barSize={18} />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
 
-      <ChartCard
-        title="Kalibracja Q-Score"
-        subtitle="Wyższy Q-Score → wyższa trafialność"
-      >
+      <ChartCard title="Bilans typów" subtitle={`${data.summary.settled_tips} rozliczonych`}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={buckets} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-            <CartesianGrid stroke={COLORS.grid} vertical={false} />
-            <XAxis dataKey="name" stroke={COLORS.axis} tick={{ fontSize: 12 }} />
-            <YAxis
-              stroke={COLORS.axis}
-              tick={{ fontSize: 12 }}
-              tickFormatter={(v) => `${v}%`}
-              domain={[0, 100]}
-            />
-            <Tooltip
-              cursor={{ fill: "rgba(255,255,255,0.04)" }}
-              contentStyle={tooltipStyle}
-              labelStyle={tooltipLabelStyle}
-              itemStyle={tooltipItemStyle}
-              formatter={(value: unknown, _n: unknown, item: unknown) => [
-                `${value}% (${(item as { payload?: { tips?: number } })?.payload?.tips} typów)`,
-                "Trafialność",
-              ]}
-            />
-            <Bar dataKey="wr" radius={[8, 8, 0, 0]}>
-              {buckets.map((b, i) => (
-                <Cell
-                  key={b.name}
-                  fill={i >= 3 ? COLORS.emerald : i >= 1 ? COLORS.amber : COLORS.rose}
-                />
+          <PieChart>
+            <Pie
+              data={winLoss}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={74}
+              outerRadius={104}
+              paddingAngle={4}
+              stroke="rgba(255,255,255,0.08)"
+            >
+              {winLoss.map((entry) => (
+                <Cell key={entry.name} fill={entry.color} />
               ))}
-            </Bar>
-          </BarChart>
+            </Pie>
+            <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} />
+            <Legend wrapperStyle={{ fontSize: 13, color: "var(--text-muted)" }} />
+          </PieChart>
         </ResponsiveContainer>
       </ChartCard>
     </div>

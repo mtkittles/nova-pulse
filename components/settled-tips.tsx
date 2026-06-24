@@ -22,17 +22,55 @@ function shortDate(iso: string): string {
 export function SettledTips({ tips }: { tips: Tip[] }) {
   if (tips.length === 0) {
     return (
-        <p className="text-center text-sm text-white/40 py-8">
-          Brak rozliczonych typów do pokazania.
-        </p>
-      )
+      <p className="py-8 text-center text-sm text-white/40">
+        Brak rozliczonych typów do pokazania.
+      </p>
+    )
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div>
+      <div className="grid gap-3 md:hidden">
+        {tips.map((t, i) => {
+          const si = statusInfo(t.actual_result)
+          const settlement = settlementLabel(t)
+          const score = t.match_score?.trim() || "—"
+          return (
+            <article key={`${t.event_id}-mobile-${i}`} className="signal-stat-tile rounded-2xl p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--text-faint)]">
+                    {shortDate(t.kickoff_utc)} · {BET_TYPE_SHORT[t.bet_type] ?? t.bet_type}
+                  </p>
+                  <h4 className="mt-1 truncate text-sm font-semibold text-[color:var(--text-primary)]">{matchLine(t)}</h4>
+                </div>
+                <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${si.classes}`}>
+                  {si.label}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded-xl bg-white/[0.035] p-2">
+                  <p className="text-[color:var(--text-faint)]">Kurs</p>
+                  <p className="mt-1 font-semibold tabular-nums text-[color:var(--text-secondary)]">{t.odds > 0 ? t.odds.toFixed(2) : "—"}</p>
+                </div>
+                <div className="rounded-xl bg-white/[0.035] p-2">
+                  <p className="text-[color:var(--text-faint)]">Score</p>
+                  <p className="mt-1 font-semibold text-[color:var(--text-secondary)]">{score}</p>
+                </div>
+                <div className="rounded-xl bg-white/[0.035] p-2">
+                  <p className="text-[color:var(--text-faint)]">Status</p>
+                  <p className="mt-1 font-semibold text-[color:var(--text-secondary)]">{settlement}</p>
+                </div>
+              </div>
+            </article>
+          )
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-white/10 text-left text-white/45 text-xs uppercase tracking-wider">
+          <tr className="border-b border-white/10 text-left text-xs uppercase tracking-wider text-white/45">
             <th className="pb-3 pr-4">Data</th>
             <th className="pb-3 pr-4">Mecz</th>
             <th className="pb-3 pr-4">Rynek</th>
@@ -74,8 +112,9 @@ export function SettledTips({ tips }: { tips: Tip[] }) {
               </tr>
             )
           })}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

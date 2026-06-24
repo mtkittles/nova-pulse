@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import type { BetType, DataSourceStatus, Tip } from "@/lib/types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
-import { AlertTriangle, CalendarOff, Database, TriangleAlert } from "lucide-react"
+import { CalendarOff, Database, SlidersHorizontal, Sparkles, TriangleAlert } from "lucide-react"
 import TipCard from "./tip-card"
 import { Calendar } from "./calendar"
 
@@ -23,6 +23,15 @@ function dateLabel(d: string): string {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "Europe/Warsaw",
+  }).format(new Date(`${d}T12:00:00Z`))
+}
+
+function shortDateLabel(d: string): string {
+  return new Intl.DateTimeFormat("pl-PL", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
     timeZone: "Europe/Warsaw",
   }).format(new Date(`${d}T12:00:00Z`))
 }
@@ -108,8 +117,24 @@ export default function TypyPage({
     return n && n !== date ? n : null
   }, [tips.length, date, availableDates])
 
+  const feedStats = useMemo(() => {
+    const avgQ = tips.length > 0 ? tips.reduce((sum, t) => sum + t.q_score, 0) / tips.length : null
+    const marketCounts = tips.reduce<Record<string, number>>((acc, t) => {
+      const label = BET_TYPE_SHORT[t.bet_type] ?? t.bet_type
+      acc[label] = (acc[label] ?? 0) + 1
+      return acc
+    }, {})
+    const bestMarket = Object.entries(marketCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "—"
+    return {
+      total: tips.length,
+      visible: visible.length,
+      avgQ: avgQ != null ? avgQ.toFixed(1) : "—",
+      bestMarket,
+    }
+  }, [tips, visible.length])
+
   const selectClass =
-    "rounded-full border border-[color:var(--line-soft)] bg-[var(--surface-glass)] px-4 py-2 text-sm text-[color:var(--text-secondary)] outline-none transition focus:border-[color:var(--accent)]/45"
+    "signal-control min-h-11 rounded-2xl px-4 py-2 text-sm outline-none transition focus:border-[color:var(--accent)]/45"
   const sourceClass =
     source === "live"
       ? "signal-badge-live"
@@ -126,29 +151,87 @@ export default function TypyPage({
         : sourceMessage || "Oracle zwróciło błąd lub jest niedostępne."
 
   return (
-    <div>
-      <header className="mb-8">
-        <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">Typy meczowe</h1>
-        <p className="mt-3 text-lg capitalize text-white/55">{dateLabel(date)}</p>
-        <div className={`mt-4 flex flex-wrap items-center gap-2 rounded-2xl border px-3 py-2.5 ${sourceClass}`}>
-          <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em]">
+    <div className="space-y-6 sm:space-y-8">
+      <header className="signal-hero relative overflow-hidden rounded-[2rem] p-5 sm:p-7 lg:p-8">
+        <div className="absolute right-[-5rem] top-[-5rem] hidden h-56 w-56 rounded-full bg-[var(--glow-1)] blur-3xl sm:block" />
+        <div className="relative grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--line-soft)] bg-black/15 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
+              <Sparkles className="h-3.5 w-3.5" /> Signal Feed
+            </div>
+            <h1 className="max-w-2xl text-4xl font-semibold tracking-[-0.04em] sm:text-5xl lg:text-6xl">Dzisiejsze typy</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[color:var(--text-secondary)] sm:text-base">
+              {dateLabel(date)}. Q-Score, edge, kurs i status meczu w jednym feedzie analitycznym.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="signal-stat-tile rounded-2xl p-3 sm:p-4">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-faint)]">Typy</p>
+              <p className="mt-2 text-2xl font-semibold tabular-nums sm:text-3xl">{feedStats.total}</p>
+            </div>
+            <div className="signal-stat-tile rounded-2xl p-3 sm:p-4">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-faint)]">Śr. Q</p>
+              <p className="mt-2 text-2xl font-semibold text-[color:var(--accent)] tabular-nums sm:text-3xl">{feedStats.avgQ}</p>
+            </div>
+            <div className="signal-stat-tile rounded-2xl p-3 sm:p-4">
+              <p className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--text-faint)]">Top rynek</p>
+              <p className="mt-2 truncate text-2xl font-semibold sm:text-3xl">{feedStats.bestMarket}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className={`relative mt-5 flex flex-wrap items-center gap-2 rounded-2xl border px-3 py-2.5 ${sourceClass}`}>
+          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] sm:text-sm">
             {source === "error" ? <TriangleAlert className="h-4 w-4" /> : <Database className="h-4 w-4" />}
             {sourceTitle}
           </span>
-          <span className="rounded-full bg-black/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em]">
+          <span className="rounded-full bg-black/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
             {sourceLabel}
           </span>
           <span className="text-xs leading-relaxed text-white/75 sm:text-sm">{sourceHint}</span>
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
-          <Calendar value={date} available={availableDates} onSelect={selectDate} />
+      <section className="signal-card rounded-[1.7rem] p-4 lg:hidden">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--text-faint)]">Data</p>
+            <p className="mt-1 text-sm font-medium capitalize text-[color:var(--text-secondary)]">{dateLabel(date)}</p>
+          </div>
+          <SlidersHorizontal className="h-5 w-5 text-[color:var(--accent)]" />
+        </div>
+        <div className="signal-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {availableDates.map((d) => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => selectDate(d)}
+              className={`shrink-0 rounded-2xl px-4 py-2.5 text-sm font-semibold transition ${
+                d === date ? "signal-chip-active" : "signal-chip"
+              }`}
+            >
+              {shortDateLabel(d)}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr] xl:grid-cols-[320px_1fr]">
+        <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
+          <div className="signal-card rounded-[1.7rem] p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--text-faint)]">Control</p>
+                <h2 className="mt-1 text-lg font-semibold">Dzień i źródło</h2>
+              </div>
+              <SlidersHorizontal className="h-5 w-5 text-[color:var(--accent)]" />
+            </div>
+            <Calendar value={date} available={availableDates} onSelect={selectDate} />
+          </div>
         </aside>
 
-        <div>
-          {/* tryby */}
+        <div className="min-w-0">
           <div className="mb-4 flex flex-wrap gap-2">
             {MODES.map((m) => (
               <button
@@ -157,12 +240,12 @@ export default function TypyPage({
                 onClick={() => !m.disabled && setMode(m.key)}
                 disabled={m.disabled}
                 aria-disabled={m.disabled}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   m.disabled
-                    ? "cursor-not-allowed border-[color:var(--line-soft)] bg-white/[0.025] text-[color:var(--text-faint)]"
+                    ? "signal-chip cursor-not-allowed opacity-45"
                     : mode === m.key
-                      ? "border-[color:var(--accent)]/40 bg-[var(--accent)]/14 text-[color:var(--text-primary)]"
-                      : "border-[color:var(--line-soft)] bg-white/[0.045] text-[color:var(--text-muted)] hover:bg-white/[0.07] hover:text-[color:var(--text-primary)]"
+                      ? "signal-chip-active"
+                      : "signal-chip hover:bg-[var(--surface-hover)] hover:text-[color:var(--text-primary)]"
                 }`}
               >
                 {m.label}
@@ -171,8 +254,7 @@ export default function TypyPage({
             ))}
           </div>
 
-          {/* filtry + sort */}
-          <div className="mb-6 flex flex-wrap items-center gap-2">
+          <div className="signal-card mb-6 flex flex-col gap-3 rounded-[1.45rem] p-3 sm:flex-row sm:flex-wrap sm:items-center">
             <select value={league} onChange={(e) => setLeague(e.target.value)} className={selectClass}>
               <option value="ALL">Wszystkie ligi</option>
               {leagues.map((l) => (
@@ -188,7 +270,7 @@ export default function TypyPage({
               <option value="odds">Sortuj: kurs</option>
             </select>
 
-            <label className="flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.05] px-4 py-2 text-sm text-white/70">
+            <label className="signal-control flex min-h-11 flex-1 items-center gap-3 rounded-2xl px-4 py-2 text-sm sm:min-w-[17rem] sm:flex-none">
               Min. Q-Score: <span className="font-semibold text-[color:var(--accent)]">{minQ}</span>
               <input
                 type="range"
@@ -197,30 +279,19 @@ export default function TypyPage({
                 step={5}
                 value={minQ}
                 onChange={(e) => setMinQ(Number(e.target.value))}
-                className="accent-[var(--accent)]"
+                className="min-w-0 flex-1 accent-[var(--accent)]"
               />
             </label>
           </div>
 
-          {mode === "THRILLER" && (
-            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300/25 bg-amber-300/[0.08] p-4 text-sm text-amber-100/85">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
-              <p>
-                <strong className="font-semibold">Tryb wysokiego ryzyka.</strong> Dokładny wynik 3:2/2:3
-                to loteria — prawdziwe prawdopodobieństwo jest niskie (zwykle kilka procent). Kursy są
-                wysokie, ale trafialność mała. Gra tylko świadoma, za środki które możesz stracić.
-              </p>
-            </div>
-          )}
-
           {loading ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-72 animate-pulse rounded-[1.8rem] border border-white/12 bg-white/[0.04]" />
+                <div key={i} className="h-80 animate-pulse rounded-[1.8rem] border border-white/10 bg-white/[0.035]" />
               ))}
             </div>
           ) : source === "error" ? (
-            <div className="rounded-[1.8rem] border border-rose-300/25 bg-rose-300/[0.08] p-10 text-center text-rose-100/90">
+            <div className="signal-card rounded-[1.8rem] p-10 text-center text-rose-100/90">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-rose-300/30 bg-rose-300/10 text-rose-100">
                 <TriangleAlert className="h-6 w-6" />
               </div>
@@ -230,7 +301,7 @@ export default function TypyPage({
               </p>
             </div>
           ) : tips.length === 0 ? (
-            <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-12 text-center">
+            <div className="signal-card rounded-[1.8rem] p-12 text-center">
               <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-white/12 bg-white/[0.05] text-white/60">
                 <CalendarOff className="h-6 w-6" />
               </div>
@@ -247,16 +318,20 @@ export default function TypyPage({
               )}
             </div>
           ) : visible.length === 0 ? (
-            <div className="rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-10 text-center text-white/55">
+            <div className="signal-card rounded-[1.8rem] p-10 text-center text-white/55">
               Brak typów dla wybranych filtrów.
             </div>
           ) : (
             <>
-              <p className="mb-5 text-sm text-white/45">
-                Pokazano <span className="font-semibold text-white/80">{visible.length}</span> z {tips.length}{" "}
-                typów.
-              </p>
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <p className="text-sm text-[color:var(--text-muted)]">
+                  Pokazano <span className="font-semibold text-[color:var(--text-primary)]">{feedStats.visible}</span> z {tips.length} sygnałów
+                </p>
+                <span className="hidden rounded-full border border-[color:var(--line-soft)] bg-white/[0.035] px-3 py-1 text-xs text-[color:var(--text-muted)] sm:inline-flex">
+                  sort: {sort === "q" ? "Q-Score" : sort === "odds" ? "kurs" : "data"}
+                </span>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {visible.map((tip) => (
                   <TipCard
                     key={String(tip.event_id)}

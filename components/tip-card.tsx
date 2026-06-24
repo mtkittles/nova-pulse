@@ -4,10 +4,10 @@ import { BET_TYPE_PL, BET_TYPE_SHORT, statusInfo } from "@/lib/labels"
 import { AlertTriangle, Clock3, Lock, Minus, Plus, Radio, Trophy } from "lucide-react"
 
 const MARKET_BADGE: Record<BetType, string> = {
-  BTTS: "border-cyan-300/30 bg-cyan-300/10 text-cyan-200",
-  OVER_1_5: "border-violet-300/30 bg-violet-300/10 text-violet-200",
-  MIX: "border-emerald-300/30 bg-emerald-300/10 text-emerald-200",
-  THRILLER: "border-amber-300/30 bg-amber-300/10 text-amber-200",
+  BTTS: "border-cyan-300/25 bg-cyan-300/[0.09] text-cyan-100",
+  OVER_1_5: "border-violet-300/25 bg-violet-300/[0.09] text-violet-100",
+  MIX: "border-emerald-300/25 bg-emerald-300/[0.09] text-emerald-100",
+  THRILLER: "border-amber-300/25 bg-amber-300/[0.09] text-amber-100",
 }
 
 function qScoreColor(q: number): string {
@@ -15,10 +15,10 @@ function qScoreColor(q: number): string {
   if (q < 75) return "text-amber-300"
   return "text-emerald-300"
 }
-function qScoreBar(q: number): string {
-  if (q < 50) return "bg-rose-400"
-  if (q < 75) return "bg-amber-400"
-  return "bg-emerald-400"
+function qScoreTone(q: number): string {
+  if (q < 50) return "from-rose-400 to-rose-300"
+  if (q < 75) return "from-amber-300 to-orange-300"
+  return "from-[var(--accent)] to-emerald-300"
 }
 
 function formatKickoff(iso: string): string {
@@ -93,7 +93,7 @@ export default function TipCard({
   // defensywnie: niekompletny rekord → komunikat zamiast crasha
   if (!tip.home || !tip.away) {
     return (
-      <article className="grid min-h-[12rem] place-items-center rounded-[1.8rem] border border-white/12 bg-white/[0.04] p-6 text-center text-sm text-white/45">
+      <article className="signal-card grid min-h-[12rem] place-items-center rounded-[1.8rem] p-6 text-center text-sm text-white/45">
         Dane niepełne
       </article>
     )
@@ -102,18 +102,18 @@ export default function TipCard({
   // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem
   if (locked) {
     return (
-      <article className="relative flex flex-col overflow-hidden rounded-[1.8rem] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
-        <div className="absolute right-[-40px] top-[-40px] hidden h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl sm:block" />
-        <div className="relative flex items-center justify-between">
-          <span className="truncate text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
-          <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
+      <article className="signal-card signal-card-hover relative flex min-h-[20rem] flex-col overflow-hidden rounded-[1.8rem] p-5">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/35 to-transparent" />
+        <div className="relative flex items-center justify-between gap-3">
+          <span className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-faint)]">{tip.league}</span>
+          <span className="shrink-0 rounded-full bg-white/[0.045] px-2.5 py-1 text-xs font-medium text-[color:var(--text-muted)]">{formatKickoff(tip.kickoff_utc)}</span>
         </div>
-        <h3 className="relative mt-4 text-lg font-semibold leading-6">
-          {tip.home} <span className="text-white/35">vs</span> {tip.away}
+        <h3 className="relative mt-4 text-xl font-semibold leading-7 tracking-[-0.02em]">
+          {tip.home} <span className="text-[color:var(--text-faint)]">vs</span> {tip.away}
         </h3>
-        <div className="relative mt-5 grid place-items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-center">
+        <div className="relative mt-5 grid flex-1 place-items-center gap-3 rounded-[1.35rem] border border-[color:var(--line-soft)] bg-[var(--surface-sunken)] p-6 text-center">
           <Lock className="h-6 w-6 text-[color:var(--accent)]" />
-          <p className="text-sm text-white/60">Zaloguj, aby zobaczyć typ, kurs i Q-Score</p>
+          <p className="text-sm leading-6 text-[color:var(--text-secondary)]">Zaloguj, aby zobaczyć typ, kurs i Q-Score</p>
           <Link
             href="/login"
             className="rounded-full bg-[var(--accent)] px-5 py-2 text-sm font-semibold text-[color:var(--on-accent)] transition hover:scale-105"
@@ -135,16 +135,50 @@ export default function TipCard({
 
   const inner = (
     <>
-      <div className="absolute right-[-40px] top-[-40px] hidden h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl sm:block" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/35 to-transparent" />
+      <div className="absolute right-[-44px] top-[-44px] hidden h-32 w-32 rounded-full bg-[var(--glow-1)] blur-3xl sm:block" />
 
-      <div className="relative flex items-center justify-between">
-        <span className="truncate text-xs uppercase tracking-[0.18em] text-white/45">{tip.league}</span>
-        <span className="shrink-0 text-sm font-medium text-white/55">{formatKickoff(tip.kickoff_utc)}</span>
+      <div className="relative flex items-center justify-between gap-3">
+        <span className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-faint)]">{tip.league}</span>
+        <span className="shrink-0 rounded-full bg-white/[0.045] px-2.5 py-1 text-xs font-medium text-[color:var(--text-muted)]">{formatKickoff(tip.kickoff_utc)}</span>
       </div>
 
-      <h3 className="relative mt-4 text-lg font-semibold leading-6">
-        {tip.home} <span className="text-white/35">vs</span> {tip.away}
-      </h3>
+      <div className="relative mt-4 flex items-start justify-between gap-4">
+        <h3 className="text-xl font-semibold leading-7 tracking-[-0.02em]">
+          {tip.home} <span className="text-[color:var(--text-faint)]">vs</span> {tip.away}
+        </h3>
+        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-[color:var(--line-soft)] bg-white/[0.045] text-center">
+          <span className={`text-2xl font-semibold leading-none tabular-nums ${qScoreColor(tip.q_score)}`}>{tip.q_score}</span>
+          <span className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--text-faint)]">Q</span>
+        </div>
+      </div>
+
+      <p className="relative mt-3 text-sm leading-6 text-[color:var(--text-secondary)]">
+        {BET_TYPE_PL[tip.bet_type]} <span className="text-[color:var(--text-faint)]">/</span>{" "}
+        <span className="font-semibold text-[color:var(--text-primary)]">{tip.bet_side}</span>
+      </p>
+
+      <div className="relative mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className={`h-full rounded-full bg-gradient-to-r ${qScoreTone(tip.q_score)}`} style={{ width: `${tip.q_score}%` }} />
+      </div>
+
+      <div className="relative mt-4 grid grid-cols-3 gap-2 text-center">
+        <div className="signal-stat-tile rounded-2xl p-3">
+          <p className="text-[11px] text-[color:var(--text-faint)]">Prob.</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums">{prob}%</p>
+        </div>
+        <div className="signal-stat-tile rounded-2xl p-3">
+          <p className="text-[11px] text-[color:var(--text-faint)]">Kurs</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums">{tip.odds.toFixed(2)}</p>
+        </div>
+        <div className="signal-stat-tile rounded-2xl p-3">
+          <p className="text-[11px] text-[color:var(--text-faint)]">Edge</p>
+          <p className={`mt-1 text-lg font-semibold tabular-nums ${tip.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
+            {tip.edge >= 0 ? "+" : ""}
+            {edgePct}%
+          </p>
+        </div>
+      </div>
 
       <div className="relative mt-4 flex flex-wrap items-center gap-2">
         <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${MARKET_BADGE[tip.bet_type]}`}>
@@ -155,26 +189,22 @@ export default function TipCard({
           {match.label}
         </span>
         <span className={`rounded-full border px-3 py-1 text-xs font-medium ${settlement.classes}`}>
-          typ: {settlement.label}
+          {settlement.label}
         </span>
         {isThriller && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/30 bg-amber-300/10 px-3 py-1 text-xs font-medium text-amber-200">
-            <AlertTriangle className="h-3.5 w-3.5" /> wysokie ryzyko
+          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300/25 bg-amber-300/[0.09] px-3 py-1 text-xs font-medium text-amber-100">
+            <AlertTriangle className="h-3.5 w-3.5" /> high risk
           </span>
         )}
       </div>
 
-      <p className="relative mt-3 text-sm text-white/65">
-        {BET_TYPE_PL[tip.bet_type]} — <span className="font-medium text-white/85">{tip.bet_side}</span>
-      </p>
-
       {(tip.match_score || tip.match_status === "LIVE" || tip.match_status === "FINISHED") && (
         <div className="relative mt-3 flex flex-wrap items-center gap-2 text-sm">
-          <span className="rounded-full border border-white/12 bg-white/[0.04] px-3 py-1 text-white/80">
-            wynik: <span className="font-semibold text-white">{tip.match_score || "—"}</span>
+          <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[color:var(--text-secondary)]">
+            wynik: <span className="font-semibold text-[color:var(--text-primary)]">{tip.match_score || "—"}</span>
           </span>
           {tip.match_status === "LIVE" && tip.match_minute != null && (
-            <span className="rounded-full border border-rose-300/30 bg-rose-300/10 px-3 py-1 text-rose-200">
+            <span className="rounded-full border border-rose-300/25 bg-rose-300/[0.09] px-3 py-1 text-rose-100">
               minuta {tip.match_minute}'
             </span>
           )}
@@ -183,39 +213,11 @@ export default function TipCard({
           )}
         </div>
       )}
-
-      <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/40">Prawd.</p>
-          <p className="mt-1 text-xl font-semibold">{prob}%</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/40">Kurs</p>
-          <p className="mt-1 text-xl font-semibold">{tip.odds.toFixed(2)}</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-          <p className="text-xs text-white/40">Edge</p>
-          <p className={`mt-1 text-xl font-semibold ${tip.edge >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-            {tip.edge >= 0 ? "+" : ""}
-            {edgePct}%
-          </p>
-        </div>
-      </div>
-
-      <div className="relative mt-4">
-        <div className="mb-1.5 flex items-center justify-between text-xs">
-          <span className="text-white/45">Q-Score</span>
-          <span className={`font-semibold ${qScoreColor(tip.q_score)}`}>{tip.q_score}/100</span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-white/10">
-          <div className={`h-full rounded-full ${qScoreBar(tip.q_score)}`} style={{ width: `${tip.q_score}%` }} />
-        </div>
-      </div>
     </>
   )
 
-  const cardClass = `group relative flex flex-col overflow-hidden rounded-[1.8rem] border bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.085] ${
-    selected ? "border-[color:var(--accent)]/60" : "border-white/12"
+  const cardClass = `signal-card signal-card-hover group relative flex min-h-[20rem] flex-col overflow-hidden rounded-[1.8rem] p-5 ${
+    selected ? "border-[color:var(--accent)]/60" : ""
   }`
 
   if (selectable) {

@@ -11,6 +11,7 @@
   --surface-elevated: rgba(24, 32, 51, 0.92);
   --surface-glass: rgba(16, 21, 34, 0.78);
   --surface-hover: rgba(255, 255, 255, 0.065);
+  --surface-sunken: rgba(2, 6, 23, 0.34);
   --line-soft: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.14);
   --text-primary: #f8fafc;
@@ -30,6 +31,7 @@
   --glow-edge: 0 0 0 1px rgba(94, 234, 212, 0.12), 0 24px 80px rgba(0, 0, 0, 0.28);
   --shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.28);
   --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.18);
+  --shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.2);
   --tooltip-bg: #f8fafc;
   --tooltip-text: #020617;
   --tooltip-muted: #475569;
@@ -111,6 +113,54 @@ body {
 
 .signal-panel-accent {
   box-shadow: var(--glow-edge);
+}
+
+.signal-hero {
+  border: 1px solid var(--line-soft);
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 24rem),
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-raised) 78%, transparent), color-mix(in srgb, var(--surface) 90%, transparent));
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(22px);
+}
+
+.signal-insight-card {
+  border: 1px solid var(--line-soft);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
+  box-shadow: var(--shadow-soft);
+}
+
+.signal-chip {
+  min-height: 2.5rem;
+  border: 1px solid var(--line-soft);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text-muted);
+}
+
+.signal-chip-active {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 9%, transparent) inset;
+}
+
+.signal-control {
+  border: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
+  color: var(--text-secondary);
+}
+
+.signal-stat-tile {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+}
+
+.signal-scrollbar {
+  scrollbar-width: none;
+}
+
+.signal-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 .signal-muted {
