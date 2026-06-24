@@ -31,7 +31,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label="Zmień motyw kolorystyczny"
-      className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line-strong)] bg-[var(--surface-glass)] px-4 py-2.5 text-sm font-medium text-[color:var(--text-secondary)] backdrop-blur transition hover:border-[color:var(--line-strong)] hover:bg-[var(--surface-raised)] hover:text-[color:var(--text-primary)]"
+      className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line-strong)] bg-[var(--surface-glass)] px-4 py-2.5 text-sm font-medium text-[color:var(--text-secondary)] shadow-[var(--shadow-card)] backdrop-blur transition hover:border-[color:var(--line-strong)] hover:bg-[var(--surface-raised)] hover:text-[color:var(--text-primary)]"
     >
       <Palette className="h-4 w-4 text-[color:var(--accent)]" />
       <span className="hidden sm:inline">

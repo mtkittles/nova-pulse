@@ -22,8 +22,8 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-[color:var(--line-soft)] bg-[var(--bg)]/82 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-[color:var(--line-soft)] bg-[var(--bg)]/88 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6 sm:py-4">
           <Brand />
 
           <nav className="hidden items-center gap-1 lg:flex">
@@ -36,8 +36,8 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
                   href={item.href}
                   className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
                     active
-                      ? "bg-[var(--accent)]/14 text-[color:var(--text-primary)] ring-1 ring-[var(--accent)]/20"
-                      : "text-[color:var(--text-muted)] hover:bg-white/[0.06] hover:text-[color:var(--text-primary)]"
+                      ? "bg-[var(--accent)]/14 text-[color:var(--text-primary)] ring-1 ring-[var(--accent)]/24"
+                      : "text-[color:var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[color:var(--text-primary)]"
                   }`}
                 >
                   <Icon className={`h-4 w-4 ${active ? "text-[color:var(--accent)]" : ""}`} />
@@ -66,7 +66,7 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
       </header>
 
       {/* dolny tab-bar (mobile) */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[color:var(--line-soft)] bg-[var(--bg-soft)]/96 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_rgba(0,0,0,0.32)] backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-[color:var(--line-strong)] bg-[var(--surface-elevated)] pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_48px_rgba(0,0,0,0.36)] backdrop-blur-xl lg:hidden">
         <div
           className="mx-auto grid max-w-md"
           style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -78,11 +78,11 @@ export function AppNav({ loggedIn, isAdmin = false }: { loggedIn: boolean; isAdm
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center gap-1 py-2.5 text-[11px] transition ${
+                className={`flex min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-medium transition ${
                   active ? "text-[color:var(--accent)]" : "text-[color:var(--text-muted)]"
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={`h-5 w-5 ${active ? "drop-shadow-[0_0_14px_var(--glow-1)]" : ""}`} />
                 {item.label}
               </Link>
             )

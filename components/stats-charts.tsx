@@ -44,10 +44,11 @@ const tooltipStyle = {
   borderRadius: "0.9rem",
   boxShadow: "0 24px 60px rgba(0,0,0,0.34)",
   color: "var(--tooltip-text)",
+  padding: "0.75rem 0.85rem",
 } as const
 
-const tooltipLabelStyle = { color: "var(--tooltip-muted)", fontWeight: 700 } as const
-const tooltipItemStyle = { color: "var(--tooltip-text)", fontWeight: 600 } as const
+const tooltipLabelStyle = { color: "var(--tooltip-muted)", fontWeight: 700, marginBottom: "0.35rem" } as const
+const tooltipItemStyle = { color: "var(--tooltip-text)", fontWeight: 650 } as const
 
 function pct(v: number, digits = 0): string {
   return `${(v * 100).toFixed(digits)}%`
@@ -63,7 +64,7 @@ function ChartCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="signal-card rounded-[1.55rem] p-5 sm:p-6">
+    <div className="signal-card signal-card-hover rounded-[1.55rem] p-5 sm:p-6">
       <h3 className="text-lg font-semibold">{title}</h3>
       {subtitle && <p className="signal-muted mt-1 text-sm">{subtitle}</p>}
       <div className="mt-5 h-72 w-full">{children}</div>

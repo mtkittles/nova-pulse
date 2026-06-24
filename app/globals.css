@@ -8,7 +8,9 @@
   --bg-soft: #080b14;
   --surface: #101522;
   --surface-raised: #182033;
+  --surface-elevated: rgba(24, 32, 51, 0.92);
   --surface-glass: rgba(16, 21, 34, 0.78);
+  --surface-hover: rgba(255, 255, 255, 0.065);
   --line-soft: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.14);
   --text-primary: #f8fafc;
@@ -25,11 +27,13 @@
   --signal-rose: #fb7185;
   --glow-1: rgba(94, 234, 212, 0.16);
   --glow-2: rgba(96, 165, 250, 0.14);
+  --glow-edge: 0 0 0 1px rgba(94, 234, 212, 0.12), 0 24px 80px rgba(0, 0, 0, 0.28);
   --shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.28);
   --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.18);
   --tooltip-bg: #f8fafc;
-  --tooltip-text: #0f172a;
-  --tooltip-muted: #334155;
+  --tooltip-text: #020617;
+  --tooltip-muted: #475569;
+  --bottom-nav-height: 5.75rem;
 }
 
 [data-theme="lupus"] {
@@ -37,6 +41,7 @@
   --bg-soft: #07110c;
   --surface: #0d1912;
   --surface-raised: #14251a;
+  --surface-elevated: rgba(20, 37, 26, 0.92);
   --surface-glass: rgba(13, 25, 18, 0.78);
   --accent: #a3e635;
   --accent-2: #34d399;
@@ -65,8 +70,8 @@ body {
 
 .signal-bg {
   background:
-    radial-gradient(circle at top left, var(--glow-1), transparent 34rem),
-    radial-gradient(circle at 85% 12%, var(--glow-2), transparent 30rem),
+    radial-gradient(circle at top left, var(--glow-1), transparent 32rem),
+    radial-gradient(circle at 85% 10%, var(--glow-2), transparent 28rem),
     linear-gradient(180deg, var(--bg), var(--bg-soft));
 }
 
@@ -85,11 +90,27 @@ body {
   backdrop-filter: blur(18px);
 }
 
+.signal-card-hover {
+  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+@media (hover: hover) {
+  .signal-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--line-strong);
+    background-color: var(--surface-hover);
+  }
+}
+
 .signal-panel {
   border: 1px solid var(--line-strong);
   background: linear-gradient(135deg, color-mix(in srgb, var(--surface-raised) 76%, transparent), color-mix(in srgb, var(--surface) 88%, transparent));
   box-shadow: var(--shadow-panel);
   backdrop-filter: blur(20px);
+}
+
+.signal-panel-accent {
+  box-shadow: var(--glow-edge);
 }
 
 .signal-muted {
@@ -104,6 +125,7 @@ body {
   border: 1px solid var(--line-soft);
   background: color-mix(in srgb, var(--surface-raised) 70%, transparent);
   color: var(--text-secondary);
+  letter-spacing: 0.12em;
 }
 
 .signal-badge-live {
@@ -131,8 +153,22 @@ body {
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34) !important;
 }
 
+.signal-tooltip-label {
+  color: var(--tooltip-muted) !important;
+  font-weight: 700 !important;
+}
+
+.signal-tooltip-item {
+  color: var(--tooltip-text) !important;
+  font-weight: 650 !important;
+}
+
 .signal-bottom-safe {
-  padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--bottom-nav-height) + 1.5rem + env(safe-area-inset-bottom));
+}
+
+.signal-floating-safe {
+  bottom: calc(var(--bottom-nav-height) + 1rem + env(safe-area-inset-bottom));
 }
 
 /* płynne przejście kolorów przy zmianie motywu */
@@ -151,5 +187,18 @@ body * {
   body,
   body * {
     transition: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .signal-bg {
+    background:
+      radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--glow-1) 70%, transparent), transparent 18rem),
+      linear-gradient(180deg, var(--bg), var(--bg-soft));
+  }
+
+  .signal-grid {
+    background-size: 56px 56px;
+    opacity: 0.45;
   }
 }
