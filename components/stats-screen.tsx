@@ -347,7 +347,9 @@ export function StatsScreen({
                   const settled = settleTip(t, t.home_score ?? null, t.away_score ?? null)
                   const pill: PillStatus = settled === "won" ? "WON" : settled === "lost" ? "LOST" : settled === "void" ? "VOID" : "PENDING"
                   const market = getMarketLabel(t.bet_type_raw ?? t.bet_type, t.bet_side_raw ?? t.bet_side, t.home, t.away)
-                  const href = t.event_id != null && t.event_id !== "" ? `/mecz/${t.event_id}` : null
+                  // Sieroty (bez fixture w matches) → wiersz nieklikalny (brak strony /mecz/{id}).
+                  const isOrphan = t.isOrphan ?? (!t.kickoff_utc && !t.match_status)
+                  const href = !isOrphan && t.event_id != null && t.event_id !== "" ? `/mecz/${t.event_id}` : null
                   const cls = `flex items-center gap-3 rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-3 ${href ? "cursor-pointer transition hover:bg-[var(--surface-2)]" : "cursor-default"}`
                   const inner = (
                     <>

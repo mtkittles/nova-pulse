@@ -15,7 +15,7 @@ function mockCalendar(): CalendarDay[] {
   }
   return [
     { ...day(0, 3, 14, 4), analyzed: 14, below_threshold: 11 },
-    { ...day(1, 9, 38, 7), analyzed: 38, below_threshold: 29, has_worldcup: true },
+    { ...day(1, 9, 38, 7), analyzed: 38, below_threshold: 29 },
     { ...day(2, 18, 71, 11), analyzed: 71, below_threshold: 53 },
     { ...day(3, 0, 0, 0), analyzed: 0 }, // brak meczów → komunikat A
     { ...day(4, 0, 24, 5), analyzed: 0, no_data: 24 }, // mecze, analiza niewykonana → B

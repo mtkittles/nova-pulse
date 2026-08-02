@@ -5,7 +5,7 @@
 import type { BetType } from "./types"
 import { LEAGUES } from "./leagues"
 
-export type ModeKey = BetType | "WC"
+export type ModeKey = BetType
 
 export interface ModeMeta {
   short: string
@@ -47,13 +47,6 @@ export const MODE_META: Record<ModeKey, ModeMeta> = {
     color: "#fbbf24",
     badge: "border-amber-300/30 bg-amber-300/10 text-amber-200",
     text: "text-amber-300",
-  },
-  WC: {
-    short: "MŚ 2026",
-    full: "Mistrzostwa Świata",
-    color: "#f472b6",
-    badge: "border-pink-300/30 bg-pink-300/10 text-pink-200",
-    text: "text-pink-300",
   },
 }
 
