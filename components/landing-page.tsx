@@ -17,7 +17,6 @@ import {
   Tag,
   Target,
   TrendingUp,
-  Trophy,
   X,
 } from "lucide-react"
 import type { Tip } from "@/lib/types"
@@ -32,13 +31,11 @@ import { LiveTicker } from "./live-ticker"
 import { ScrollReveal } from "./scroll-reveal"
 import { useLiveMatches } from "@/hooks/use-live-matches"
 import type { TimelinePoint } from "@/lib/stats-types"
-import type { WCPhase } from "@/lib/extra-types"
 
 type LandingProps = {
   loggedIn?: boolean
   topTips: Tip[]
   todayTips: Tip[]
-  wcTips: Tip[]
   matchesToday: number
   winRate: number // 0..1
   roi: number // np. 0.05
@@ -47,7 +44,6 @@ type LandingProps = {
   avgQScore: number // 0..100
   leaguesCount: number
   timeline: TimelinePoint[]
-  wcPhase?: WCPhase
 }
 
 const navItems = [
@@ -120,13 +116,11 @@ export default function LandingPage({
   loggedIn = false,
   topTips,
   todayTips,
-  wcTips,
   winRate,
   roi,
   totalTips,
   settledTips,
   leaguesCount,
-  wcPhase = "pre",
 }: LandingProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   // zamknij menu na Esc
@@ -142,9 +136,8 @@ export default function LandingPage({
   const roiPositive = roi >= 0
   const roiSign = roiPositive ? "+" : ""
   const lowSample = totalTips < 10
-  const wcRunning = wcPhase === "group" || wcPhase === "knockout"
 
-  const tipHref = (t: Tip) => (loggedIn && t.event_id ? `/mecz/${t.event_id}` : undefined)
+  const tipHref = (t: Tip) => (loggedIn && !t.isOrphan && t.event_id ? `/mecz/${t.event_id}` : undefined)
 
   // Typy do sekcji "Dziś": preferuj topTips (value), w razie braku — pierwsze z dnia.
   const heroTips = (topTips.length > 0 ? topTips : todayTips).slice(0, 3)
@@ -413,41 +406,6 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* MŚ — tylko gdy turniej trwa */}
-      {wcRunning && (
-        <section id="mundial" className="mx-auto max-w-7xl px-6 py-14">
-          <motion.div {...reveal()}>
-            <Card active hover={false} className="p-8 md:p-10">
-              <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div className="max-w-lg">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-[var(--cyan-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[color:var(--cyan)]">
-                    <Trophy className="h-3.5 w-3.5" /> Mundial 2026
-                  </div>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight md:text-3xl">
-                    {wcPhase === "knockout" ? "Faza pucharowa trwa" : "Faza grupowa trwa"}
-                  </h2>
-                  <p className="mt-3 leading-7 text-[color:var(--text-secondary)]">
-                    Predykcje na mecze turnieju — z Q-Score i kursem. Wejdź w pełny tryb Mundialu.
-                  </p>
-                  <div className="mt-6">
-                    <Button href="/mundial" variant="primary" size="md">
-                      Zobacz Mundial →
-                    </Button>
-                  </div>
-                </div>
-                {wcTips.length > 0 && (
-                  <div className="grid w-full gap-4 sm:grid-cols-2 lg:max-w-xl">
-                    {wcTips.slice(0, 2).map((tip) => (
-                      <TipCard key={String(tip.event_id)} tip={tip} href={tipHref(tip)} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Card>
-          </motion.div>
-        </section>
-      )}
-
       {/* PLANY (prezentacja — brak płatności) */}
       <section id="plany" className="mx-auto max-w-7xl px-6 py-14">
         <motion.div {...reveal()} className="mb-8 max-w-2xl">
@@ -524,11 +482,14 @@ export default function LandingPage({
             <Link href="/typy" className="transition hover:text-[color:var(--text-primary)]">
               Typy
             </Link>
-            <Link href="/mundial" className="transition hover:text-[color:var(--text-primary)]">
-              Mundial
+            <Link href="/live" className="transition hover:text-[color:var(--text-primary)]">
+              Live
             </Link>
             <Link href="/stats" className="transition hover:text-[color:var(--text-primary)]">
               Statystyki
+            </Link>
+            <Link href="/ranking" className="transition hover:text-[color:var(--text-primary)]">
+              Ranking
             </Link>
             <Link href="/ligi" className="transition hover:text-[color:var(--text-primary)]">
               Ligi

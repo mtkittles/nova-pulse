@@ -82,8 +82,9 @@ export default function TipCard({
 
   const liveOn = status === "live" || status === "halftime"
   const finished = status === "finished"
-  // Sierota = typ bez fixture (brak godziny ORAZ statusu) → brak strony /mecz/{id}.
-  const isOrphan = !tip.kickoff_utc && !tip.match_status
+  // Sierota = typ bez fixture w matches → brak strony /mecz/{id}.
+  // Preferuj flagę z adaptera (adaptTip); fallback: lokalna heurystyka (spójność).
+  const isOrphan = tip.isOrphan ?? (!tip.kickoff_utc && !tip.match_status)
   // wynik: z live, a w razie braku — z pól tipa (home_score/away_score z Oracle)
   const homeScore = live ? live.home_score : tip.home_score ?? null
   const awayScore = live ? live.away_score : tip.away_score ?? null

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { BarChart3, Crown, Home, Medal, Menu, Newspaper, Radio, Shield, Target, Ticket, Trophy, User, X } from "lucide-react"
+import { BarChart3, Crown, Home, Medal, Menu, Newspaper, Radio, Shield, Target, Ticket, User, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { Brand } from "./brand"
 import { LogoutButton } from "./logout-button"
@@ -17,7 +17,6 @@ const SHOW_NEWS = process.env.NEXT_PUBLIC_FEATURE_NEWS === "true"
 const SHOW_COUPONS = process.env.NEXT_PUBLIC_FEATURE_COUPONS === "true"
 
 const NAV: NavItem[] = [
-  { href: "/mundial", label: "Mundial", icon: Trophy, highlight: true },
   { href: "/typy", label: "Typy", icon: Target },
   { href: "/live", label: "Live", icon: Radio },
   { href: "/stats", label: "Statystyki", icon: BarChart3 },

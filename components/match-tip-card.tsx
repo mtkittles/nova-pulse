@@ -171,7 +171,8 @@ export default function MatchTipCard({
 
   const liveOn = status === "live" || status === "halftime"
   const finished = status === "finished"
-  const isOrphan = !group.kickoff_utc && !group.match_status
+  // Sierota — jeden typ wystarczy, żeby cała karta była sierotą (grupa dzieli event_id).
+  const isOrphan = group.tips.some((t) => t.isOrphan) || (!group.kickoff_utc && !group.match_status)
 
   const homeScore = live ? live.home_score : group.home_score ?? null
   const awayScore = live ? live.away_score : group.away_score ?? null

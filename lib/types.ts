@@ -45,6 +45,9 @@ export interface Tip {
   away_score?: number | null
   /** "FINISHED" | "LIVE" | "SCHEDULED" z Oracle */
   match_status?: string
+  /** Sierota — predykcja bez fixture w matches (brak kickoff_utc i match_status).
+   *  UI: karta widoczna, ale bez linku do /mecz/{id} (strona zwróci "nie znaleziono"). */
+  isOrphan?: boolean
 }
 
 export interface TipsResponse {

@@ -146,12 +146,6 @@ export function Calendar({
             >
               {d}
 
-              {info?.has_worldcup && (
-                <span className="absolute left-1 top-0.5 text-[9px] leading-none" title="Mecz MŚ 2026">
-                  🏆
-                </span>
-              )}
-
               {tips > 0 ? (
                 <span className="absolute right-1 top-0.5 text-[9px] font-semibold leading-none text-white/70">
                   {tips}

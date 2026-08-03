@@ -151,6 +151,9 @@ export function adaptTip(raw: unknown): Tip {
     home_score: t.home_score != null ? num(t.home_score) : null,
     away_score: t.away_score != null ? num(t.away_score) : null,
     match_status: t.match_status != null ? String(t.match_status) : undefined,
+    // Sierota — predykcja bez fixture w matches (brak kickoff_utc i match_status).
+    // Wykrywana raz w adapterze; wszystkie consumery (karty/linki) używają tego.
+    isOrphan: t.kickoff_utc == null && t.match_status == null,
   }
 }
 
@@ -553,10 +556,6 @@ export function adaptCalendar(raw: unknown): CalendarDay[] {
         analyzed,
         below_threshold: o.below_threshold != null ? num(o.below_threshold) : undefined,
         no_data: o.no_data != null ? num(o.no_data) : analyzed != null ? Math.max(0, matches - analyzed) : undefined,
-        has_worldcup:
-          o.has_worldcup === true ||
-          o.worldcup === true ||
-          /world.?cup|mundial|wc_2026/i.test(String(o.leagues_list ?? o.competitions ?? "")),
       }
     })
     .filter((d) => DATE_RE.test(d.date))
