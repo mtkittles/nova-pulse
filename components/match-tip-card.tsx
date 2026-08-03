@@ -193,8 +193,18 @@ export default function MatchTipCard({
     (a, b) => Number(b.is_primary ?? false) - Number(a.is_primary ?? false) || sortKey(b.q_score) - sortKey(a.q_score),
   )
 
+  // Sieroty — wyszarzony wygląd (kickoff/status/logo brak = brak strony analizy).
+  const orphanClass = isOrphan ? " opacity-70 saturate-[.6]" : ""
   const cardClass =
-    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)]"
+    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)]" +
+    orphanClass
+
+  // Karta jednego meczu może zawierać wiele rynków (>10 zdarza się). Domyślnie pokaż 3
+  // najlepsze (is_primary + Q-Score), reszta pod „+N więcej".
+  const MAX_VISIBLE = 3
+  const [showAll, setShowAll] = useState(false)
+  const visibleTips = showAll ? sortedTips : sortedTips.slice(0, MAX_VISIBLE)
+  const extraCount = Math.max(0, sortedTips.length - MAX_VISIBLE)
 
   const header = (
     <>
@@ -263,7 +273,7 @@ export default function MatchTipCard({
     <article className={cardClass}>
       {header}
       <div className="relative mt-3 space-y-2">
-        {sortedTips.map((tip, i) => (
+        {visibleTips.map((tip, i) => (
           <MarketRow
             key={i}
             tip={tip}
@@ -277,6 +287,18 @@ export default function MatchTipCard({
           />
         ))}
       </div>
+
+      {extraCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          aria-expanded={showAll}
+          className="relative mt-2 inline-flex items-center gap-1.5 self-start rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-[color:var(--text-secondary)] transition hover:bg-white/10 hover:text-[color:var(--text-primary)]"
+        >
+          {showAll ? "Zwiń" : `+${extraCount} więcej`}
+          <ChevronDown className={`h-3.5 w-3.5 transition ${showAll ? "rotate-180" : ""}`} />
+        </button>
+      )}
 
       {href && !isOrphan ? (
         <Link

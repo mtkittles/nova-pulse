@@ -105,10 +105,10 @@ function isPrimary(o: Record<string, unknown>): boolean {
 }
 
 function mapResult(t: Record<string, unknown>): 0 | 1 | null {
-  const r = t.actual_result
+  // Nowy shape (predictions[].result) i stary (actual_result) — akceptuj oba.
+  const r = t.actual_result ?? t.result
   if (r === 1 || r === "1") return 1
   if (r === 0 || r === "0") return 0
-  // fallback dla starego kształtu ze "status"
   const s = String(t.status ?? "").toLowerCase()
   if (s === "won" || s === "win") return 1
   if (s === "lost" || s === "lose") return 0
@@ -118,7 +118,8 @@ function mapResult(t: Record<string, unknown>): 0 | 1 | null {
 export function adaptTip(raw: unknown): Tip {
   const t = (raw ?? {}) as Record<string, unknown>
   // Brak danych → null (NIGDY 0 — 0 wygląda jak realna ocena/kurs).
-  const model_prob = numOrNull(t.model_prob)
+  // Nowy shape: predykcje mają "confidence"; stary — "model_prob".
+  const model_prob = numOrNull(t.model_prob ?? t.confidence)
   const odds = numOrNull(t.odds)
   // Edge: użyj realnego (może być ujemny); gdy brak, a mamy prob+odds → policz
   // przewagę nad kursem; gdy i tego brak → null.
@@ -159,11 +160,27 @@ export function adaptTip(raw: unknown): Tip {
 
 export function adaptTips(raw: unknown): TipsResponse {
   const r = (raw ?? {}) as Record<string, unknown>
-  const list = Array.isArray(r.tips) ? r.tips : []
-  return {
-    date: String(r.date ?? new Date().toISOString().slice(0, 10)),
-    tips: list.map(adaptTip),
+  const date = String(r.date ?? new Date().toISOString().slice(0, 10))
+
+  // Nowy shape: { matches: [{ ...match_info, predictions: [{...}] }] }.
+  // Spłaszczamy do Tip[] — match-info łączymy z każdą predykcją, adaptTip robi resztę.
+  // MatchTipCard i tak grupuje po event_id, więc downstream bez zmian.
+  if (Array.isArray(r.matches)) {
+    const tips: Tip[] = []
+    for (const m of r.matches as unknown[]) {
+      const mo = (m ?? {}) as Record<string, unknown>
+      const preds = Array.isArray(mo.predictions) ? (mo.predictions as unknown[]) : []
+      for (const p of preds) {
+        const po = (p ?? {}) as Record<string, unknown>
+        tips.push(adaptTip({ ...mo, ...po }))
+      }
+    }
+    return { date, tips }
   }
+
+  // Stary shape: { tips: [...] } — płaska lista jeden wpis per typ.
+  const list = Array.isArray(r.tips) ? r.tips : []
+  return { date, tips: list.map(adaptTip) }
 }
 
 // ——— statystyki ———

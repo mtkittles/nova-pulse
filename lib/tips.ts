@@ -21,8 +21,11 @@ function emptyTips(date: string): TipsResponse {
   return { date, tips: [] }
 }
 
-function hasTipsArray(x: unknown): boolean {
-  return !!x && typeof x === "object" && Array.isArray((x as { tips?: unknown }).tips)
+// Kontrakt Oracle: nowy shape { matches: [...] } lub stary { tips: [...] } — akceptuj oba.
+function hasTipsOrMatches(x: unknown): boolean {
+  if (!x || typeof x !== "object") return false
+  const o = x as { tips?: unknown; matches?: unknown }
+  return Array.isArray(o.tips) || Array.isArray(o.matches)
 }
 
 // Typy dla konkretnego dnia (domyślnie dziś). Wyłącznie server-side.
@@ -35,7 +38,7 @@ export async function getTips(date?: string): Promise<TipsResponse> {
   try {
     await ensureLeagueNames()
     const data = await oracleFetch<unknown>(`/tips?date=${encodeURIComponent(d)}`)
-    if (!hasTipsArray(data)) {
+    if (!hasTipsOrMatches(data)) {
       console.error("getTips: odpowiedź Oracle niezgodna z kontraktem")
       return emptyTips(d)
     }
