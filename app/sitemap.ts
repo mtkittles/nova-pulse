@@ -25,10 +25,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         next: { revalidate: 3600 },
       })
       if (res.ok) {
-        const data = (await res.json()) as { tips?: { event_id?: string | number }[] }
+        // Oracle: nowy { matches: [{event_id,...}] } lub stary { tips: [{event_id,...}] } — czytamy oba.
+        const data = (await res.json()) as {
+          matches?: { event_id?: string | number }[]
+          tips?: { event_id?: string | number }[]
+        }
+        const rows = data.matches ?? data.tips ?? []
         const seen = new Set<string>()
-        for (const tip of data.tips ?? []) {
-          const id = tip.event_id != null ? String(tip.event_id) : ""
+        for (const row of rows) {
+          const id = row.event_id != null ? String(row.event_id) : ""
           if (id && !seen.has(id)) {
             seen.add(id)
             matchPages.push({ url: `${base}/mecz/${id}`, priority: 0.8, changeFrequency: "weekly" })

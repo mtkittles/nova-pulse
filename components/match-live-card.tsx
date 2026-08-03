@@ -32,9 +32,12 @@ export function MatchLiveCard({ group }: { group: MatchLiveGroup }) {
   const showScore = (isActive || isFinished) && group.homeScore != null && group.awayScore != null
   const scoreColor =
     group.status === "LIVE_HIT" ? "text-[color:var(--success)]" : group.status === "LIVE_AT_RISK" ? "text-[color:var(--danger)]" : "text-[color:var(--text-primary)]"
+  // Sierota jak w MatchTipCard: wystarczy jeden typ bez fixture — cała grupa dzieli event_id.
+  const isOrphan = group.tips.some(({ tip }) => tip.isOrphan) || (!group.kickoff_utc && !group.event_id)
+  const orphanClass = isOrphan ? " opacity-70 saturate-[.6]" : ""
 
   const inner = (
-    <div className={`rounded-[var(--radius-card)] border-2 bg-[var(--surface-1)] p-4 transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-[var(--surface-2)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)] ${cfg.border}`}>
+    <div className={`rounded-[var(--radius-card)] border-2 bg-[var(--surface-1)] p-4 transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-[var(--surface-2)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)] ${cfg.border}${orphanClass}`}>
       {/* nagłówek: liga + status/czas */}
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="min-w-0 truncate uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{group.league}</span>
@@ -89,7 +92,8 @@ export function MatchLiveCard({ group }: { group: MatchLiveGroup }) {
     </div>
   )
 
-  return group.event_id ? (
+  // Sieroty nie mają strony /mecz/{id} — renderuj bez linka.
+  return group.event_id && !isOrphan ? (
     <Link href={`/mecz/${group.event_id}`} className="block">
       {inner}
     </Link>
