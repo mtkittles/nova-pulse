@@ -191,6 +191,195 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ============================================================
+   Kinetyczny hero — litery wjeżdżają kaskadowo przy montażu.
+   Czysty CSS (keyframes + animation-delay przez --i), działa
+   nawet bez JS/przed hydratacją — brak ryzyka "znikającego H1".
+   ============================================================ */
+@keyframes lb-kinetic-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kinetic-letter {
+  display: inline-block;
+  opacity: 0;
+  animation: lb-kinetic-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+/* claim + licznik pod tytułem — jedno opóźnione pojawienie (nie per-litera) */
+@keyframes lb-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kinetic-sub {
+  opacity: 0;
+  animation: lb-fade-up 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 400ms;
+}
+
+/* strzałka scroll-down — bounce w pętli, znika po pierwszym scrollu */
+@keyframes lb-arrow-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+.kinetic-arrow {
+  animation: lb-arrow-bounce 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   Kaskadowe odsłanianie nagłówków sekcji — słowo po słowie.
+   JS (IntersectionObserver) przełącza .is-visible; przejście CSS.
+   ============================================================ */
+.reveal-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 480ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+.reveal-word.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   Live ticker — marquee czysto CSS (bez JS-owego przewijania).
+   Druga kopia listy (aria-hidden) daje pętlę bez przeskoku.
+   ============================================================ */
+.ticker-viewport {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, black 24px, black calc(100% - 24px), transparent);
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: lb-marquee linear infinite;
+}
+
+@keyframes lb-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* pauza na hover — TYLKO gdy hover realnie istnieje (desktop) */
+@media (hover: hover) and (pointer: fine) {
+  .ticker-viewport:hover .ticker-track {
+    animation-play-state: paused;
+  }
+}
+
+/* ============================================================
+   Podkreślenie linku nawigacji — rośnie od lewej na hover (desktop).
+   ============================================================ */
+.nav-underline {
+  position: relative;
+}
+
+.nav-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-underline:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ============================================================
+   Overlay menu mobilne — pozycje wjeżdżają kaskadowo od dołu.
+   ============================================================ */
+.menu-item {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 320ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 50ms);
+}
+
+.menu-item.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   prefers-reduced-motion — dla nowych animacji: wyłącz przesunięcie
+   (transform: none !important), zostaw (skrócone) pojawianie się przez
+   opacity. Klasowy selektor (0,1,0) bije uniwersalny „*" niżej w pliku
+   (0,0,0) niezależnie od kolejności — specificity, nie source order.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .kinetic-letter {
+    animation-duration: 400ms !important;
+    transform: none !important;
+  }
+  .kinetic-sub {
+    animation-duration: 400ms !important;
+    transform: none !important;
+  }
+  .kinetic-arrow {
+    animation: none !important;
+    transform: none !important;
+  }
+  .reveal-word {
+    transition-duration: 300ms !important;
+    transform: none !important;
+  }
+  .menu-item {
+    transition-duration: 200ms !important;
+    transform: none !important;
+  }
+  .ticker-track {
+    animation: none !important;
+    transform: none !important;
+  }
+  .ticker-viewport {
+    overflow-x: auto;
+    mask-image: none;
+  }
+  .ticker-dup {
+    display: none;
+  }
+}
+
 /* mniejszy promień kart na mobile */
 @media (max-width: 640px) {
   :root {

@@ -6,10 +6,13 @@ import type { Tip } from "@/lib/types"
 import type { TimelinePoint } from "@/lib/stats-types"
 import { Brand } from "./brand"
 import { Card } from "./ui/card"
-import { LiveTicker } from "./live-ticker"
+import { RevealText } from "./ui/reveal-text"
 import { ScrollReveal } from "./scroll-reveal"
 import { MobileTabBar } from "./mobile-tab-bar"
 import { LandingHeader } from "./landing/landing-header"
+import { HeroKinetic } from "./landing/hero-kinetic"
+import { SectionIndex } from "./landing/section-index"
+import { LiveTicker } from "./landing/live-ticker"
 import { TodayStrip } from "./landing/today-strip"
 import { TodayTips } from "./landing/today-tips"
 import { ModelFormChart } from "./landing/model-form-chart"
@@ -104,7 +107,7 @@ function SectionHead({
         <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[color:var(--cyan)]/80">
           {eyebrow}
         </p>
-        <h2 className="mt-1.5 text-xl font-semibold tracking-tight md:text-2xl">{title}</h2>
+        <RevealText text={title} className="mt-1.5 text-xl font-semibold tracking-tight md:text-2xl" />
         {hint && <p className="mt-1 text-sm text-[color:var(--text-secondary)]">{hint}</p>}
       </div>
       {action && (
@@ -133,49 +136,27 @@ export default function LandingPage({
   return (
     <div className="min-h-screen bg-[var(--bg-0)] text-[color:var(--text-primary)]">
       <LandingHeader loggedIn={loggedIn} />
+      <SectionIndex />
 
       {/* pb-tabbar: zapas na dolną nawigację mobilną + pasek gestów */}
       <main className="pb-tabbar mx-auto max-w-6xl px-4 md:px-6 lg:pb-0">
-        {/* ——— HERO: zwięzły, bez marketingowego rozmachu ——— */}
-        <section className="pt-6 md:pt-10">
-          <h1 className="max-w-2xl text-3xl font-semibold leading-[1.1] tracking-[-0.03em] md:text-5xl">
-            Typy z przewagą nad bukmacherem,{" "}
-            <span className="text-[color:var(--cyan)]">weryfikowane na żywo</span>
-          </h1>
-          <p className="mt-3 max-w-xl text-[15px] leading-7 text-[color:var(--text-secondary)] md:text-base">
-            Model goli Poissona/Dixon-Coles, kalibracja prawdopodobieństw i własny Q-Score.
-            Każdy typ rozliczany automatycznie po meczu.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            <Link
-              href="/typy"
-              className="tap inline-flex items-center gap-1.5 rounded-full bg-[var(--cyan)] px-5 text-sm font-semibold text-[color:var(--on-accent)] transition-transform duration-150 hover:scale-[1.02]"
-            >
-              Typy dnia <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="https://t.me/lupus_bet_bot"
-              className="tap inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-1)] px-5 text-sm font-medium text-[color:var(--text-secondary)] transition-colors duration-150 hover:border-[color:var(--cyan)] hover:text-[color:var(--text-primary)]"
-            >
-              <Send className="h-4 w-4" /> Bot Telegram
-            </Link>
-          </div>
-        </section>
+        {/* ——— 1. HERO KINETYCZNY ——— */}
+        <HeroKinetic tips={todayTips} />
+
+        {/* ——— LIVE TICKER — pełna szerokość, wychodzi poza max-w-6xl ——— */}
+        <div className="-mx-4 md:-mx-6">
+          <LiveTicker tips={todayTips} />
+        </div>
 
         {/* ——— 2. DZIŚ W SKRÓCIE ——— */}
-        <section id="dzis" className="pt-8 md:pt-10">
+        <section id="dzis" className="scroll-mt-24 pt-8 md:pt-10">
           <ScrollReveal>
             <TodayStrip tips={todayTips} />
           </ScrollReveal>
         </section>
 
-        {/* ——— LIVE TICKER ——— */}
-        <section className="pt-4">
-          <LiveTicker />
-        </section>
-
         {/* ——— 3. TYPY DNIA ——— */}
-        <section className="pt-12 md:pt-14">
+        <section id="typy-dnia" className="scroll-mt-24 pt-12 md:pt-14">
           <SectionHead
             eyebrow="Dziś"
             title="Typy dnia"
@@ -186,7 +167,7 @@ export default function LandingPage({
         </section>
 
         {/* ——— 4 + 5. FORMA MODELU + ROZKŁAD Q ——— */}
-        <section id="forma" className="pt-12 md:pt-14">
+        <section id="forma" className="scroll-mt-24 pt-12 md:pt-14">
           <SectionHead
             eyebrow="Dowód"
             title="Forma modelu"
@@ -205,7 +186,7 @@ export default function LandingPage({
 
         {/* ——— 6. OSTATNIO ROZLICZONE ——— */}
         {recentSettled.length > 0 && (
-          <section className="pt-12 md:pt-14">
+          <section id="rozliczone" className="scroll-mt-24 pt-12 md:pt-14">
             <SectionHead
               eyebrow="Weryfikacja"
               title="Ostatnio rozliczone"
@@ -218,7 +199,7 @@ export default function LandingPage({
         )}
 
         {/* ——— 7a. JAK DZIAŁA ——— */}
-        <section id="how" className="pt-12 md:pt-14">
+        <section id="how" className="scroll-mt-24 pt-12 md:pt-14">
           <SectionHead eyebrow="Jak działa model" title="Trzy kroki od danych do rozliczenia" />
           <div className="grid gap-4 md:grid-cols-3">
             {HOW_IT_WORKS.map((step, i) => {
@@ -241,7 +222,7 @@ export default function LandingPage({
         </section>
 
         {/* ——— 7b. PLANY ——— */}
-        <section id="plany" className="pt-12 md:pt-14">
+        <section id="plany" className="scroll-mt-24 pt-12 md:pt-14">
           <SectionHead eyebrow="Plany" title="Wybierz poziom dostępu" />
           <div className="grid gap-4 md:grid-cols-3">
             {PLANS.map((plan, i) => (
