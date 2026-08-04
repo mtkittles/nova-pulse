@@ -1,6 +1,6 @@
 import LandingPage from "@/components/landing-page"
 import { getStats } from "@/lib/stats"
-import { getTodayTips } from "@/lib/tips"
+import { getTipsHistory, getTodayTips } from "@/lib/tips"
 import { getSession } from "@/lib/auth"
 import { sortKey } from "@/lib/format"
 import type { Tip } from "@/lib/types"
@@ -9,7 +9,13 @@ import type { Tip } from "@/lib/types"
 export const dynamic = "force-dynamic"
 
 export default async function Home() {
-  const [stats, today, session] = await Promise.all([getStats(), getTodayTips(), getSession()])
+  // getTipsHistory zasila sekcję „Ostatnio rozliczone" (proof bar).
+  const [stats, today, session, history] = await Promise.all([
+    getStats(),
+    getTodayTips(),
+    getSession(),
+    getTipsHistory(12),
+  ])
 
   const tips = today.tips
   const byQ = [...tips].sort((a, b) => sortKey(b.q_score) - sortKey(a.q_score))
@@ -33,6 +39,7 @@ export default async function Home() {
       avgQScore={stats.summary.avg_q_score}
       leaguesCount={leaguesCount}
       timeline={stats.timeline}
+      recentSettled={history}
     />
   )
 }
