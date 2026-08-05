@@ -16,7 +16,7 @@ const TABS: Tab[] = [
 ]
 
 /**
- * Dolna nawigacja mobilna (≤1024px) — wydzielona z AppNav, żeby landing
+ * Dolna nawigacja mobilna (≤1024px) — wydzielona z headera, żeby landing
  * i pozostałe strony miały jeden pasek zamiast dwóch kopii.
  *
  * Blur tła + safe-area-inset (pasek gestów iOS), tap targety 44px.

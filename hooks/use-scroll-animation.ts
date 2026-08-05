@@ -50,10 +50,17 @@ export function usePrefersReducedMotion() {
 // powstaje. Callback ref wywołuje się PRZY KAŻDYM podpięciu węzła, więc
 // obserwator zawsze dostaje realny element, niezależnie od tego, kiedy się
 // pojawi.
-export function useInViewOnce<T extends Element>(): [(node: T | null) => void, boolean] {
+// delayMs: przesuwa moment ustawienia inView=true względem faktycznego
+// wejścia w viewport — dwa ciężkie wykresy obok siebie (np. "Forma modelu")
+// wchodzą w viewport w TEJ SAMEJ klatce przy szybkim scrollu, więc ich
+// pierwszy render (ResponsiveContainer + layout recharts) trafiał w jeden
+// commit i dawał ~100ms zacięcie. Mały offset na drugim wykresie rozkłada
+// ten koszt na dwie klatki zamiast jednej.
+export function useInViewOnce<T extends Element>(delayMs = 0): [(node: T | null) => void, boolean] {
   const [inView, setInView] = useState(false)
   const reduced = usePrefersReducedMotion()
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inViewRef = useRef(inView)
   inViewRef.current = inView
 
@@ -68,8 +75,12 @@ export function useInViewOnce<T extends Element>(): [(node: T | null) => void, b
       const io = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
-            setInView(true)
             io.disconnect()
+            if (delayMs > 0) {
+              timerRef.current = setTimeout(() => setInView(true), delayMs)
+            } else {
+              setInView(true)
+            }
           }
         },
         { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
@@ -77,10 +88,16 @@ export function useInViewOnce<T extends Element>(): [(node: T | null) => void, b
       io.observe(node)
       observerRef.current = io
     },
-    [reduced],
+    [reduced, delayMs],
   )
 
-  useEffect(() => () => observerRef.current?.disconnect(), [])
+  useEffect(
+    () => () => {
+      observerRef.current?.disconnect()
+      if (timerRef.current) clearTimeout(timerRef.current)
+    },
+    [],
+  )
 
   return [setRef, inView]
 }

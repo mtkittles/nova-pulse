@@ -1,10 +1,13 @@
 import type { RecommendationTier } from "@/lib/types"
 
 // Badge tieru rekomendacji z Oracle: value / watchlist / analysis.
+// Jeden kolor bazowy (--cyan) dla wszystkich trzech — rozróżnienie wyłącznie
+// przez ikonę i styl wypełnienia (nie przez barwę): Value = pełne tło,
+// Analiza = sam obrys, Watchlist = przezroczyste tło z cyan tekstem.
 const TIER: Record<RecommendationTier, { label: string; cls: string }> = {
-  value: { label: "💎 Value", cls: "border-emerald-400/40 bg-emerald-400/15 text-emerald-200" },
-  watchlist: { label: "👁 Watchlist", cls: "border-amber-400/40 bg-amber-400/15 text-amber-200" },
-  analysis: { label: "📊 Analiza", cls: "border-white/15 bg-white/5 text-[color:var(--text-muted)]" },
+  value: { label: "💎 Value", cls: "border border-[color:var(--cyan)] bg-[var(--cyan)] text-[color:var(--on-accent)]" },
+  analysis: { label: "📊 Analiza", cls: "border border-[color:var(--cyan)] bg-transparent text-[color:var(--cyan)]" },
+  watchlist: { label: "👁 Watchlist", cls: "border border-transparent bg-transparent text-[color:var(--cyan)]" },
 }
 
 export function TierBadge({ tier, className = "" }: { tier?: RecommendationTier | null; className?: string }) {

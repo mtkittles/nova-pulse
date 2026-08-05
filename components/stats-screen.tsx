@@ -53,11 +53,11 @@ function plTips(n: number): string {
   return d >= 2 && d <= 4 && (dd < 10 || dd >= 20) ? "typy" : "typów"
 }
 
-// Kolor baru Q-Score wg trafialności: <60% czerwony, 60-69% żółty, ≥70% zielony.
-function qBarColor(wrPct: number): string {
-  if (wrPct >= 70) return "#22C55E"
-  if (wrPct >= 60) return "#EAB308"
-  return "#EF4444"
+// Jeden akcent (cyan) na wszystkich słupkach — gradacja przez opacity zależną
+// od wartości względem najwyższego koszyka, spójnie z histogramem Q-Score na
+// landingu (q-distribution.tsx), zamiast kolorowania czerwień/złoto/zieleń.
+function qBarOpacity(wrPct: number, maxWr: number): number {
+  return 0.4 + 0.6 * (wrPct / maxWr)
 }
 
 function QBucketTooltip({ active, payload }: { active?: boolean; payload?: { payload: { bucket: string; wr: number; roi: number; tips: number } }[] }) {
@@ -110,6 +110,7 @@ export function StatsScreen({
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((t) => ({ date: t.date, roi: roiAlreadyPct ? t.roi : t.roi * 100, tips: t.tips }))
   const hasData = s.total_tips > 0
+  const maxQWinRate = Math.max(1, ...data.q_score_buckets.map((b) => Math.round(b.win_rate * 100)))
 
   // Brush kontrolowany — domyślnie okno wg wybranego okresu; user może przeciągać.
   const [brush, setBrush] = useState<{ start: number; end: number }>({ start: 0, end: 0 })
@@ -128,7 +129,7 @@ export function StatsScreen({
     }`
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 lg:max-w-6xl">
+    <div className="mx-auto max-w-2xl space-y-8 lg:max-w-[1600px]">
       {/* [A] NAGŁÓWEK */}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-semibold tracking-tight">Statystyki modelu</h1>
@@ -216,7 +217,7 @@ export function StatsScreen({
             <section>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Skuteczność wg Q-Score</h2>
               <Card hover={false}>
-                {/* mini bar chart: trafialność per zakres Q (kolor wg progu) */}
+                {/* mini bar chart: trafialność per zakres Q (mono-cyan, gradacja opacity) */}
                 <ResponsiveContainer width="100%" height={180}>
                   <BarChart
                     data={data.q_score_buckets.map((b) => ({ bucket: b.bucket, wr: Math.round(b.win_rate * 100), roi: b.roi, tips: b.tips }))}
@@ -229,7 +230,7 @@ export function StatsScreen({
                     <Tooltip content={<QBucketTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
                     <Bar dataKey="wr" radius={[0, 6, 6, 0]}>
                       {data.q_score_buckets.map((b, i) => (
-                        <Cell key={i} fill={qBarColor(Math.round(b.win_rate * 100))} />
+                        <Cell key={i} fill="var(--cyan)" fillOpacity={qBarOpacity(Math.round(b.win_rate * 100), maxQWinRate)} />
                       ))}
                     </Bar>
                   </BarChart>

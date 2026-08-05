@@ -44,7 +44,7 @@ export function QScoreRing({
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={drawn ? targetOffset : c}
-          style={{ transition: "stroke-dashoffset 900ms ease" }}
+          style={{ transition: "stroke-dashoffset 500ms ease" }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">

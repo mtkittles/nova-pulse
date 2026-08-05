@@ -326,6 +326,11 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* aktualna strona w nawigacji — podkreślenie widoczne na stałe, nie tylko na hover */
+.nav-underline.is-active::after {
+  transform: scaleX(1);
+}
+
 /* ============================================================
    Overlay menu mobilne — pozycje wjeżdżają kaskadowo od dołu.
    ============================================================ */

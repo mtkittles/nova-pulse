@@ -38,7 +38,10 @@ function QTooltip({
 export function QDistribution({ tips }: { tips: Tip[] }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
-  const [inViewRef, inView] = useInViewOnce<HTMLDivElement>()
+  // offset 120ms: rozjeżdża moment mountu z sąsiednim ModelFormChart (ta sama
+  // sekcja, wchodzą w viewport w tej samej klatce przy szybkim scrollu) —
+  // patrz komentarz w useInViewOnce
+  const [inViewRef, inView] = useInViewOnce<HTMLDivElement>(120)
 
   const { data, spread, maxCount } = useMemo(() => {
     const bins = new Map<number, number>()

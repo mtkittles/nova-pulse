@@ -52,6 +52,7 @@ function MarketRow({
   awayScore,
   loggedIn,
   tracked,
+  index = 0,
 }: {
   tip: Tip
   home: string
@@ -61,6 +62,7 @@ function MarketRow({
   awayScore: number | null
   loggedIn: boolean
   tracked: boolean
+  index?: number
 }) {
   const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, home, away)
   const settlement: Settlement = finished ? settleTip(tip, homeScore, awayScore) : "pending"
@@ -83,7 +85,7 @@ function MarketRow({
     <div className="flex items-stretch rounded-2xl border border-white/10 bg-white/[0.035]">
       <div className="min-w-0 flex-1">
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 p-3 text-left">
-        <QRing value={tip.q_score} size={42} stroke={4} />
+        <QRing value={tip.q_score} size={42} stroke={4} delay={Math.min(index, 8) * 0.03} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.short}</span>
@@ -292,6 +294,7 @@ export default function MatchTipCard({
             awayScore={awayScore}
             loggedIn={loggedIn}
             tracked={Boolean(trackedKeys?.has(`${tip.event_id}|${tip.bet_type}`))}
+            index={i}
           />
         ))}
       </div>

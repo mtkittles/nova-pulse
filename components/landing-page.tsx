@@ -9,7 +9,7 @@ import { Brand } from "./brand"
 import { RevealText } from "./ui/reveal-text"
 import { ScrollReveal } from "./scroll-reveal"
 import { MobileTabBar } from "./mobile-tab-bar"
-import { LandingHeader } from "./landing/landing-header"
+import { SiteHeader } from "./site-header"
 import { HeroKinetic } from "./landing/hero-kinetic"
 import { SectionIndex } from "./landing/section-index"
 import { LiveTicker } from "./landing/live-ticker"
@@ -138,16 +138,16 @@ export default function LandingPage({
 
   return (
     <div className="min-h-screen bg-[var(--bg-0)] text-[color:var(--text-primary)]">
-      <LandingHeader loggedIn={loggedIn} />
+      <SiteHeader loggedIn={loggedIn} />
       <SectionIndex />
 
       {/* pb-tabbar: zapas na dolną nawigację mobilną + pasek gestów */}
-      <main className="pb-tabbar mx-auto max-w-6xl px-4 md:px-6 lg:pb-0">
+      <main className="pb-tabbar mx-auto max-w-[1600px] px-[clamp(1.5rem,5vw,5rem)] lg:pb-0">
         {/* ——— 1. HERO KINETYCZNY ——— */}
         <HeroKinetic tips={todayTips} />
 
-        {/* ——— LIVE TICKER — pełna szerokość, wychodzi poza max-w-6xl ——— */}
-        <div className="-mx-4 md:-mx-6">
+        {/* ——— LIVE TICKER — pełna szerokość, wychodzi poza max-w-[1600px] ——— */}
+        <div className="-mx-[clamp(1.5rem,5vw,5rem)]">
           <LiveTicker tips={todayTips} />
         </div>
 
