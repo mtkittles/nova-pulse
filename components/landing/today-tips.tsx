@@ -63,7 +63,7 @@ function Chip({
       className={`tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-colors duration-150 ${
         active
           ? "border-[color:var(--cyan)] bg-[var(--cyan-soft)] text-[color:var(--cyan)]"
-          : "border-[color:var(--border-soft)] bg-[var(--surface-1)] text-[color:var(--text-secondary)]"
+          : "border-[color:var(--border-subtle)] bg-[var(--bg-1)] text-[color:var(--text-secondary)]"
       }`}
     >
       {children}
@@ -161,7 +161,7 @@ export function TodayTips({ tips, loggedIn }: { tips: Tip[]; loggedIn: boolean }
       </div>
 
       {groups.length === 0 ? (
-        <div className="grid place-items-center rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-10 text-center">
+        <div className="grid place-items-center rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-10 text-center">
           <CalendarOff className="mb-3 h-6 w-6 text-[color:var(--text-muted)]" />
           <p className="font-medium">Brak typów dla wybranych filtrów</p>
           <button
@@ -170,7 +170,7 @@ export function TodayTips({ tips, loggedIn }: { tips: Tip[]; loggedIn: boolean }
               setLeague("ALL")
               setMarket("ALL")
             }}
-            className="tap mt-3 inline-flex items-center rounded-full border border-[color:var(--border-soft)] px-4 text-sm text-[color:var(--text-secondary)]"
+            className="tap mt-3 inline-flex items-center rounded-full border border-[color:var(--border-subtle)] px-4 text-sm text-[color:var(--text-secondary)]"
           >
             Wyczyść filtry
           </button>
@@ -192,7 +192,7 @@ export function TodayTips({ tips, loggedIn }: { tips: Tip[]; loggedIn: boolean }
       <div className="mt-6 flex justify-center">
         <Link
           href="/typy"
-          className="tap inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-1)] px-5 text-sm font-medium text-[color:var(--text-secondary)] transition-colors duration-150 hover:border-[color:var(--cyan)] hover:text-[color:var(--text-primary)]"
+          className="tap inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border-subtle)] bg-[var(--bg-1)] px-5 text-sm font-medium text-[color:var(--text-secondary)] transition-colors duration-150 hover:border-[color:var(--cyan)] hover:text-[color:var(--text-primary)]"
         >
           Wszystkie typy dnia <ArrowRight className="h-4 w-4" />
         </Link>

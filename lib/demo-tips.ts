@@ -280,6 +280,9 @@ export interface DemoMatch {
   away_score: number | null
   home_team_logo: string | null
   away_team_logo: string | null
+  /** team_id z tabeli LEAGUES — do generatora formy drużyny (demoTeamSeason). */
+  home_team_id: number | null
+  away_team_id: number | null
   predictions: DemoPrediction[]
 }
 
@@ -468,6 +471,8 @@ function buildMatch(
     away_score,
     home_team_logo: logo(homeId),
     away_team_logo: logo(awayId),
+    home_team_id: homeId,
+    away_team_id: awayId,
     predictions,
   }
 }
@@ -498,6 +503,8 @@ function buildOrphan(rnd: Rnd, eventId: number): DemoMatch {
     away_score: null,
     home_team_logo: null,
     away_team_logo: null,
+    home_team_id: null,
+    away_team_id: null,
     predictions,
   }
 }
@@ -637,4 +644,243 @@ export function demoCalendarDays(nowMs: number = Date.now()): DemoCalendarDay[] 
       analyzed: p.matches.length,
     }
   })
+}
+
+// ——— Szczegóły meczu (/match/{id}/detailed) ———
+//
+// Zwraca RAW payload w kształcie, który `adaptMatchDetailed` (lib/oracle-map.ts)
+// już umie parsować — ten sam adapter co produkcja, ten sam powód co przy
+// `demoTipsPayload`: demo ma testować adapter, nie go omijać.
+//
+// Mecz (drużyny, herby, predykcje, wynik) bierzemy z generatora list — więc
+// karta na /typy i strona /mecz/{id} pokazują TE SAME dane. H2H/forma/rozkład
+// wyniku to osobny, niezależny mock (użytkownik: "wystarczy realistyczny,
+// nie musi być idealnie spójny z listą typów").
+
+const FORM_LETTERS: readonly (readonly ["W" | "D" | "L", number])[] = [
+  ["W", 40],
+  ["D", 25],
+  ["L", 35],
+]
+
+function demoTeamStats(rnd: Rnd): Record<string, unknown> {
+  return {
+    played: 20 + Math.floor(rnd() * 10),
+    gf_avg: round2(0.8 + rnd() * 1.6),
+    ga_avg: round2(0.6 + rnd() * 1.4),
+    btts_pct: Math.round(40 + rnd() * 40),
+    over_1_5_pct: Math.round(50 + rnd() * 40),
+    clean_sheets_pct: Math.round(15 + rnd() * 35),
+    form: Array.from({ length: 5 }, () => weighted(rnd, FORM_LETTERS)).join(""),
+  }
+}
+
+function demoOddsMarkets(rnd: Rnd): Record<string, unknown> {
+  return {
+    btts_yes: round2(1.6 + rnd() * 0.7),
+    btts_no: round2(1.6 + rnd() * 0.7),
+    home_win: round2(1.7 + rnd() * 2.5),
+    draw: round2(3.0 + rnd() * 1.2),
+    away_win: round2(1.7 + rnd() * 2.5),
+    over25: round2(1.7 + rnd() * 0.8),
+    over35: round2(2.6 + rnd() * 1.2),
+    cs_32: round2(15 + rnd() * 12),
+    cs_23: round2(18 + rnd() * 14),
+    home_team_o15: round2(1.6 + rnd() * 1.0),
+    away_team_o15: round2(1.7 + rnd() * 1.1),
+  }
+}
+
+/**
+ * Szuka meczu o danym `event_id` w całym oknie 7 dni (ten sam generator, więc
+ * te same dane co na kartach) i dokleja szczegóły dowodowe (H2H, forma,
+ * rozkład wyniku, statystyki). Nie znaleziono → `{ found: false }` — dokładnie
+ * ten kształt, po którym `lib/match.ts` już rozpoznaje "brak meczu".
+ */
+export function demoMatchDetailed(id: string, nowMs: number = Date.now()): Record<string, unknown> {
+  let found: DemoMatch | null = null
+  for (const d of demoDates(nowMs)) {
+    const m = demoTipsPayload(d, nowMs).matches.find((x) => String(x.event_id) === String(id))
+    if (m) {
+      found = m
+      break
+    }
+  }
+  if (!found) return { found: false }
+
+  const rnd = mulberry32(hashSeed(`nova-pulse-demo-detail:${id}`))
+
+  const h2hCount = 3 + Math.floor(rnd() * 3) // 3–5 ostatnich spotkań
+  const h2h = Array.from({ length: h2hCount }, (_, i) => {
+    const [hs, as] = weighted(rnd, SCORELINES)
+    const swapped = rnd() < 0.5 // kto był gospodarzem w TYM spotkaniu H2H
+    const daysAgo = 60 + i * (120 + Math.floor(rnd() * 120))
+    const date = new Date(nowMs - daysAgo * 864e5).toISOString().slice(0, 10)
+    return swapped
+      ? { home_team: found.away_team, away_team: found.home_team, home_score: hs, away_score: as, date }
+      : { home_team: found.home_team, away_team: found.away_team, home_score: hs, away_score: as, date }
+  })
+
+  // Rozkład wyniku — ta sama tabela wag co przy losowaniu meczów (spójna
+  // "kształtem" z resztą generatora), przeskalowana do rozsądnej próbki.
+  const score_distribution = SCORELINES.map(([[h, a], w]) => ({
+    score: `${h}:${a}`,
+    count: Math.max(1, Math.round(w / 2)),
+  }))
+
+  return {
+    found: true,
+    event_id: found.event_id,
+    home_team: found.home_team,
+    away_team: found.away_team,
+    home_team_logo: found.home_team_logo,
+    away_team_logo: found.away_team_logo,
+    // team_id realny (z tabeli LEAGUES) — pozwala getTeam() w demo dociągnąć
+    // "Forma — ostatnie mecze" (FormPanel) tą samą ścieżką co produkcja.
+    home_id: found.home_team_id,
+    away_id: found.away_team_id,
+    league_code: found.league,
+    kickoff_utc: found.kickoff_utc,
+    status: found.match_status,
+    home_score: found.home_score,
+    away_score: found.away_score,
+    predictions: found.predictions,
+    h2h,
+    home_stats: demoTeamStats(rnd),
+    away_stats: demoTeamStats(rnd),
+    score_distribution,
+    odds_markets: demoOddsMarkets(rnd),
+  }
+}
+
+// ——— Sezon drużyny (/team/{id}) — dla FormPanel na stronie meczu i /druzyna/{id} ———
+
+const TEAM_FORM_LETTERS: readonly (readonly ["W" | "D" | "L", number])[] = [
+  ["W", 42],
+  ["D", 26],
+  ["L", 32],
+]
+
+function demoSideStats(rnd: Rnd): Record<string, unknown> {
+  return {
+    played: 10 + Math.floor(rnd() * 8),
+    gf_avg: round2(0.7 + rnd() * 1.8),
+    ga_avg: round2(0.6 + rnd() * 1.5),
+    btts_pct: Math.round(35 + rnd() * 45),
+    over15_pct: Math.round(50 + rnd() * 40),
+    clean_sheets_pct: Math.round(15 + rnd() * 35),
+  }
+}
+
+/** Szuka drużyny po numerycznym `team_id` (z tabeli LEAGUES) w całym katalogu lig. */
+function findDemoTeamById(wantedId: number): { name: string; league: DemoLeague } | null {
+  if (!Number.isFinite(wantedId)) return null
+  for (const league of LEAGUES) {
+    const team = league.teams.find(([, teamId]) => teamId === wantedId)
+    if (team) return { name: team[0], league }
+  }
+  return null
+}
+
+/**
+ * Szuka drużyny o danym `team_id` (numeryczne ID z tabeli LEAGUES — to samo,
+ * którego używamy do budowy URL herbu) i generuje jej sezon. `{ found: false }`
+ * gdy id nie pochodzi z tego generatora (np. bezpośrednie wejście na obcy URL).
+ */
+export function demoTeamSeason(id: string, nowMs: number = Date.now()): Record<string, unknown> {
+  const wantedId = Number(id)
+  const hit = findDemoTeamById(wantedId)
+  if (!hit) return { found: false }
+
+  const rnd = mulberry32(hashSeed(`nova-pulse-demo-team:${id}:${ymdWarsaw(nowMs)}`))
+  const played = 20 + Math.floor(rnd() * 10)
+  const wins = Math.round(played * (0.3 + rnd() * 0.35))
+  const losses = Math.round((played - wins) * (0.4 + rnd() * 0.3))
+  const draws = Math.max(0, played - wins - losses)
+  const gf = Math.round(played * (0.9 + rnd() * 1.2))
+  const ga = Math.round(played * (0.7 + rnd() * 1.1))
+
+  return {
+    found: true,
+    team_id: wantedId,
+    name: hit.name,
+    league: hit.league.name,
+    country: hit.league.country,
+    logo: logo(wantedId),
+    played,
+    wins,
+    draws,
+    losses,
+    gf,
+    ga,
+    btts_pct: Math.round(35 + rnd() * 45),
+    over_1_5_pct: Math.round(50 + rnd() * 40),
+    over_2_5_pct: Math.round(30 + rnd() * 40),
+    home_stats: demoSideStats(rnd),
+    away_stats: demoSideStats(rnd),
+    form: Array.from({ length: 5 }, () => weighted(rnd, TEAM_FORM_LETTERS)).join(""),
+    scorers: [],
+  }
+}
+
+/**
+ * "Forma — ostatnie mecze" (FormPanel, zakładka Analiza na /mecz/{id}) czyta
+ * z ZUPEŁNIE innej ścieżki niż demoTeamSeason: `getTeamForm()` w lib/form.ts,
+ * osobny plik, osobny endpoint (/api/team/{id}/form). Bez tego wpięcia widget
+ * pokazywałby swój istniejący produkcyjny fallback (mockForm() w lib/form.ts —
+ * statyczne japońskie kluby), kompletnie niezwiązane z meczem, który user
+ * ogląda — myląco bardziej niż pusty stan.
+ *
+ * Przeciwnicy pochodzą z TEJ SAMEJ ligi co drużyna (realizm), naprzemiennie
+ * dom/wyjazd wg `scope`.
+ */
+export function demoTeamForm(
+  id: string,
+  scope: "all" | "home" | "away",
+  count: number,
+  nowMs: number = Date.now(),
+): Record<string, unknown> {
+  const wantedId = Number(id)
+  const hit = findDemoTeamById(wantedId)
+  if (!hit) return { team_name: "—", matches: [] }
+
+  const rnd = mulberry32(hashSeed(`nova-pulse-demo-form:${id}:${scope}:${ymdWarsaw(nowMs)}`))
+  const opponents = hit.league.teams.filter(([name]) => name !== hit.name)
+
+  const matches: Record<string, unknown>[] = []
+  let btts = 0
+  let gfSum = 0
+  let gaSum = 0
+
+  for (let i = 0; i < count; i++) {
+    const isHome = scope === "home" ? true : scope === "away" ? false : rnd() < 0.5
+    const opponent = opponents.length > 0 ? pick(rnd, opponents)[0] : "—"
+    const [hs, as] = weighted(rnd, SCORELINES)
+    const gf = isHome ? hs : as
+    const ga = isHome ? as : hs
+    if (gf > 0 && ga > 0) btts++
+    gfSum += gf
+    gaSum += ga
+    const date = new Date(nowMs - (i + 1) * 7 * 864e5).toISOString().slice(0, 10)
+    // `result` explicite — adaptForm go liczy z m.gf/m.goals_for (surowe pole),
+    // którego tu NIE podajemy (mamy tylko home_score/away_score); bez tego
+    // formResult() nie ma z czego wyliczyć wynik i pada na fallback "D".
+    const result = gf > ga ? "W" : gf < ga ? "L" : "D"
+    matches.push({
+      home: isHome,
+      opponent,
+      home_score: isHome ? gf : ga,
+      away_score: isHome ? ga : gf,
+      date,
+      result,
+    })
+  }
+
+  return {
+    team_name: hit.name,
+    matches,
+    btts_pct: count > 0 ? Math.round((btts / count) * 100) : null,
+    avg_goals_for: count > 0 ? round2(gfSum / count) : null,
+    avg_goals_against: count > 0 ? round2(gaSum / count) : null,
+  }
 }

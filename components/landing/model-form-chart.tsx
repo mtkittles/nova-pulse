@@ -21,7 +21,7 @@ function FormTooltip({
   if (!active || !payload?.length) return null
   const p = payload[0].payload
   return (
-    <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-3 py-2 text-xs">
+    <div className="rounded-lg border border-[color:var(--border-subtle)] bg-[var(--bg-1)] px-3 py-2 text-xs">
       <p className="font-medium text-[color:var(--text-primary)]">{fmtDay(p.date)}</p>
       <p className="mt-1 tnum text-[color:var(--cyan)]">Skuteczność {p.wr.toFixed(1)}%</p>
       <p className="tnum text-[color:var(--text-secondary)]">{p.tips} typów</p>
@@ -50,7 +50,7 @@ export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
 
   if (data.length === 0) {
     return (
-      <div className="grid h-64 place-items-center rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] text-sm text-[color:var(--text-muted)]">
+      <div className="grid h-64 place-items-center rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] text-sm text-[color:var(--text-muted)]">
         Brak danych historycznych
       </div>
     )
@@ -59,7 +59,7 @@ export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
   // Recharts potrzebuje szerokości kontenera — do momentu montażu pokazujemy
   // shimmer o docelowej wysokości, żeby układ nie skakał.
   if (!mounted) {
-    return <div className="shimmer h-64 rounded-[var(--radius-card)] border border-[color:var(--border-soft)]" />
+    return <div className="shimmer h-64 rounded-xl border border-[color:var(--border-subtle)]" />
   }
 
   const values = data.map((d) => d.wr)
@@ -67,18 +67,20 @@ export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
   const hi = Math.min(100, Math.ceil(Math.max(...values) / 10) * 10 + 5)
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-4 md:p-5">
+    <div className="rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           {/* left: 0 — ujemny margines przycinał pierwszą cyfrę etykiet osi Y */}
           <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
+              {/* jedyny gradient na landingu — cyan→transparent pod linią, dokłada
+                  czytelności (oddziela obszar nad/pod progiem), nie jest dekoracją tła karty */}
               <linearGradient id="lb-form-fill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--cyan)" stopOpacity={0.32} />
                 <stop offset="100%" stopColor="var(--cyan)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="var(--border-soft)" vertical={false} />
+            <CartesianGrid stroke="var(--border-subtle)" vertical={false} />
             <XAxis
               dataKey="date"
               tickFormatter={fmtDay}
@@ -96,7 +98,7 @@ export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
               width={42}
             />
             <ReferenceLine y={50} stroke="var(--text-muted)" strokeDasharray="3 3" />
-            <Tooltip content={<FormTooltip />} cursor={{ stroke: "var(--border-strong)" }} />
+            <Tooltip content={<FormTooltip />} cursor={{ stroke: "var(--border-subtle)" }} />
             <Area
               type="monotone"
               dataKey="wr"

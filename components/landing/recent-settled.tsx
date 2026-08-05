@@ -21,17 +21,22 @@ export function RecentSettled({ tips }: { tips: Tip[] }) {
   const rate = Math.round((wins / settled.length) * 100)
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)]">
-      {/* pasek znaczników — cały wynik na jeden rzut oka */}
-      <div className="flex items-center gap-3 border-b border-[color:var(--border-soft)] px-4 py-3 md:px-5">
-        <div className="flex flex-wrap gap-1">
+    <div className="overflow-hidden rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)]">
+      {/* pasek znaczników — cały wynik na jeden rzut oka. Monochromatyczny cyan:
+          trafiony = pełna kropka, chybiony = pusty obrys (--border-subtle).
+          Jedyny sygnał koloru na landingu poza samym --cyan zostaje wyłącznie
+          w tej sekcji dowodowej (patrz komentarz przy pasku niżej). */}
+      <div className="flex items-center gap-3 border-b border-[color:var(--border-subtle)] px-4 py-3 md:px-5">
+        <div className="flex flex-wrap gap-1.5">
           {settled.map((t, i) => (
             <span
               key={`${t.event_id}-${i}`}
               title={t.actual_result === 1 ? "Trafiony" : "Chybiony"}
-              className={`h-2.5 w-2.5 rounded-full ${
-                t.actual_result === 1 ? "bg-[var(--success)]" : "bg-[var(--danger)]"
-              }`}
+              className={
+                t.actual_result === 1
+                  ? "h-2.5 w-2.5 rounded-full bg-[var(--cyan)]"
+                  : "h-2.5 w-2.5 rounded-full border border-[color:var(--border-subtle)]"
+              }
             />
           ))}
         </div>
@@ -43,7 +48,7 @@ export function RecentSettled({ tips }: { tips: Tip[] }) {
         </p>
       </div>
 
-      <ul className="divide-y divide-[color:var(--border-soft)]">
+      <ul className="divide-y divide-[color:var(--border-subtle)]">
         {settled.slice(0, 6).map((t, i) => {
           const m = getMarketLabel(
             t.bet_type_raw ?? t.bet_type,
@@ -52,12 +57,13 @@ export function RecentSettled({ tips }: { tips: Tip[] }) {
             t.away,
           )
           const won = t.actual_result === 1
+          // Sygnał trafienia bez zielonego/czerwonego: pasek i etykieta różnią
+          // się INTENSYWNOŚCIĄ cyjanu (jasny = trafiony, przygaszony = chybiony),
+          // nie barwą — spójne z gradacją opacity w histogramie Q-Score.
           const row = (
             <div className="flex items-center gap-3 px-4 py-3 md:px-5">
               <span
-                className={`h-8 w-1 shrink-0 rounded-full ${
-                  won ? "bg-[var(--success)]" : "bg-[var(--danger)]"
-                }`}
+                className={`h-8 w-1 shrink-0 rounded-full bg-[var(--cyan)] ${won ? "" : "opacity-25"}`}
               />
               <span className="flex shrink-0 -space-x-1.5">
                 <TeamBadge teamName={t.home} logoUrl={t.homeLogo} size="sm" />
@@ -75,7 +81,7 @@ export function RecentSettled({ tips }: { tips: Tip[] }) {
                 </span>
                 <span
                   className={`block text-[11px] font-semibold ${
-                    won ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"
+                    won ? "text-[color:var(--cyan)]" : "text-[color:var(--text-muted)]"
                   }`}
                 >
                   {won ? "trafiony" : "chybiony"}
@@ -91,7 +97,7 @@ export function RecentSettled({ tips }: { tips: Tip[] }) {
               ) : (
                 <Link
                   href={`/mecz/${t.event_id}`}
-                  className="block transition-colors duration-150 hover:bg-[var(--surface-2)]"
+                  className="block transition-colors duration-150 hover:bg-white/[0.03]"
                 >
                   {row}
                 </Link>

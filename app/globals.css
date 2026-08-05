@@ -15,6 +15,9 @@
   /* obramowania */
   --border-soft: rgba(126, 232, 247, 0.1);
   --border-strong: rgba(126, 232, 247, 0.22);
+  /* neutralny 1px border (bez cyjanowego tintu) — flat karty dashboardu
+     na landingu (components/landing/*), gdzie jedynym akcentem ma być cyan. */
+  --border-subtle: rgba(255, 255, 255, 0.08);
 
   /* tekst */
   --text-primary: #f5f8fb;

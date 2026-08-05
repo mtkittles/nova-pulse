@@ -23,10 +23,12 @@ function fmtTime(iso: string): string {
 function TickerRow({ item }: { item: TickerItem }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-5 text-sm">
+      {/* wskaźnik "na żywo" — cyan, nie czerwony: poza sekcją "Ostatnio rozliczone"
+          czerwień/zieleń jest z palety wyłączona, cyan zostaje jedynym akcentem */}
       {item.live && (
         <span className="relative flex h-1.5 w-1.5 shrink-0">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--danger)] opacity-75" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--cyan)] opacity-75" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--cyan)]" />
         </span>
       )}
       <span className="text-[color:var(--text-muted)]">{item.league}</span>
@@ -35,7 +37,7 @@ function TickerRow({ item }: { item: TickerItem }) {
         {item.home} vs {item.away}
       </span>
       <span className="text-[color:var(--cyan)]">·</span>
-      <span className={`tnum font-semibold ${item.live ? "text-[color:var(--danger)]" : "text-[color:var(--text-secondary)]"}`}>
+      <span className={`tnum font-semibold ${item.live ? "text-[color:var(--cyan)]" : "text-[color:var(--text-secondary)]"}`}>
         {item.right}
       </span>
     </span>
@@ -111,7 +113,7 @@ export function LiveTicker({ tips }: { tips: Tip[] }) {
 
   return (
     <div
-      className="ticker-viewport border-y border-[color:var(--border-soft)] bg-[var(--bg-1)]"
+      className="ticker-viewport border-y border-[color:var(--border-subtle)] bg-[var(--bg-1)]"
       aria-label="Mecze na żywo i najbliższe"
     >
       <div className="ticker-track h-12 items-center" style={{ animationDuration: `${duration}s` }}>

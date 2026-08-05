@@ -5,7 +5,6 @@ import { Activity, ArrowRight, Check, CheckCircle2, Cpu, Send, ShieldCheck } fro
 import type { Tip } from "@/lib/types"
 import type { TimelinePoint } from "@/lib/stats-types"
 import { Brand } from "./brand"
-import { Card } from "./ui/card"
 import { RevealText } from "./ui/reveal-text"
 import { ScrollReveal } from "./scroll-reveal"
 import { MobileTabBar } from "./mobile-tab-bar"
@@ -206,7 +205,7 @@ export default function LandingPage({
               const Icon = step.icon
               return (
                 <ScrollReveal key={step.title} delay={i * 70} className="h-full">
-                  <div className="lift h-full rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-5">
+                  <div className="lift h-full rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-5">
                     <div className="grid h-10 w-10 place-items-center rounded-xl border border-[color:var(--border-strong)] bg-[var(--cyan-soft)] text-[color:var(--cyan)]">
                       <Icon className="h-5 w-5" />
                     </div>
@@ -228,10 +227,8 @@ export default function LandingPage({
             {PLANS.map((plan, i) => (
               <ScrollReveal key={plan.name} delay={i * 70} className="h-full">
                 <div
-                  className={`relative flex h-full flex-col rounded-[var(--radius-card)] border bg-[var(--surface-1)] p-5 ${
-                    plan.highlight
-                      ? "border-[color:var(--cyan)]/60 bg-[linear-gradient(160deg,var(--cyan-soft),transparent_55%)]"
-                      : "border-[color:var(--border-soft)]"
+                  className={`relative flex h-full flex-col rounded-xl border bg-[var(--bg-1)] p-5 ${
+                    plan.highlight ? "border-[color:var(--cyan)]/60" : "border-[color:var(--border-subtle)]"
                   }`}
                 >
                   {plan.badge && (
@@ -256,7 +253,7 @@ export default function LandingPage({
                     className={`tap mt-5 inline-flex items-center justify-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-transform duration-150 hover:scale-[1.02] ${
                       plan.highlight
                         ? "bg-[var(--cyan)] text-[color:var(--on-accent)]"
-                        : "border border-[color:var(--border-soft)] bg-[var(--surface-2)] text-[color:var(--text-primary)]"
+                        : "border border-[color:var(--border-subtle)] bg-[var(--bg-1)] text-[color:var(--text-primary)]"
                     }`}
                   >
                     {plan.cta.href.includes("t.me") && <Send className="h-4 w-4" />}
@@ -274,7 +271,10 @@ export default function LandingPage({
         {/* ——— 8. STOPKA ——— */}
         <footer className="pt-12 md:pt-14">
           <ScrollReveal>
-            <Card hover={false} active className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+            {/* flat div zamiast współdzielonego <Card active> — ten ma wypalony
+                cyan-gradient tła (patrz ui/card.tsx), używany też poza landingiem
+                (/mecz), więc nie ruszamy go; tu piszemy płasko wprost */}
+            <div className="flex flex-col items-start gap-4 rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-6 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-lg font-semibold">Odbieraj typy w Telegramie</h3>
                 <p className="mt-1 text-sm text-[color:var(--text-secondary)]">
@@ -287,9 +287,12 @@ export default function LandingPage({
               >
                 <Send className="h-4 w-4" /> @lupus_bet_bot
               </Link>
-            </Card>
+            </div>
           </ScrollReveal>
 
+          {/* Ostrzeżenie 18+/odpowiedzialna gra — poza zakresem "flat black+cyan":
+              amber to sygnał regulacyjny/uwagi, nie element dekoracyjny dashboardu,
+              więc zostaje bez zmian. */}
           <div className="mt-6 flex items-start gap-3 rounded-[var(--radius-card)] border border-[color:var(--warning)]/30 bg-[color:var(--warning)]/[0.08] p-4 text-sm text-[color:var(--text-secondary)]">
             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--warning)]" />
             <p>
@@ -301,7 +304,7 @@ export default function LandingPage({
             </p>
           </div>
 
-          <div className="mt-6 flex flex-col justify-between gap-4 border-t border-[color:var(--border-soft)] pt-6 text-sm text-[color:var(--text-secondary)] md:flex-row md:items-center">
+          <div className="mt-6 flex flex-col justify-between gap-4 border-t border-[color:var(--border-subtle)] pt-6 text-sm text-[color:var(--text-secondary)] md:flex-row md:items-center">
             <Brand />
             <div className="flex flex-wrap gap-x-5 gap-y-2">
               {[

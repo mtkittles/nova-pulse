@@ -61,7 +61,7 @@ export function LandingHeader({ loggedIn }: { loggedIn: boolean }) {
       <header
         className={`safe-top sticky top-0 z-50 transition-all duration-200 ${
           scrolled
-            ? "border-b border-[color:var(--border-soft)] bg-[var(--bg-0)]/72 backdrop-blur-xl"
+            ? "border-b border-[color:var(--border-subtle)] bg-[var(--bg-0)]/72 backdrop-blur-xl"
             : "border-b border-transparent bg-transparent"
         }`}
       >
@@ -94,7 +94,7 @@ export function LandingHeader({ loggedIn }: { loggedIn: boolean }) {
               onClick={() => setOpen((v) => !v)}
               aria-label={open ? "Zamknij menu" : "Otwórz menu"}
               aria-expanded={open}
-              className="tap grid place-items-center rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-1)]/80 backdrop-blur md:hidden"
+              className="tap grid place-items-center rounded-lg border border-[color:var(--border-subtle)] bg-[var(--bg-1)]/80 backdrop-blur md:hidden"
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -110,7 +110,7 @@ export function LandingHeader({ loggedIn }: { loggedIn: boolean }) {
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Zamknij menu"
-              className="tap grid place-items-center rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-1)]/80"
+              className="tap grid place-items-center rounded-lg border border-[color:var(--border-subtle)] bg-[var(--bg-1)]/80"
             >
               <X className="h-5 w-5" />
             </button>

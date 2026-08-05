@@ -33,9 +33,9 @@ export function TodayStrip({ tips }: { tips: Tip[] }) {
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[color:var(--border-soft)] md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[color:var(--border-subtle)] bg-[color:var(--border-subtle)] md:grid-cols-4">
       {items.map((it) => (
-        <div key={it.label} className="bg-[var(--surface-1)] px-4 py-4 md:px-5 md:py-5">
+        <div key={it.label} className="bg-[var(--bg-1)] px-4 py-4 md:px-5 md:py-5">
           <p
             className={`text-2xl font-semibold tracking-tight md:text-3xl ${
               it.accent ? "text-[color:var(--cyan)]" : "text-[color:var(--text-primary)]"

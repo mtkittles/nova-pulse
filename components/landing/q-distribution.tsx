@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import type { Tip } from "@/lib/types"
-import { scaleColor } from "@/lib/design"
 
 const BIN = 5
 const MIN = 50
@@ -19,7 +18,7 @@ function QTooltip({
   if (!active || !payload?.length) return null
   const p = payload[0].payload
   return (
-    <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-3 py-2 text-xs">
+    <div className="rounded-lg border border-[color:var(--border-subtle)] bg-[var(--bg-1)] px-3 py-2 text-xs">
       <p className="font-medium text-[color:var(--text-primary)]">Q {p.label}</p>
       <p className="mt-1 tnum text-[color:var(--text-secondary)]">
         {p.count} {p.count === 1 ? "typ" : p.count < 5 ? "typy" : "typów"}
@@ -39,7 +38,7 @@ export function QDistribution({ tips }: { tips: Tip[] }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
-  const { data, spread } = useMemo(() => {
+  const { data, spread, maxCount } = useMemo(() => {
     const bins = new Map<number, number>()
     for (let b = MIN; b < MAX; b += BIN) bins.set(b, 0)
 
@@ -58,23 +57,24 @@ export function QDistribution({ tips }: { tips: Tip[] }) {
       count,
     }))
     // ile koszyków faktycznie ma zawartość — to jest „dowód różnicowania"
-    return { data: rows, spread: rows.filter((r) => r.count > 0).length, total: counted }
+    const maxCount = Math.max(1, ...rows.map((r) => r.count))
+    return { data: rows, spread: rows.filter((r) => r.count > 0).length, total: counted, maxCount }
   }, [tips])
 
   if (data.every((d) => d.count === 0)) {
     return (
-      <div className="grid h-56 place-items-center rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] text-sm text-[color:var(--text-muted)]">
+      <div className="grid h-56 place-items-center rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] text-sm text-[color:var(--text-muted)]">
         Brak ocen Q-Score
       </div>
     )
   }
 
   if (!mounted) {
-    return <div className="shimmer h-56 rounded-[var(--radius-card)] border border-[color:var(--border-soft)]" />
+    return <div className="shimmer h-56 rounded-xl border border-[color:var(--border-subtle)]" />
   }
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-4 md:p-5">
+    <div className="rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
       <div className="h-56 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
@@ -93,9 +93,11 @@ export function QDistribution({ tips }: { tips: Tip[] }) {
               width={34}
             />
             <Tooltip content={<QTooltip />} cursor={{ fill: "var(--cyan-soft)" }} />
-            <Bar dataKey="count" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+            {/* jeden akcent (cyan) na wszystkich słupkach — gradacja przez opacity
+                zależną od wysokości, nie przez zmianę barwy (żółty/zielony/czerwony) */}
+            <Bar dataKey="count" radius={[3, 3, 0, 0]} isAnimationActive={false}>
               {data.map((d) => (
-                <Cell key={d.label} fill={scaleColor(d.mid / 100)} fillOpacity={0.85} />
+                <Cell key={d.label} fill="var(--cyan)" fillOpacity={0.4 + 0.6 * (d.count / maxCount)} />
               ))}
             </Bar>
           </BarChart>
