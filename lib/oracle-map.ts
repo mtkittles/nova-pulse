@@ -951,7 +951,25 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     ),
     home_scorers: adaptScorers(r.home_scorers ?? r.home_top_scorers ?? rec(r.home).scorers),
     away_scorers: adaptScorers(r.away_scorers ?? r.away_top_scorers ?? rec(r.away).scorers),
+    home_elo: numOrNull(r.home_elo),
+    away_elo: numOrNull(r.away_elo),
+    home_form5: form5OrUndefined(r.home_form5),
+    away_form5: form5OrUndefined(r.away_form5),
+    lambda_home: numOrNull(r.lambda_home),
+    lambda_away: numOrNull(r.lambda_away),
   }
+}
+
+// Sekwencja W/D/L (najnowszy pierwszy) — akceptuje tablicę liter/słów. Brak/puste → undefined
+// (nie pusta tablica), żeby UI mogło łatwo rozróżnić "brak danych" od "0 meczów".
+function form5OrUndefined(raw: unknown): ("W" | "D" | "L")[] | undefined {
+  if (!Array.isArray(raw) || raw.length === 0) return undefined
+  const out: ("W" | "D" | "L")[] = []
+  for (const v of raw) {
+    const c = String(v ?? "").trim().toUpperCase()[0]
+    if (c === "W" || c === "D" || c === "L") out.push(c)
+  }
+  return out.length > 0 ? out : undefined
 }
 
 // ——— kupony użytkownika ———

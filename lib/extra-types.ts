@@ -304,4 +304,16 @@ export interface MatchDetailed {
   score_matrix: number[][] | null
   home_scorers: Scorer[]
   away_scorers: Scorer[]
+
+  // — Elo + forma + λ Poissona — WYŁĄCZNIE tryb demo. Brak odpowiednika w
+  // kontrakcie Oracle, więc poza demo zawsze null/undefined — sekcje
+  // match/team-strength.tsx i match/score-matrix.tsx po prostu się nie renderują.
+  home_elo?: number | null
+  away_elo?: number | null
+  /** Najnowszy wynik pierwszy (index 0). */
+  home_form5?: ("W" | "D" | "L")[]
+  away_form5?: ("W" | "D" | "L")[]
+  /** λ (oczekiwana liczba goli) z modelu Poissona — wejście dla match/score-matrix.tsx. */
+  lambda_home?: number | null
+  lambda_away?: number | null
 }

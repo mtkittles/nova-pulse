@@ -711,8 +711,8 @@ export function demoMatchDetailed(id: string, nowMs: number = Date.now()): Recor
 
   const rnd = mulberry32(hashSeed(`nova-pulse-demo-detail:${id}`))
 
-  const h2hCount = 3 + Math.floor(rnd() * 3) // 3–5 ostatnich spotkań
-  const h2h = Array.from({ length: h2hCount }, (_, i) => {
+  const H2H_COUNT = 5 // "Ostatnie 5 bezpośrednich starć" — moduł H2H (match/h2h-panel.tsx)
+  const h2h = Array.from({ length: H2H_COUNT }, (_, i) => {
     const [hs, as] = weighted(rnd, SCORELINES)
     const swapped = rnd() < 0.5 // kto był gospodarzem w TYM spotkaniu H2H
     const daysAgo = 60 + i * (120 + Math.floor(rnd() * 120))
@@ -728,6 +728,20 @@ export function demoMatchDetailed(id: string, nowMs: number = Date.now()): Recor
     score: `${h}:${a}`,
     count: Math.max(1, Math.round(w / 2)),
   }))
+
+  // Elo — rozstaw realistyczny dla klubowej piłki (nie FIFA-reprezentacji).
+  const home_elo = Math.round(1400 + rnd() * 450)
+  const away_elo = Math.round(1400 + rnd() * 450)
+
+  // λ Poissona (oczekiwana liczba goli) — 0.8–2.2 na drużynę, z lekką
+  // przewagą gospodarza wbudowaną w sam zakres losowania, nie mnożnikiem
+  // (żeby nie wyjść poza deklarowany przedział).
+  const lambda_home = round2(0.9 + rnd() * 1.3)
+  const lambda_away = round2(0.8 + rnd() * 1.2)
+
+  // Forma 5 ostatnich meczów, niezależna od home_stats.form (ten sam wzorzec
+  // wag co reszta generatora) — najnowszy wynik na indeksie 0.
+  const form5 = () => Array.from({ length: 5 }, () => weighted(rnd, TEAM_FORM_LETTERS))
 
   return {
     found: true,
@@ -751,6 +765,12 @@ export function demoMatchDetailed(id: string, nowMs: number = Date.now()): Recor
     away_stats: demoTeamStats(rnd),
     score_distribution,
     odds_markets: demoOddsMarkets(rnd),
+    home_elo,
+    away_elo,
+    home_form5: form5(),
+    away_form5: form5(),
+    lambda_home,
+    lambda_away,
   }
 }
 

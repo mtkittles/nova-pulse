@@ -27,6 +27,9 @@ import { StatusPill } from "./ui/status-pill"
 import { EmptyState } from "./ui/empty-state"
 import { QScoreRing } from "./ui/q-score-ring"
 import { MetricLabel, METRIC_HINTS } from "./ui/metric-tooltip"
+import { TeamStrength } from "./match/team-strength"
+import { ScoreMatrix } from "./match/score-matrix"
+import { H2HPanel } from "./match/h2h-panel"
 
 // rynek wybrany przez bota → klucz siatki kursów (do podświetlenia)
 function chosenMarketKey(p?: MatchPrediction): keyof OddsMarkets | null {
@@ -193,6 +196,43 @@ export function MatchDetail({
           )}
         </Card>
       </div>
+
+      {/* [A2] ELO + FORMA / MACIERZ / H2H — wyłącznie tryb demo. Bramka jednym
+          sygnałem: λ Poissona (lambda_home/away) nie ma odpowiednika w
+          kontrakcie Oracle, więc jego obecność jednoznacznie znaczy "to demo".
+          H2H per se ISTNIEJE też w produkcji (zakładka H2H niżej) — bez tej
+          wspólnej bramki nowy, kompaktowy H2HPanel wyciekłby też na prawdziwe
+          mecze, czego to zadanie nie obejmuje. Kolejność wg układu strony:
+          kontekst siły drużyn od razu → macierz (najbardziej wizualna) →
+          H2H (dowód historyczny) na dole. */}
+      {match.lambda_home != null && match.lambda_away != null && (
+        <>
+          {match.home_elo != null && match.away_elo != null && match.home_form5 && match.away_form5 && match.home_metrics && match.away_metrics && (
+            <div className="mt-5">
+              <TeamStrength
+                homeTeam={match.home}
+                awayTeam={match.away}
+                homeElo={match.home_elo}
+                awayElo={match.away_elo}
+                homeForm5={match.home_form5}
+                awayForm5={match.away_form5}
+                homeGfAvg={match.home_metrics.gf_avg}
+                awayGfAvg={match.away_metrics.gf_avg}
+              />
+            </div>
+          )}
+
+          <div className="mt-5">
+            <ScoreMatrix lambdaHome={match.lambda_home} lambdaAway={match.lambda_away} />
+          </div>
+
+          {match.h2h_matches.length > 0 && (
+            <div className="mt-5">
+              <H2HPanel matches={match.h2h_matches} homeTeam={match.home} />
+            </div>
+          )}
+        </>
+      )}
 
       {/* PASEK ZAKŁADEK (sticky pod headerem) */}
       <MeczTabs active={tab} onChange={changeTab} h2hCount={match.h2h_matches.length} />
