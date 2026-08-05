@@ -13,8 +13,9 @@
 //
 // Uwaga: `lib/demo-data.ts` to co innego (profil/kupony testera).
 
-import { primeLeagueNames } from "./leagues"
+import { primeLeagueNames, getLeagueName } from "./leagues"
 import { resolveTip } from "./tip-utils"
+import { getMarketLabel } from "./market-label"
 
 // ——— PRNG (mulberry32) — deterministyczny, seedowany stringiem ———
 
@@ -882,5 +883,237 @@ export function demoTeamForm(
     btts_pct: count > 0 ? Math.round((btts / count) * 100) : null,
     avg_goals_for: count > 0 ? round2(gfSum / count) : null,
     avg_goals_against: count > 0 ? round2(gaSum / count) : null,
+  }
+}
+
+// ——— /stats — pula historyczna (niezależna od okna 7-dniowego kart) ———
+//
+// Karty na /typy/live pokrywają dziś ±3 dni; statystyki potrzebują dużo
+// głębszej próby, żeby koszyki kalibracji i tabela rozbicia miały sens
+// (małe n = szum, nie sygnał). Osobna pula, ~180 rozliczonych typów
+// rozłożonych na ostatnie 120 dni, seedowana NA STAŁE (nie datą) — to ma
+// wyglądać jak trwały zapis historii, nie losowanie na nowo co dzień.
+
+function round1(x: number): number {
+  return Math.round(x * 10) / 10
+}
+
+interface DemoHistoricalTip {
+  date: string
+  league: string // kod ligi
+  marketLabel: string
+  confidence: number // 0..1 — deklarowana pewność modelu
+  odds: number
+  q_score: number
+  result: 0 | 1
+}
+
+// [lo, hi) deklarowanej pewności → REALNA trafialność w tym koszyku + n.
+// Celowe odchylenie: model lekko niedoszacowany nisko, WYRAŹNIE przeszacowany
+// wysoko (klasyczny wzorzec nadmiernej pewności) — wykres kalibracji ma sens
+// edukacyjny, punkty nie leżą idealnie na przekątnej.
+const CALIBRATION_BUCKETS: readonly { lo: number; hi: number; trueRate: number; n: number }[] = [
+  { lo: 0.3, hi: 0.4, trueRate: 0.38, n: 38 },
+  { lo: 0.4, hi: 0.5, trueRate: 0.44, n: 42 },
+  { lo: 0.5, hi: 0.6, trueRate: 0.53, n: 40 },
+  { lo: 0.6, hi: 0.7, trueRate: 0.6, n: 35 },
+  { lo: 0.7, hi: 0.8, trueRate: 0.65, n: 25 },
+]
+
+const HISTORY_SEED = "nova-pulse-demo-history-v1"
+
+function demoHistoricalPool(nowMs: number = Date.now()): DemoHistoricalTip[] {
+  const rnd = mulberry32(hashSeed(HISTORY_SEED))
+  const pool: DemoHistoricalTip[] = []
+
+  for (const b of CALIBRATION_BUCKETS) {
+    for (let i = 0; i < b.n; i++) {
+      const confidence = b.lo + rnd() * (b.hi - b.lo)
+      const result: 0 | 1 = rnd() < b.trueRate ? 1 : 0
+      // Kurs niezależny od trueRate (to oddzielny wymiar: "ile bukmacher
+      // płaci", nie "czy trafimy") — z lekką przewagą wartości dodatniej,
+      // żeby ROI w tabeli rozbicia miało zróżnicowany, realistyczny rozkład.
+      const edge = -0.05 + rnd() * 0.2
+      const odds = round2(clamp(1 / Math.max(0.15, confidence - edge), 1.3, 6))
+      const q_score = Math.round(clamp(50 + rnd() * 45 + edge * 50, 50, 100))
+      const league = pick(rnd, LEAGUES).code
+      const spec = pick(rnd, MARKETS)
+      const marketLabel = getMarketLabel(spec.bet_type, spec.bet_side).short
+      const daysAgo = 1 + Math.floor(rnd() * 120)
+      const date = new Date(nowMs - daysAgo * 864e5).toISOString().slice(0, 10)
+      pool.push({ date, league, marketLabel, confidence, odds, q_score, result })
+    }
+  }
+  return pool
+}
+
+export interface CalibrationPoint {
+  bucket: string
+  /** średnia deklarowana pewność w koszyku, w procentach */
+  declaredPct: number
+  /** realna trafialność w koszyku, w procentach */
+  actualPct: number
+  n: number
+}
+
+/** Wykres kalibracji (stats/calibration-chart.tsx) — jeden punkt na koszyk pewności. */
+export function demoCalibration(nowMs: number = Date.now()): CalibrationPoint[] {
+  const pool = demoHistoricalPool(nowMs)
+  return CALIBRATION_BUCKETS.map((b) => {
+    const rows = pool.filter((t) => t.confidence >= b.lo && t.confidence < b.hi)
+    const n = rows.length
+    const wins = rows.filter((t) => t.result === 1).length
+    const declaredPct = n > 0 ? round1((rows.reduce((a, t) => a + t.confidence, 0) / n) * 100) : (b.lo + b.hi) * 50
+    const actualPct = n > 0 ? round1((wins / n) * 100) : 0
+    return { bucket: `${Math.round(b.lo * 100)}–${Math.round(b.hi * 100)}%`, declaredPct, actualPct, n }
+  })
+}
+
+export interface BreakdownRow {
+  key: string
+  label: string
+  tips: number
+  /** 0..1 */
+  winRate: number
+  avgOdds: number
+  /** 0..1 (ułamek) */
+  roi: number
+}
+
+export interface BreakdownData {
+  market: BreakdownRow[]
+  league: BreakdownRow[]
+  qscore: BreakdownRow[]
+}
+
+function computeRow(key: string, label: string, rows: DemoHistoricalTip[]): BreakdownRow {
+  const tips = rows.length
+  const wins = rows.filter((t) => t.result === 1).length
+  const winRate = tips > 0 ? wins / tips : 0
+  const avgOdds = tips > 0 ? round2(rows.reduce((a, t) => a + t.odds, 0) / tips) : 0
+  const returns = rows.reduce((a, t) => a + (t.result === 1 ? t.odds - 1 : -1), 0)
+  const roi = tips > 0 ? returns / tips : 0
+  return { key, label, tips, winRate, avgOdds, roi }
+}
+
+const Q_BANDS: readonly [number, number][] = [
+  [50, 60],
+  [60, 70],
+  [70, 80],
+  [80, 90],
+  [90, 101],
+]
+
+function qBandLabel(lo: number, hi: number): string {
+  return hi > 100 ? `${lo}–100` : `${lo}–${hi - 1}`
+}
+
+// Grupowanie współdzielone przez demoBreakdown (cała pula, Moduł 2) i
+// demoStatsPayload (pula przefiltrowana po okresie, istniejące sekcje
+// "Podział po rynkach" / "Najlepsze ligi" / "Skuteczność wg Q-Score").
+function groupByAll(rows: DemoHistoricalTip[]): BreakdownData {
+  const byMarket = new Map<string, DemoHistoricalTip[]>()
+  for (const t of rows) {
+    const arr = byMarket.get(t.marketLabel) ?? []
+    arr.push(t)
+    byMarket.set(t.marketLabel, arr)
+  }
+  const market = [...byMarket.entries()].map(([label, rs]) => computeRow(label, label, rs))
+
+  const byLeague = new Map<string, DemoHistoricalTip[]>()
+  for (const t of rows) {
+    const arr = byLeague.get(t.league) ?? []
+    arr.push(t)
+    byLeague.set(t.league, arr)
+  }
+  // Tylko ligi z min. 5 typami — ten sam próg co istniejący podpis w UI
+  // ("Ligi z min. 5 rozliczonymi typami"), inaczej tabela zaśmiecona 1-typowymi wierszami.
+  const league = [...byLeague.entries()]
+    .map(([code, rs]) => computeRow(code, getLeagueName(code), rs))
+    .filter((r) => r.tips >= 5)
+
+  const qscore = Q_BANDS.map(([lo, hi]) => {
+    const rs = rows.filter((t) => t.q_score >= lo && t.q_score < hi)
+    const label = qBandLabel(lo, hi)
+    return computeRow(`q-${lo}-${hi}`, label, rs)
+  })
+
+  return { market, league, qscore }
+}
+
+/** Tabela rozbicia skuteczności (stats/breakdown-table.tsx) — cała pula historyczna. */
+export function demoBreakdown(nowMs: number = Date.now()): BreakdownData {
+  return groupByAll(demoHistoricalPool(nowMs))
+}
+
+/**
+ * Raw payload dla getStats() — kształt, który `adaptStats` (lib/oracle-map.ts)
+ * już umie parsować. Ten sam adapter co produkcja; pula przefiltrowana po
+ * `period` (7/30/all — "all" = pełne 120 dni puli).
+ */
+export function demoStatsPayload(period: string | undefined, nowMs: number = Date.now()): Record<string, unknown> {
+  const pool = demoHistoricalPool(nowMs)
+  const days = period === "7" ? 7 : period === "30" ? 30 : 120
+  const cutoff = nowMs - days * 864e5
+  const filtered = pool.filter((t) => Date.parse(t.date) >= cutoff)
+
+  const wins = filtered.filter((t) => t.result === 1).length
+  const settled = filtered.length
+  const lost = settled - wins
+  const win_rate = settled > 0 ? wins / settled : 0
+  const returns = filtered.reduce((a, t) => a + (t.result === 1 ? t.odds - 1 : -1), 0)
+  const roi = settled > 0 ? returns / settled : 0
+  const avg_q_score = settled > 0 ? Math.round(filtered.reduce((a, t) => a + t.q_score, 0) / settled) : 0
+
+  // seria: od najnowszego dnia wstecz, ile pod rząd tego samego wyniku (ujemna = przegrane).
+  const sortedDesc = [...filtered].sort((a, b) => b.date.localeCompare(a.date))
+  let current_streak = 0
+  if (sortedDesc.length > 0) {
+    const firstResult = sortedDesc[0].result
+    for (const t of sortedDesc) {
+      if (t.result !== firstResult) break
+      current_streak++
+    }
+    if (firstResult === 0) current_streak = -current_streak
+  }
+
+  // oś czasu: skumulowane per unikalny dzień, chronologicznie.
+  const byDate = new Map<string, DemoHistoricalTip[]>()
+  for (const t of filtered) {
+    const arr = byDate.get(t.date) ?? []
+    arr.push(t)
+    byDate.set(t.date, arr)
+  }
+  const timeline: Record<string, unknown>[] = []
+  let cumWins = 0
+  let cumReturns = 0
+  let cumCount = 0
+  for (const d of [...byDate.keys()].sort()) {
+    const dayRows = byDate.get(d)!
+    cumCount += dayRows.length
+    cumWins += dayRows.filter((t) => t.result === 1).length
+    cumReturns += dayRows.reduce((a, t) => a + (t.result === 1 ? t.odds - 1 : -1), 0)
+    timeline.push({
+      date: d,
+      win_rate: cumCount > 0 ? cumWins / cumCount : 0,
+      roi: cumCount > 0 ? cumReturns / cumCount : 0,
+      tips: dayRows.length,
+    })
+  }
+
+  const grouped = groupByAll(filtered)
+
+  return {
+    generated_at: new Date(nowMs).toISOString(),
+    summary: { won: wins, lost, win_rate, roi, current_streak, avg_q_score, period_days: days },
+    timeline,
+    by_market: grouped.market.map((r) => ({ bet_type: r.label, tips: r.tips, win_rate: r.winRate, roi: r.roi })),
+    by_league: grouped.league.map((r) => ({ league_name: r.label, tips: r.tips, win_rate: r.winRate, roi: r.roi })),
+    q_score_buckets: grouped.qscore.map((r) => ({
+      range: r.label.replace(/–/g, "-"),
+      tips: r.tips,
+      win_rate: r.winRate,
+      roi: r.roi,
+    })),
   }
 }

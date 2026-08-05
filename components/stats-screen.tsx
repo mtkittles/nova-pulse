@@ -6,6 +6,7 @@ import { Bar, BarChart, Brush, CartesianGrid, Cell, Line, LineChart, ReferenceLi
 import { BarChart3, Send, TrendingUp } from "lucide-react"
 import type { StatsResponse } from "@/lib/stats-types"
 import type { Tip } from "@/lib/types"
+import type { DemoAnalytics } from "@/lib/stats"
 import { getMarketLabel } from "@/lib/market-label"
 import { fmtOdds } from "@/lib/format"
 import { settleTip } from "@/lib/tip-utils"
@@ -16,6 +17,8 @@ import { EmptyState } from "./ui/empty-state"
 import { StatusPill, type PillStatus } from "./ui/status-pill"
 import { TeamBadge } from "./team-badge"
 import { ScrollReveal } from "./scroll-reveal"
+import { CalibrationChart } from "./stats/calibration-chart"
+import { BreakdownTable } from "./stats/breakdown-table"
 
 type Period = "7" | "30" | "all"
 
@@ -73,9 +76,11 @@ function QBucketTooltip({ active, payload }: { active?: boolean; payload?: { pay
 export function StatsScreen({
   initial,
   recentTips,
+  analytics = null,
 }: {
   initial: StatsResponse
   recentTips: Tip[]
+  analytics?: DemoAnalytics | null
 }) {
   const [period, setPeriod] = useState<Period>("30")
   const [data, setData] = useState<StatsResponse>(initial)
@@ -254,6 +259,30 @@ export function StatsScreen({
                 </table>
               </Card>
             </section>
+          )}
+
+          {/* [C3] KALIBRACJA — tylko demo (brak odpowiednika w kontrakcie Oracle) */}
+          {analytics && (
+            <ScrollReveal>
+              <section>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
+                  Kalibracja modelu
+                </h2>
+                <CalibrationChart points={analytics.calibration} />
+              </section>
+            </ScrollReveal>
+          )}
+
+          {/* [C4] ROZBICIE SKUTECZNOŚCI — tylko demo */}
+          {analytics && (
+            <ScrollReveal>
+              <section>
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
+                  Rozbicie skuteczności
+                </h2>
+                <BreakdownTable data={analytics.breakdown} />
+              </section>
+            </ScrollReveal>
           )}
 
           {/* [D] PODZIAŁ PO RYNKACH */}

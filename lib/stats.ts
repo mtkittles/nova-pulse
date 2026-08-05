@@ -2,6 +2,8 @@ import type { StatsResponse } from "./stats-types"
 import { mockStats } from "./mock-stats"
 import { isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptStats } from "./oracle-map"
+import { isDemoDataOn } from "./demo-source"
+import { demoStatsPayload, demoCalibration, demoBreakdown, type CalibrationPoint, type BreakdownData } from "./demo-tips"
 
 function emptyStats(): StatsResponse {
   return {
@@ -30,6 +32,8 @@ function hasSummary(x: unknown): boolean {
 
 // period: "7" | "30" | "all"
 export async function getStats(period?: string): Promise<StatsResponse> {
+  // Tryb demo — pula historyczna (lib/demo-tips.ts), ten sam adapter co produkcja.
+  if (await isDemoDataOn()) return adaptStats(demoStatsPayload(period))
   if (!isOracleConfigured()) return mockStats
   const path = period ? `/stats?period=${encodeURIComponent(period)}` : "/stats"
   try {
@@ -43,4 +47,18 @@ export async function getStats(period?: string): Promise<StatsResponse> {
     console.error("getStats: Oracle niedostępne →", err)
     return emptyStats()
   }
+}
+
+export interface DemoAnalytics {
+  calibration: CalibrationPoint[]
+  breakdown: BreakdownData
+}
+
+// Wykres kalibracji + tabela rozbicia (stats/calibration-chart.tsx,
+// stats/breakdown-table.tsx) — funkcjonalność wyłącznie trybu demo: nie ma
+// odpowiadającego kontraktu/endpointu po stronie Oracle, więc poza demo
+// zwraca null i sekcje po prostu się nie renderują (bez pustego stanu-śmiecia).
+export async function getDemoAnalytics(): Promise<DemoAnalytics | null> {
+  if (!(await isDemoDataOn())) return null
+  return { calibration: demoCalibration(), breakdown: demoBreakdown() }
 }
