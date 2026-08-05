@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useInViewOnce } from "@/hooks/use-scroll-animation"
 
 const N = 6 // gole 0..5 na drużynę
 
@@ -34,6 +35,7 @@ function buildGrid(lambdaHome: number, lambdaAway: number): Cell[][] {
  */
 export function ScoreMatrix({ lambdaHome, lambdaAway }: { lambdaHome: number; lambdaAway: number }) {
   const [active, setActive] = useState<Cell | null>(null)
+  const [gridRef, inView] = useInViewOnce<HTMLDivElement>()
   const grid = buildGrid(lambdaHome, lambdaAway)
   const flat = grid.flat()
   const maxPct = Math.max(...flat.map((c) => c.pct))
@@ -49,7 +51,7 @@ export function ScoreMatrix({ lambdaHome, lambdaAway }: { lambdaHome: number; la
         Macierz wyników
       </h2>
 
-      <div className="flex justify-center">
+      <div ref={gridRef} className="flex justify-center">
         <div>
           {/* etykieta osi X (gole gości) */}
           <div className="ml-7 flex">
@@ -69,10 +71,13 @@ export function ScoreMatrix({ lambdaHome, lambdaAway }: { lambdaHome: number; la
                   <button
                     key={cell.a}
                     type="button"
-                    className={`m-[1px] grid h-9 w-9 shrink-0 place-items-center rounded-[3px] text-[10px] font-medium tnum transition-[outline] duration-100 sm:h-11 sm:w-11 ${
+                    className={`matrix-cell m-[1px] grid h-9 w-9 shrink-0 place-items-center rounded-[3px] text-[10px] font-medium tnum transition-[outline] duration-100 sm:h-11 sm:w-11 ${
                       isActive ? "outline outline-2 outline-[color:var(--cyan)]" : ""
-                    }`}
-                    style={{ backgroundColor: `color-mix(in srgb, var(--cyan) ${Math.round(opacity * 100)}%, transparent)` }}
+                    } ${inView ? "is-visible" : ""}`}
+                    style={{
+                      backgroundColor: `color-mix(in srgb, var(--cyan) ${Math.round(opacity * 100)}%, transparent)`,
+                      "--i": h * N + cell.a,
+                    } as React.CSSProperties}
                     onMouseEnter={() => setActive(cell)}
                     onMouseLeave={() => setActive(null)}
                     onFocus={() => setActive(cell)}

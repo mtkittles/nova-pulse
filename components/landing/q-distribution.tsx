@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import type { Tip } from "@/lib/types"
+import { useInViewOnce } from "@/hooks/use-scroll-animation"
 
 const BIN = 5
 const MIN = 50
@@ -37,6 +38,7 @@ function QTooltip({
 export function QDistribution({ tips }: { tips: Tip[] }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+  const [inViewRef, inView] = useInViewOnce<HTMLDivElement>()
 
   const { data, spread, maxCount } = useMemo(() => {
     const bins = new Map<number, number>()
@@ -72,6 +74,9 @@ export function QDistribution({ tips }: { tips: Tip[] }) {
   if (!mounted) {
     return <div className="shimmer h-56 rounded-xl border border-[color:var(--border-subtle)]" />
   }
+  if (!inView) {
+    return <div ref={inViewRef} className="h-56 rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)]" />
+  }
 
   return (
     <div className="rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
@@ -95,7 +100,7 @@ export function QDistribution({ tips }: { tips: Tip[] }) {
             <Tooltip content={<QTooltip />} cursor={{ fill: "var(--cyan-soft)" }} />
             {/* jeden akcent (cyan) na wszystkich słupkach — gradacja przez opacity
                 zależną od wysokości, nie przez zmianę barwy (żółty/zielony/czerwony) */}
-            <Bar dataKey="count" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+            <Bar dataKey="count" radius={[3, 3, 0, 0]} isAnimationActive animationDuration={700} animationEasing="ease-out">
               {data.map((d) => (
                 <Cell key={d.label} fill="var(--cyan)" fillOpacity={0.4 + 0.6 * (d.count / maxCount)} />
               ))}

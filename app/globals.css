@@ -344,6 +344,65 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
+   Kropka "LIVE" — subtelna poświata (box-shadow, nie opacity-pulse jak
+   Tailwind .animate-pulse) w --cyan, pętla 2s. Jeden wspólny efekt dla
+   wszystkich miejsc z badge LIVE (karty meczów, /live, ticker).
+   ============================================================ */
+@keyframes lb-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(88, 230, 245, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(88, 230, 245, 0.15);
+  }
+}
+
+.live-glow {
+  animation: lb-live-pulse 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   Liczby na kartach (kurs, %) — krótki "flip" przy pierwszym renderze.
+   Celowo NIE scroll-triggered (żadnego IntersectionObserver per liczba —
+   dziesiątki instancji na /typy) — czysty CSS, odpala się na mount,
+   zerowy koszt JS niezależnie od liczby kart na stronie.
+   ============================================================ */
+@keyframes lb-num-flip {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.num-flip {
+  animation: lb-num-flip 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ============================================================
+   Macierz wyników — komórki wjeżdżają kaskadowo (opacity+scale) przy
+   wejściu w viewport. Ten sam wzorzec --i co .menu-item/.reveal-word,
+   tylko gęstszy stagger (36 komórek, 10ms/komórkę ≈ 350ms całości).
+   ============================================================ */
+.matrix-cell {
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    opacity 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 10ms);
+}
+
+.matrix-cell.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ============================================================
    prefers-reduced-motion — dla nowych animacji: wyłącz przesunięcie
    (transform: none !important), zostaw (skrócone) pojawianie się przez
    opacity. Klasowy selektor (0,1,0) bije uniwersalny „*" niżej w pliku
@@ -380,6 +439,21 @@ h1, h2, h3, h4, h5, h6 {
   }
   .ticker-dup {
     display: none;
+  }
+  /* pulsująca poświata to ruch ciągły (nie jednorazowe wejście) — usuwamy
+     całkowicie, status LIVE jest już czytelny z koloru/tekstu kropki. */
+  .live-glow {
+    animation: none !important;
+    box-shadow: none !important;
+  }
+  .num-flip {
+    animation-duration: 1ms !important;
+    transform: none !important;
+  }
+  .matrix-cell {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    transform: none !important;
   }
 }
 

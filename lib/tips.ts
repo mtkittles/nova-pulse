@@ -3,7 +3,7 @@ import { mockTips } from "./mock-tips"
 import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptTips } from "./oracle-map"
 import { isDemoDataOn } from "./demo-source"
-import { demoActivePayload, demoHistoryPayload, demoTipsPayload } from "./demo-tips"
+import { demoActivePayload, demoHistoryPayload, demoTipsPayload, demoThrillerSpotlight, type ThrillerSpotlight } from "./demo-tips"
 
 function warsawDate(offsetDays = 0): string {
   const d = new Date(Date.now() + offsetDays * 864e5)
@@ -88,4 +88,13 @@ export async function getLiveWindowTips(): Promise<TipsResponse> {
     console.error("getLiveWindowTips: /tips/active niedostępne →", err)
     return emptyTips(today)
   }
+}
+
+// "Mecz wieczoru" (landing/thriller-spotlight.tsx) — wyłącznie tryb demo:
+// brak odpowiednika w kontrakcie Oracle (produkcyjny thriller_watchlist ma
+// inny mechanizm doboru, nie wystawiony jako endpoint), więc poza demo null
+// i sekcja się nie renderuje.
+export async function getThrillerSpotlight(): Promise<ThrillerSpotlight | null> {
+  if (!(await isDemoDataOn())) return null
+  return demoThrillerSpotlight()
 }

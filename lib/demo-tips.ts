@@ -1137,3 +1137,85 @@ export function demoStatsPayload(period: string | undefined, nowMs: number = Dat
     })),
   }
 }
+
+// ——— "Mecz wieczoru" (landing/thriller-spotlight.tsx) ———
+//
+// Nie ma tu żadnego mechanizmu scoringu jak w produkcyjnym thriller_watchlist
+// (dobór wg realnych metryk H2H/formy) — to demo pokazuje JAK sekcja ma
+// wyglądać i działać, nie odtwarza logiki wyboru bota.
+
+const THRILLER_TAGS: readonly string[] = [
+  "Starcie liderów",
+  "Rywalizacja o awans",
+  "Wysokie prawdopodobieństwo goli",
+  "Hit kolejki",
+]
+
+const THRILLER_FACT_TEMPLATES: readonly ((rnd: Rnd) => string)[] = [
+  (rnd) => `Oba zespoły w formie: ${3 + Math.floor(rnd() * 3)}W z ostatnich 5`,
+  (rnd) => `Bezpośrednie starcia: średnio ${round1(1.8 + rnd() * 2.0)} gola/mecz`,
+  (rnd) => `Rywalizacja bez remisu w ${2 + Math.floor(rnd() * 2)} z ostatnich 4 spotkań`,
+  (rnd) => `Gospodarze nie przegrali u siebie od ${2 + Math.floor(rnd() * 6)} kolejek`,
+  (rnd) => `Mecze tych drużyn kończą się BTTS w ${50 + Math.floor(rnd() * 35)}% przypadków`,
+]
+
+export interface ThrillerSpotlight {
+  event_id: number
+  home_team: string
+  away_team: string
+  home_team_logo: string | null
+  away_team_logo: string | null
+  league: string // kod ligi
+  kickoff_utc: string | null
+  match_status: string | null
+  home_score: number | null
+  away_score: number | null
+  tag: string
+  facts: string[]
+  // Sekcja ma sens nawet bez typu bota — badge tylko gdy mecz go ma.
+  badge: { marketLabel: string; odds: number; q_score: number } | null
+}
+
+/**
+ * Wybiera JEDEN wyróżniony mecz z dzisiejszej/jutrzejszej puli (pomija
+ * sieroty — sekcja ma linkować do działającej strony /mecz/{id}) i dokleja
+ * tag + 2-3 mikrofakty. Deterministyczne w obrębie dnia (seed po dacie),
+ * więc SSR/klient się zgadzają i wybór nie skacze przy każdym odświeżeniu.
+ */
+export function demoThrillerSpotlight(nowMs: number = Date.now()): ThrillerSpotlight | null {
+  const today = ymdWarsaw(nowMs)
+  const tomorrow = ymdWarsaw(nowMs + DAY_MS)
+  const pool = [...demoTipsPayload(today, nowMs).matches, ...demoTipsPayload(tomorrow, nowMs).matches].filter(
+    (m) => m.kickoff_utc != null,
+  )
+  if (pool.length === 0) return null
+
+  const rnd = mulberry32(hashSeed(`nova-pulse-demo-thriller:${today}`))
+  const match = pick(rnd, pool)
+  const tag = pick(rnd, THRILLER_TAGS)
+
+  const factCount = 2 + Math.floor(rnd() * 2) // 2–3
+  const order = [...THRILLER_FACT_TEMPLATES].sort(() => rnd() - 0.5)
+  const facts = order.slice(0, factCount).map((f) => f(rnd))
+
+  const bestPred =
+    match.predictions.length > 0 ? [...match.predictions].sort((a, b) => b.q_score - a.q_score)[0] : null
+
+  return {
+    event_id: match.event_id,
+    home_team: match.home_team,
+    away_team: match.away_team,
+    home_team_logo: match.home_team_logo,
+    away_team_logo: match.away_team_logo,
+    league: match.league,
+    kickoff_utc: match.kickoff_utc,
+    match_status: match.match_status,
+    home_score: match.home_score,
+    away_score: match.away_score,
+    tag,
+    facts,
+    badge: bestPred
+      ? { marketLabel: getMarketLabel(bestPred.bet_type, bestPred.bet_side).short, odds: bestPred.odds, q_score: bestPred.q_score }
+      : null,
+  }
+}

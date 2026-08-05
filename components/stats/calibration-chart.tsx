@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { ComposedChart, Line, ReferenceLine, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from "recharts"
 import type { CalibrationPoint } from "@/lib/demo-tips"
+import { useInViewOnce } from "@/hooks/use-scroll-animation"
 
 const DOMAIN: [number, number] = [28, 82]
 
@@ -41,6 +42,7 @@ function CalibrationTooltip({ active, payload }: { active?: boolean; payload?: {
 export function CalibrationChart({ points }: { points: CalibrationPoint[] }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+  const [inViewRef, inView] = useInViewOnce<HTMLDivElement>()
 
   const withData = points.filter((p) => p.n > 0)
   if (withData.length === 0) {
@@ -53,6 +55,12 @@ export function CalibrationChart({ points }: { points: CalibrationPoint[] }) {
 
   if (!mounted) {
     return <div className="shimmer h-72 rounded-xl border border-[color:var(--border-subtle)]" />
+  }
+  // Czekamy na viewport, zanim w ogóle wyrenderujemy Line/Scatter — pierwszy
+  // render ma być tą animacją (recharts nie "przerysowuje" po zmianie samej
+  // flagi na już zamontowanym elemencie, dane się nie zmieniają).
+  if (!inView) {
+    return <div ref={inViewRef} className="h-72 rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)]" />
   }
 
   const maxN = Math.max(...points.map((p) => p.n))
@@ -96,8 +104,14 @@ export function CalibrationChart({ points }: { points: CalibrationPoint[] }) {
               ifOverflow="extendDomain"
             />
             <Tooltip content={<CalibrationTooltip />} cursor={{ stroke: "var(--border-subtle)" }} />
-            <Line type="monotone" dataKey="y" stroke="var(--cyan)" strokeWidth={2} dot={false} isAnimationActive={false} />
-            <Scatter dataKey="y" shape={(p: { cx?: number; cy?: number; payload?: CalibrationPoint }) => <CalibrationDot {...p} maxN={maxN} />} isAnimationActive={false} />
+            <Line type="monotone" dataKey="y" stroke="var(--cyan)" strokeWidth={2} dot={false} isAnimationActive animationDuration={900} animationEasing="ease-out" />
+            <Scatter
+              dataKey="y"
+              shape={(p: { cx?: number; cy?: number; payload?: CalibrationPoint }) => <CalibrationDot {...p} maxN={maxN} />}
+              isAnimationActive
+              animationDuration={900}
+              animationEasing="ease-out"
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

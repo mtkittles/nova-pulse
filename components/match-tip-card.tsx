@@ -101,19 +101,20 @@ function MarketRow({
             <span className="font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</span>
           </p>
         </div>
-        {/* desktop: pełne metryki od razu */}
+        {/* desktop: pełne metryki od razu — num-flip: krótki "flip" na mount,
+            czysty CSS (bez IntersectionObserver per liczba — dziesiątki wierszy na /typy) */}
         <div className="hidden shrink-0 items-center gap-3 text-right sm:flex">
           <div>
             <p className="text-[10px] text-white/50">Szansa</p>
-            <p className="text-sm font-semibold" style={{ color: tip.model_prob != null ? m.color : "var(--text-muted)" }}>{fmtProb(tip.model_prob)}</p>
+            <p className="num-flip text-sm font-semibold" style={{ color: tip.model_prob != null ? m.color : "var(--text-muted)" }}>{fmtProb(tip.model_prob)}</p>
           </div>
           <div>
             <p className="text-[10px] text-white/50">Kurs</p>
-            <p className="text-sm font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
+            <p className="num-flip text-sm font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
           </div>
           <div>
             <p className="text-[10px] text-white/50">Edge</p>
-            <p className={`text-sm font-semibold ${edgeClass}`}>{fmtEdge(tip.edge)}</p>
+            <p className={`num-flip text-sm font-semibold ${edgeClass}`}>{fmtEdge(tip.edge)}</p>
           </div>
         </div>
         <ChevronDown className={`h-4 w-4 shrink-0 text-white/40 transition sm:hidden ${open ? "rotate-180" : ""}`} />
@@ -183,10 +184,17 @@ export default function MatchTipCard({
 
   // prawy górny róg
   const right =
-    status === "live" ? <span className="font-bold text-rose-300">🔴 LIVE {minuteTxt}</span>
-    : status === "halftime" ? <span className="font-bold text-amber-300">🟡 PRZERWA</span>
-    : finished ? <span className="text-white/55">koniec</span>
-    : <span className="text-white/55">{formatKickoff(group.kickoff_utc)}</span>
+    status === "live" ? (
+      <span className="inline-flex items-center gap-1.5 font-bold text-rose-300">
+        <span className="live-glow h-1.5 w-1.5 rounded-full bg-[var(--danger)]" /> LIVE {minuteTxt}
+      </span>
+    ) : status === "halftime" ? (
+      <span className="font-bold text-amber-300">🟡 PRZERWA</span>
+    ) : finished ? (
+      <span className="text-white/55">koniec</span>
+    ) : (
+      <span className="text-white/55">{formatKickoff(group.kickoff_utc)}</span>
+    )
 
   // główna rekomendacja (is_primary) na górze, potem po Q-Score
   const sortedTips = [...group.tips].sort(

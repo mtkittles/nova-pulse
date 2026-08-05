@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import type { TimelinePoint } from "@/lib/stats-types"
+import { useInViewOnce } from "@/hooks/use-scroll-animation"
 
 function fmtDay(val: string): string {
   const d = new Date(val)
@@ -37,6 +38,9 @@ function FormTooltip({
 export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+  // Rysowanie linii "od zera" przy wejściu w viewport — recharts robi to
+  // natywnie (draw wzdłuż ścieżki) po prostu przez isAnimationActive.
+  const [inViewRef, inView] = useInViewOnce<HTMLDivElement>()
 
   const data = useMemo(
     () =>
@@ -56,10 +60,16 @@ export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
     )
   }
 
-  // Recharts potrzebuje szerokości kontenera — do momentu montażu pokazujemy
-  // shimmer o docelowej wysokości, żeby układ nie skakał.
+  // Recharts potrzebuje szerokości kontenera, więc czekamy na mount; DODATKOWO
+  // czekamy na wejście w viewport, zanim w ogóle wyrenderujemy <Area> — dzięki
+  // temu isAnimationActive={true} to jej PIERWSZY render (prawdziwy mount),
+  // nie zmiana propsa na już zamontowanym komponencie (recharts by tego nie
+  // przerysował jako animacji, bo dane się nie zmieniły — tylko flaga).
   if (!mounted) {
     return <div className="shimmer h-64 rounded-xl border border-[color:var(--border-subtle)]" />
+  }
+  if (!inView) {
+    return <div ref={inViewRef} className="h-64 rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)]" />
   }
 
   const values = data.map((d) => d.wr)
@@ -107,7 +117,9 @@ export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
               fill="url(#lb-form-fill)"
               dot={false}
               activeDot={{ r: 4, fill: "var(--cyan)", stroke: "var(--bg-0)", strokeWidth: 2 }}
-              isAnimationActive={false}
+              isAnimationActive
+              animationDuration={900}
+              animationEasing="ease-out"
             />
           </AreaChart>
         </ResponsiveContainer>

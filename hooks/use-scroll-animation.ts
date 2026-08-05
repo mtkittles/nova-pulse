@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 // Kierunek scrolla — do wyboru animacji wjazdu (dół → fadeInUp, góra → fadeInDown).
 // setState tylko przy ZMIANIE kierunku (brak storma re-renderów na każdy scroll).
@@ -34,4 +34,53 @@ export function usePrefersReducedMotion() {
     return () => mq.removeEventListener("change", on)
   }, [])
   return reduced
+}
+
+// Czy dany element wszedł (choć raz) w viewport — do jednorazowego "odpalenia"
+// animacji przy scrollu (wykresy, macierz wyników). Ta sama konwencja
+// obserwatora co ScrollReveal (threshold 0.1, rootMargin -40px od dołu),
+// wydzielona tu, żeby nie duplikować boilerplate w każdym komponencie
+// wykresu. Reduced-motion → od razu true (bez obserwatora).
+//
+// Callback ref, NIE useRef+useEffect — kilka konsumentów (wykresy) dołącza
+// ref do elementu, który pojawia się w DOM dopiero PO osobnej bramce
+// `mounted` (inny stan, inny efekt w komponencie nadrzędnym). Przy zwykłym
+// useRef efekt tego hooka odpala się RAZ na mount, kiedy ref.current jest
+// jeszcze null (element z refem jeszcze nie istnieje) — obserwator nigdy nie
+// powstaje. Callback ref wywołuje się PRZY KAŻDYM podpięciu węzła, więc
+// obserwator zawsze dostaje realny element, niezależnie od tego, kiedy się
+// pojawi.
+export function useInViewOnce<T extends Element>(): [(node: T | null) => void, boolean] {
+  const [inView, setInView] = useState(false)
+  const reduced = usePrefersReducedMotion()
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const inViewRef = useRef(inView)
+  inViewRef.current = inView
+
+  const setRef = useCallback(
+    (node: T | null) => {
+      observerRef.current?.disconnect()
+      observerRef.current = null
+      if (!node || reduced || inViewRef.current) {
+        if (reduced) setInView(true)
+        return
+      }
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setInView(true)
+            io.disconnect()
+          }
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
+      )
+      io.observe(node)
+      observerRef.current = io
+    },
+    [reduced],
+  )
+
+  useEffect(() => () => observerRef.current?.disconnect(), [])
+
+  return [setRef, inView]
 }

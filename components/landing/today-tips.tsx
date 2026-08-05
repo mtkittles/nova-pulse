@@ -60,9 +60,9 @@ function Chip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-colors duration-150 ${
+      className={`tap inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-sm font-medium transition-[color,background-color,border-color,box-shadow] duration-200 ${
         active
-          ? "border-[color:var(--cyan)] bg-[var(--cyan-soft)] text-[color:var(--cyan)]"
+          ? "border-[color:var(--cyan)] bg-[var(--cyan-soft)] text-[color:var(--cyan)] shadow-[0_0_0_3px_var(--cyan-soft)]"
           : "border-[color:var(--border-subtle)] bg-[var(--bg-1)] text-[color:var(--text-secondary)]"
       }`}
     >

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Activity, ArrowRight, Check, CheckCircle2, Cpu, Send, ShieldCheck } from "lucide-react"
 import type { Tip } from "@/lib/types"
 import type { TimelinePoint } from "@/lib/stats-types"
+import type { ThrillerSpotlight as ThrillerSpotlightData } from "@/lib/demo-tips"
 import { Brand } from "./brand"
 import { RevealText } from "./ui/reveal-text"
 import { ScrollReveal } from "./scroll-reveal"
@@ -17,6 +18,7 @@ import { TodayTips } from "./landing/today-tips"
 import { ModelFormChart } from "./landing/model-form-chart"
 import { QDistribution } from "./landing/q-distribution"
 import { RecentSettled } from "./landing/recent-settled"
+import { ThrillerSpotlight } from "./landing/thriller-spotlight"
 
 type LandingProps = {
   loggedIn?: boolean
@@ -31,6 +33,7 @@ type LandingProps = {
   leaguesCount: number
   timeline: TimelinePoint[]
   recentSettled: Tip[]
+  thriller?: ThrillerSpotlightData | null
 }
 
 const HOW_IT_WORKS = [
@@ -129,6 +132,7 @@ export default function LandingPage({
   settledTips,
   timeline,
   recentSettled,
+  thriller = null,
 }: LandingProps) {
   const roiPositive = roi >= 0
 
@@ -164,6 +168,15 @@ export default function LandingPage({
           />
           <TodayTips tips={todayTips} loggedIn={loggedIn} />
         </section>
+
+        {/* ——— MECZ WIECZORU — wyłącznie demo (getThrillerSpotlight → null poza
+            demo). Cała sekcja pominięta, nie tylko komponent — inaczej pusty
+            <section> zostawiałby martwy odstęp w produkcji. ——— */}
+        {thriller && (
+          <section id="mecz-wieczoru" className="scroll-mt-24 pt-12 md:pt-14">
+            <ThrillerSpotlight data={thriller} />
+          </section>
+        )}
 
         {/* ——— 4 + 5. FORMA MODELU + ROZKŁAD Q ——— */}
         <section id="forma" className="scroll-mt-24 pt-12 md:pt-14">

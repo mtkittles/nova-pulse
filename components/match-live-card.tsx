@@ -42,7 +42,7 @@ export function MatchLiveCard({ group }: { group: MatchLiveGroup }) {
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="min-w-0 truncate uppercase tracking-[0.14em] text-[color:var(--text-muted)]">{group.league}</span>
         <span className={`inline-flex shrink-0 items-center gap-1 font-semibold ${cfg.color}`}>
-          {cfg.dot && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--danger)]" />}
+          {cfg.dot && <span className="live-glow h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />}
           {group.right}
         </span>
       </div>
