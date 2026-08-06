@@ -110,6 +110,76 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
+   Ambientowe tło — globalne (root layout), position:fixed, za CAŁĄ
+   treścią wszystkich stron. Trzy rozmyte plamy --cyan po przekątnej,
+   bardzo niska opacity (efekt widoczny w przerwach między sekcjami,
+   nie na wierzchu kart/danych). Powolny dryf pozycji w pętli.
+   ============================================================ */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, var(--cyan) 0%, transparent 70%);
+  filter: blur(90px);
+  will-change: transform;
+}
+
+.ambient-blob-1 {
+  top: -12%;
+  right: -8%;
+  width: 46vw;
+  height: 46vw;
+  opacity: 0.06;
+  animation: lb-ambient-drift-1 26s ease-in-out infinite;
+}
+
+.ambient-blob-2 {
+  top: 32%;
+  left: 28%;
+  width: 50vw;
+  height: 50vw;
+  opacity: 0.04;
+  animation: lb-ambient-drift-2 32s ease-in-out infinite;
+}
+
+.ambient-blob-3 {
+  bottom: -14%;
+  left: -10%;
+  width: 44vw;
+  height: 44vw;
+  opacity: 0.055;
+  animation: lb-ambient-drift-3 24s ease-in-out infinite;
+}
+
+@keyframes lb-ambient-drift-1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-6%, 6%); }
+}
+
+@keyframes lb-ambient-drift-2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(6%, -7%); }
+}
+
+@keyframes lb-ambient-drift-3 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(7%, -5%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-blob {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
    Shimmer — skeleton loading zamiast spinnerów.
    Przesuwający się połysk po powierzchni surface-1.
    ============================================================ */
@@ -407,6 +477,12 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(1);
 }
 
+/* słupki "Model vs punkt odniesienia" — rysują się od zera przy wejściu
+   w viewport (width sterowany z Reacta przez useInViewOnce) */
+.baseline-bar {
+  transition: width 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* ============================================================
    prefers-reduced-motion — dla nowych animacji: wyłącz przesunięcie
    (transform: none !important), zostaw (skrócone) pojawianie się przez
@@ -459,6 +535,9 @@ h1, h2, h3, h4, h5, h6 {
     transition-duration: 1ms !important;
     transition-delay: 0ms !important;
     transform: none !important;
+  }
+  .baseline-bar {
+    transition-duration: 1ms !important;
   }
 }
 

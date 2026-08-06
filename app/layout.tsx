@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Inter, Space_Grotesk } from "next/font/google"
 import "./globals.css"
 import { DEMO_MODE } from "@/lib/demo-mode"
+import { AmbientBackground } from "@/components/ambient-background"
 
 // Tekst UI — Inter; nagłówki/wyświetlanie — Space Grotesk (max 2 rodziny).
 const inter = Inter({
@@ -60,7 +61,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pl" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body className="bg-[var(--bg-0)] text-[color:var(--text-primary)] antialiased">
+      {/* isolate: body dostaje własny stacking context, żeby AmbientBackground
+          (position:fixed, z-index:-1) malował się MIĘDZY tłem body a treścią —
+          bez tego przeglądarka "promuje" solidne tło body na kanwę viewportu,
+          która maluje się PONIŻEJ potomków o ujemnym z-index (klasyczna
+          pułapka CSS), więc ambient byłby całkowicie niewidoczny mimo
+          poprawnych stylów. */}
+      <body className="isolate bg-[var(--bg-0)] text-[color:var(--text-primary)] antialiased">
+        <AmbientBackground />
         {DEMO_MODE && (
           <div className="flex h-8 items-center justify-center gap-2 border-b border-amber-400/20 bg-amber-400/10 px-4 text-center text-xs font-medium text-amber-300">
             🔍 Tryb demonstracyjny — dane przykładowe, profil mockowy

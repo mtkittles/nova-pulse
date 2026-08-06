@@ -14,10 +14,10 @@ export function AppShell({
   children: ReactNode
 }) {
   return (
-    <main className="min-h-screen bg-[var(--bg)] text-white">
+    <main className="min-h-screen text-white">
+      {/* tło samo w sobie przezroczyste — ambientowe plamy z root layout muszą
+          być widoczne w przerwach; siatka zostaje jako osobny, neutralny akcent */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute left-[-120px] top-[-120px] h-96 w-96 rounded-full bg-[var(--glow-1)] blur-3xl" />
-        <div className="absolute right-[-120px] top-40 h-96 w-96 rounded-full bg-[var(--glow-2)] blur-3xl" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:72px_72px]" />
       </div>
 

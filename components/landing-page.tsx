@@ -19,6 +19,8 @@ import { ModelFormChart } from "./landing/model-form-chart"
 import { QDistribution } from "./landing/q-distribution"
 import { RecentSettled } from "./landing/recent-settled"
 import { ThrillerSpotlight } from "./landing/thriller-spotlight"
+import { EngineTerminal } from "./landing/engine-terminal"
+import { BaselineComparison } from "./landing/baseline-comparison"
 
 type LandingProps = {
   loggedIn?: boolean
@@ -137,7 +139,7 @@ export default function LandingPage({
   const roiPositive = roi >= 0
 
   return (
-    <div className="min-h-screen bg-[var(--bg-0)] text-[color:var(--text-primary)]">
+    <div className="min-h-screen text-[color:var(--text-primary)]">
       <SiteHeader loggedIn={loggedIn} />
       <SectionIndex />
 
@@ -194,6 +196,9 @@ export default function LandingPage({
               <QDistribution tips={todayTips} />
             </ScrollReveal>
           </div>
+          <ScrollReveal delay={120} className="mt-4">
+            <BaselineComparison winRate={winRate} />
+          </ScrollReveal>
         </section>
 
         {/* ——— 6. OSTATNIO ROZLICZONE ——— */}
@@ -231,6 +236,9 @@ export default function LandingPage({
               )
             })}
           </div>
+          <ScrollReveal delay={140} className="mt-4">
+            <EngineTerminal />
+          </ScrollReveal>
         </section>
 
         {/* ——— 7b. PLANY ——— */}
