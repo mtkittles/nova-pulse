@@ -7,7 +7,10 @@
 :root {
   /* tła i powierzchnie */
   --bg-0: #05070b;
-  --bg-1: #080d13;
+  /* --bg-1: karty (landing/mecz/stats) — półprzezroczyste (glassmorphism),
+     żeby ambientowe tło (siatka + plamy cyan) przebijało przez karty.
+     --bg-0 zostaje w pełni kryjące (tło strony/canvas). */
+  --bg-1: rgba(8, 13, 19, 0.62);
   --surface-1: #0c131b;
   --surface-2: #111b25;
   --surface-3: #172431;
@@ -15,9 +18,9 @@
   /* obramowania */
   --border-soft: rgba(126, 232, 247, 0.1);
   --border-strong: rgba(126, 232, 247, 0.22);
-  /* neutralny 1px border (bez cyjanowego tintu) — flat karty dashboardu
-     na landingu (components/landing/*), gdzie jedynym akcentem ma być cyan. */
-  --border-subtle: rgba(255, 255, 255, 0.08);
+  /* subtelny 1px border z cyjanowym tintem (0.12) — flat karty dashboardu
+     na landingu/mecz/stats, spójny z jedynym akcentem palety (cyan). */
+  --border-subtle: rgba(88, 230, 245, 0.12);
 
   /* tekst */
   --text-primary: #f5f8fb;
@@ -110,10 +113,34 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
+   Glassmorphism — karty (--bg-1, teraz rgba) dostają rozmycie tła, żeby
+   ambientowa warstwa (siatka + plamy cyan) przebijała przez nie. Selektor
+   atrybutowy zamiast ręcznego dopisywania klasy w kilkunastu plikach —
+   Tailwind emituje `bg-[var(--bg-1)]` jako dosłowny string w atrybucie
+   class, więc [class*="..."] łapie każde miejsce używające tego tokenu.
+   ============================================================ */
+[class*="bg-[var(--bg-1)]"] {
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* Dane gęste (tabele liczb, wykresy) — czytelność > efekt. Mocniejsza,
+   prawie kryjąca alfa i słabszy blur, żeby siatka pod spodem nie rozmywała
+   cyfr. Nakłada się na bg-[var(--bg-1)] dzięki równej specyficzności +
+   kolejności w arkuszu (ta reguła niżej wygrywa). */
+.glass-solid {
+  background-color: rgba(8, 13, 19, 0.86) !important;
+  backdrop-filter: blur(4px) saturate(1.05);
+  -webkit-backdrop-filter: blur(4px) saturate(1.05);
+}
+
+/* ============================================================
    Ambientowe tło — globalne (root layout), position:fixed, za CAŁĄ
-   treścią wszystkich stron. Trzy rozmyte plamy --cyan po przekątnej,
-   bardzo niska opacity (efekt widoczny w przerwach między sekcjami,
-   nie na wierzchu kart/danych). Powolny dryf pozycji w pętli.
+   treścią wszystkich stron. Siatka linii + trzy rozmyte plamy --cyan po
+   przekątnej. Opacity podniesione (10-15%) po weryfikacji, że 4-6% jest
+   praktycznie niewidoczne na realnym ekranie (screenshot: delta ~2-9/255
+   na kanał — poprawne w kodzie, ale poniżej progu percepcji). Powolny
+   dryf pozycji plam w pętli.
    ============================================================ */
 .ambient-bg {
   position: fixed;
@@ -123,11 +150,24 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
+.ambient-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(126, 232, 247, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126, 232, 247, 0.07) 1px, transparent 1px);
+  background-size: 72px 72px;
+  /* zanika ku dołowi, żeby siatka nie "walczyła" wizualnie z treścią
+     w dolnej, gęściej wypełnionej części długich stron */
+  mask-image: linear-gradient(to bottom, black, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black, black 60%, transparent 100%);
+}
+
 .ambient-blob {
   position: absolute;
   border-radius: 9999px;
   background: radial-gradient(circle, var(--cyan) 0%, transparent 70%);
-  filter: blur(90px);
+  filter: blur(70px);
   will-change: transform;
 }
 
@@ -136,7 +176,7 @@ h1, h2, h3, h4, h5, h6 {
   right: -8%;
   width: 46vw;
   height: 46vw;
-  opacity: 0.06;
+  opacity: 0.14;
   animation: lb-ambient-drift-1 26s ease-in-out infinite;
 }
 
@@ -145,7 +185,7 @@ h1, h2, h3, h4, h5, h6 {
   left: 28%;
   width: 50vw;
   height: 50vw;
-  opacity: 0.04;
+  opacity: 0.1;
   animation: lb-ambient-drift-2 32s ease-in-out infinite;
 }
 
@@ -154,7 +194,7 @@ h1, h2, h3, h4, h5, h6 {
   left: -10%;
   width: 44vw;
   height: 44vw;
-  opacity: 0.055;
+  opacity: 0.13;
   animation: lb-ambient-drift-3 24s ease-in-out infinite;
 }
 
@@ -500,8 +540,20 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* CELOWO bez animation-fill-mode: both/forwards. Dopóki animacja "wypełnia"
+   końcowy stan, getComputedStyle(...).transform raportuje matrix(1,0,0,1,0,0)
+   — NIE słowo kluczowe `none` — nawet jeśli keyframe `to` ustawia `none`
+   wprost (sprawdzone bezpośrednio w przeglądarce). Każda wartość transform
+   inna niż `none` (włącznie z macierzą tożsamościową) tworzy NOWY containing
+   block dla potomków position:fixed — z fill-mode:both ta macierz zostawała
+   PRZYPIĘTA na stałe, więc MobileTabBar i pełnoekranowe overlaye (menu
+   mobilne), zagnieżdżone wewnątrz .page-transition przez app/template.tsx,
+   przestawały być fixed względem viewportu (stąd "pasek na końcu dokumentu"
+   i rozjechane menu). Bez fill-mode, po 220ms element wraca do naturalnego
+   stanu z arkusza (opacity:1, transform:none — identyczny wizualnie z "to",
+   więc zero widocznego skoku) i `none` faktycznie zwalnia containing block. */
 .page-transition {
-  animation: lb-page-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: lb-page-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* mikro-interakcja przy dodaniu typu do kuponu — krótki scale-pulse

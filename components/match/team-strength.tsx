@@ -93,7 +93,7 @@ export function TeamStrength({
   awayGfAvg: number
 }) {
   return (
-    <div className="rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
+    <div className="glass-solid rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
         Siła drużyn
       </h2>

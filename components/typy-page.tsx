@@ -104,19 +104,21 @@ function nearest(target: string, dates: string[]): string | null {
   return best
 }
 
-// Karta na liście /typy: fade+lekki przesuw przy pojawieniu/zniknięciu po
-// zmianie filtra (AnimatePresence w rodzicu) + płynne przesunięcie reszty
-// siatki (layout). transform+opacity, 180ms — zgodnie z audytem wydajności
+// Karta na liście /typy: fade+scale przy pojawieniu/zniknięciu po zmianie
+// filtra (AnimatePresence w rodzicu) + płynne przesunięcie reszty siatki
+// (layout). Stagger 30ms/kartę (limit 10 — dłuższe listy nie czekają
+// sekundami). transform+opacity, ~200ms — zgodnie z audytem wydajności
 // (dziesiątki kart, żadnych właściwości wymuszających repaint).
-function TypyCardMotion({ children }: { children: React.ReactNode }) {
+function TypyCardMotion({ index, children }: { index: number; children: React.ReactNode }) {
   const reduced = useReducedMotion()
+  const delay = reduced ? 0 : Math.min(index, 10) * 0.03
   return (
     <motion.div
       layout={!reduced}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: reduced ? 0.001 : 0.18, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: reduced ? 0.001 : 0.2, ease: "easeOut", delay }}
       className="h-full"
     >
       {children}
@@ -385,8 +387,8 @@ export default function TypyPage({
             // twardo znikać, nowe fade-inują (layout: płynne przesunięcie reszty siatki).
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <AnimatePresence mode="popLayout" initial={false}>
-                {groups.map((g) => (
-                  <TypyCardMotion key={g.key}>
+                {groups.map((g, i) => (
+                  <TypyCardMotion key={g.key} index={i}>
                     <MatchTipCard
                       group={g}
                       href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined}

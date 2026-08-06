@@ -172,7 +172,7 @@ export function StatsScreen({
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
               <TrendingUp className="h-4 w-4 text-[color:var(--cyan)]" /> Skumulowany ROI
             </h2>
-            <Card hover={false}>
+            <Card hover={false} dense>
               {loading ? (
                 <Skeleton className="h-64 w-full" />
               ) : chart.length === 0 ? (
@@ -216,7 +216,7 @@ export function StatsScreen({
           {data.q_score_buckets.length > 0 && (
             <section>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Skuteczność wg Q-Score</h2>
-              <Card hover={false}>
+              <Card hover={false} dense>
                 {/* mini bar chart: trafialność per zakres Q (mono-cyan, gradacja opacity) */}
                 <ResponsiveContainer width="100%" height={180}>
                   <BarChart
@@ -290,7 +290,7 @@ export function StatsScreen({
           <ScrollReveal>
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Podział po rynkach</h2>
-            <Card hover={false}>
+            <Card hover={false} dense>
               {data.by_market.length === 0 ? (
                 <p className="py-6 text-center text-sm text-[color:var(--text-muted)]">Brak danych.</p>
               ) : (
@@ -330,7 +330,7 @@ export function StatsScreen({
           {data.by_league.length > 0 && (
             <section>
               <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Najlepsze ligi</h2>
-              <Card hover={false}>
+              <Card hover={false} dense>
                 <table className="w-full text-sm">
                   <thead className="border-b border-[color:var(--border-soft)] text-xs uppercase tracking-wide text-[color:var(--text-muted)]">
                     <tr>

@@ -53,7 +53,7 @@ export function H2HPanel({ matches, homeTeam }: { matches: H2HMatch[]; homeTeam:
   }
 
   return (
-    <div className="rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
+    <div className="glass-solid rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
           Bezpośrednie starcia

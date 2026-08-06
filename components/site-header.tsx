@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { Brand } from "./brand"
 import { LogoutButton } from "./logout-button"
+import { SoundToggle } from "./sound-toggle"
 
 type NavItem = { label: string; href: string }
 
@@ -112,6 +113,7 @@ export function SiteHeader({ loggedIn, isAdmin = false }: { loggedIn: boolean; i
           </nav>
 
           <div className="flex items-center gap-2">
+            <SoundToggle />
             {loggedIn ? (
               <div className="hidden items-center gap-5 sm:flex">
                 <Link

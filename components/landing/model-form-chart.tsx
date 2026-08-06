@@ -77,7 +77,7 @@ export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
   const hi = Math.min(100, Math.ceil(Math.max(...values) / 10) * 10 + 5)
 
   return (
-    <div className="rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
+    <div className="glass-solid rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           {/* left: 0 — ujemny margines przycinał pierwszą cyfrę etykiet osi Y */}

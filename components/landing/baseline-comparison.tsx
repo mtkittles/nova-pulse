@@ -35,7 +35,7 @@ export function BaselineComparison({ winRate }: { winRate: number }) {
   ]
 
   return (
-    <div ref={ref} className="rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-5">
+    <div ref={ref} className="glass-solid rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-5">
       <p className="mb-4 text-sm font-semibold text-[color:var(--text-primary)]">Model vs punkt odniesienia</p>
       <div className="space-y-4">
         {rows.map((row) => (

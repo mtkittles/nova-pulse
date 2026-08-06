@@ -20,6 +20,7 @@ import { QDistribution } from "./landing/q-distribution"
 import { RecentSettled } from "./landing/recent-settled"
 import { ThrillerSpotlight } from "./landing/thriller-spotlight"
 import { EngineTerminal } from "./landing/engine-terminal"
+import { MiniTerminal } from "./landing/mini-terminal"
 import { BaselineComparison } from "./landing/baseline-comparison"
 
 type LandingProps = {
@@ -151,6 +152,11 @@ export default function LandingPage({
         {/* ——— LIVE TICKER — pełna szerokość, wychodzi poza max-w-[1600px] ——— */}
         <div className="-mx-[clamp(1.5rem,5vw,5rem)]">
           <LiveTicker tips={todayTips} />
+        </div>
+
+        {/* ——— MINI TERMINAL "Dziś w piłce" ——— */}
+        <div className="pt-6 md:pt-8">
+          <MiniTerminal tips={todayTips} winRate={winRate} />
         </div>
 
         {/* ——— 2. DZIŚ W SKRÓCIE ——— */}

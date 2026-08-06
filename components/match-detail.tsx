@@ -321,7 +321,7 @@ export function MatchDetail({
           {best?.q_score_breakdown && <QScoreBreakdownCard breakdown={best.q_score_breakdown} />}
 
           {/* [C] KURSY RYNKÓW */}
-          <Card hover={false}>
+          <Card hover={false} dense>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Kursy rynków</h2>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {MARKET_CELLS.map((c) => {
@@ -375,7 +375,7 @@ export function MatchDetail({
           )}
 
           {/* [D] HEATMAPA */}
-          <Card hover={false}>
+          <Card hover={false} dense>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona/Dixon-Coles)</h2>
             {match.score_matrix ? (
               <LazyMount height={360}>
@@ -410,7 +410,7 @@ export function MatchDetail({
       {/* ── H2H: [F] ── */}
       {tab === "h2h" && (
         <motion.div key="h2h" {...fade} className="space-y-5">
-          <Card hover={false}>
+          <Card hover={false} dense>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Ostatnie spotkania (H2H)</h2>
             {match.h2h_matches.length === 0 ? (
               <EmptyState icon={BarChart3} title="Brak historycznych spotkań" description="Te drużyny nie grały ze sobą w dostępnym zakresie danych." />

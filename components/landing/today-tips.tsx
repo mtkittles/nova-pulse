@@ -9,17 +9,18 @@ import { MARKET_FILTERS, marketGroupOf, type MarketCategory } from "@/lib/market
 import { sortKey } from "@/lib/format"
 import MatchTipCard, { type MatchGroup } from "../match-tip-card"
 
-// Karta: fade+lekki przesuw przy pojawieniu/zniknięciu po zmianie chipa
-// filtra (AnimatePresence w rodzicu) — transform+opacity, 180ms.
-function TipCardMotion({ children }: { children: React.ReactNode }) {
+// Karta: fade+scale przy pojawieniu/zniknięciu po zmianie chipa filtra
+// (AnimatePresence w rodzicu), stagger 30ms/kartę — transform+opacity, ~200ms.
+function TipCardMotion({ index, children }: { index: number; children: React.ReactNode }) {
   const reduced = useReducedMotion()
+  const delay = reduced ? 0 : Math.min(index, 10) * 0.03
   return (
     <motion.div
       layout={!reduced}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: reduced ? 0.001 : 0.18, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: reduced ? 0.001 : 0.2, ease: "easeOut", delay }}
       className="h-full"
     >
       {children}
@@ -196,8 +197,8 @@ export function TodayTips({ tips, loggedIn }: { tips: Tip[]; loggedIn: boolean }
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence mode="popLayout" initial={false}>
-            {groups.map((g) => (
-              <TipCardMotion key={g.key}>
+            {groups.map((g, i) => (
+              <TipCardMotion key={g.key} index={i}>
                 <MatchTipCard
                   group={g}
                   href={g.event_id && !g.tips.some((t) => t.isOrphan) ? `/mecz/${g.event_id}` : undefined}

@@ -15,12 +15,8 @@ export function AppShell({
 }) {
   return (
     <main className="min-h-screen text-white">
-      {/* tło samo w sobie przezroczyste — ambientowe plamy z root layout muszą
-          być widoczne w przerwach; siatka zostaje jako osobny, neutralny akcent */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:72px_72px]" />
-      </div>
-
+      {/* tło samo w sobie przezroczyste — ambientowe tło z root layout
+          (siatka + plamy --cyan) musi być widoczne w przerwach */}
       <SiteHeader loggedIn={loggedIn} isAdmin={isAdmin} />
 
       <div className="mx-auto max-w-[1600px] px-[clamp(1.5rem,5vw,5rem)] pb-28 pt-10 lg:pb-14">{children}</div>

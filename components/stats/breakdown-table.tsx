@@ -68,7 +68,7 @@ export function BreakdownTable({ data }: { data: BreakdownData }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)]">
+    <div className="glass-solid overflow-hidden rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)]">
       <div className="flex gap-1 border-b border-[color:var(--border-subtle)] p-2">
         {TABS.map((t) => (
           <button

@@ -206,7 +206,7 @@ export default function MatchTipCard({
   // Sieroty — wyszarzony wygląd (kickoff/status/logo brak = brak strony analizy).
   const orphanClass = isOrphan ? " opacity-70 saturate-[.6]" : ""
   const cardClass =
-    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)]" +
+    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border-subtle)] bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur-md backdrop-saturate-[1.2] transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)]" +
     orphanClass
 
   // Karta jednego meczu może zawierać wiele rynków (>10 zdarza się). Domyślnie pokaż 3
