@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { DEMO_COOKIE, DEMO_PARAM_ALLOWED } from "@/lib/demo-flags"
+import { DEMO_COOKIE, isDemoParamAllowed } from "@/lib/demo-flags"
 
 // Jedyne zadanie: zamienić `?demo=1` na ciasteczko `lb_demo`, żeby tryb demo
 // przeżył nawigację ORAZ client-side fetch do `/api/tips` (przełącznik daty
@@ -13,7 +13,11 @@ export function middleware(req: NextRequest) {
   if (param == null) return NextResponse.next()
 
   const res = NextResponse.next()
-  if (!DEMO_PARAM_ALLOWED) return res
+  // req.headers.get("host") (nagłówek żądania), NIE req.nextUrl.hostname —
+  // to drugie potrafi nie odzwierciedlać realnego Hosta (np. na gołym
+  // `next start` bez proxy zwraca adres bindu, nie to, co faktycznie
+  // wysłał klient), zweryfikowane bezpośrednio przed tą zmianą.
+  if (!isDemoParamAllowed(req.headers.get("host"))) return res
 
   if (param === "0" || param === "false") {
     res.cookies.delete(DEMO_COOKIE)

@@ -82,7 +82,7 @@ export function TrackTipButton({
           onClick={onTrack}
           disabled={status === "loading"}
           aria-label={status === "tracked" ? "Typ śledzony" : "Śledź typ"}
-          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border transition-[transform,background-color,border-color,color] duration-150 ${cls}`}
+          className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border transition-[transform,background-color,border-color,color] duration-150 ${cls} ${status === "tracked" ? "track-success-pulse" : ""}`}
         >
           {status === "loading" ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -116,7 +116,7 @@ export function TrackTipButton({
         type="button"
         onClick={onTrack}
         disabled={status === "loading" || status === "tracked"}
-        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-[transform,box-shadow,background-color,border-color,color] duration-150 ${cls}`}
+        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-[transform,box-shadow,background-color,border-color,color] duration-150 ${cls} ${status === "tracked" ? "track-success-pulse" : ""}`}
       >
         {status === "loading" ? (
           <Loader2 className="h-4 w-4 animate-spin" />

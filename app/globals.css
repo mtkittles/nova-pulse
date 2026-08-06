@@ -484,6 +484,45 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================================
+   Przejście między stronami — app/template.tsx re-montuje się przy
+   KAŻDEJ nawigacji (w odróżnieniu od layout.tsx), więc CSS-owy fade+
+   translate na mount daje lekkie route transition bez View Transitions
+   API (niestabilne w Next 15 pod App Routerem).
+   ============================================================ */
+@keyframes lb-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  animation: lb-page-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* mikro-interakcja przy dodaniu typu do kuponu — krótki scale-pulse
+   w momencie, gdy przycisk przechodzi w stan "śledzony" */
+@keyframes lb-track-success {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.track-success-pulse {
+  animation: lb-track-success 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
    prefers-reduced-motion — dla nowych animacji: wyłącz przesunięcie
    (transform: none !important), zostaw (skrócone) pojawianie się przez
    opacity. Klasowy selektor (0,1,0) bije uniwersalny „*" niżej w pliku
@@ -538,6 +577,13 @@ h1, h2, h3, h4, h5, h6 {
   }
   .baseline-bar {
     transition-duration: 1ms !important;
+  }
+  .page-transition {
+    animation-duration: 1ms !important;
+    transform: none !important;
+  }
+  .track-success-pulse {
+    animation: none !important;
   }
 }
 

@@ -311,6 +311,26 @@ export default function MatchTipCard({
         </button>
       )}
 
+      {/* hover-podgląd (desktop) ukrytych rynków — bez klikania, samo najechanie
+          kursorem pokazuje co jeszcze jest w karcie. Czysty CSS (grid-template-rows
+          0fr→1fr), zero JS-owego stanu na hover (dziesiątki kart na liście). */}
+      {!showAll && extraCount > 0 && (
+        <div className="relative grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out group-hover/card:grid-rows-[1fr]">
+          <div className="overflow-hidden">
+            <div className="mt-2 flex flex-wrap gap-1.5 pt-0.5">
+              {sortedTips.slice(MAX_VISIBLE).map((tip, i) => {
+                const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, group.home, group.away)
+                return (
+                  <span key={i} className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${m.badge}`}>
+                    {m.short} · {fmtProb(tip.model_prob)}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {href && !isOrphan ? (
         <Link
           href={href}

@@ -2,12 +2,30 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { ArrowRight, CalendarOff } from "lucide-react"
 import type { Tip } from "@/lib/types"
 import { MARKET_FILTERS, marketGroupOf, type MarketCategory } from "@/lib/market-label"
 import { sortKey } from "@/lib/format"
 import MatchTipCard, { type MatchGroup } from "../match-tip-card"
-import { ScrollReveal } from "../scroll-reveal"
+
+// Karta: fade+lekki przesuw przy pojawieniu/zniknięciu po zmianie chipa
+// filtra (AnimatePresence w rodzicu) — transform+opacity, 180ms.
+function TipCardMotion({ children }: { children: React.ReactNode }) {
+  const reduced = useReducedMotion()
+  return (
+    <motion.div
+      layout={!reduced}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: reduced ? 0.001 : 0.18, ease: "easeOut" }}
+      className="h-full"
+    >
+      {children}
+    </motion.div>
+  )
+}
 
 // Grupowanie typów w mecze (po event_id; sieroty po home|away|kickoff).
 // Ta sama zasada co na /typy — jedna karta = jeden mecz.
@@ -177,15 +195,17 @@ export function TodayTips({ tips, loggedIn }: { tips: Tip[]; loggedIn: boolean }
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {groups.map((g, i) => (
-            <ScrollReveal key={g.key} delay={Math.min(i, 6) * 40} className="h-full">
-              <MatchTipCard
-                group={g}
-                href={g.event_id && !g.tips.some((t) => t.isOrphan) ? `/mecz/${g.event_id}` : undefined}
-                loggedIn={loggedIn}
-              />
-            </ScrollReveal>
-          ))}
+          <AnimatePresence mode="popLayout" initial={false}>
+            {groups.map((g) => (
+              <TipCardMotion key={g.key}>
+                <MatchTipCard
+                  group={g}
+                  href={g.event_id && !g.tips.some((t) => t.isOrphan) ? `/mecz/${g.event_id}` : undefined}
+                  loggedIn={loggedIn}
+                />
+              </TipCardMotion>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 
