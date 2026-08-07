@@ -473,6 +473,28 @@ h1, h2, h3, h4, h5, h6 {
   animation-delay: 600ms;
 }
 
+/* oddech sygnetu w hero — pętla niezależna od wjazdu .kinetic-logo (osobny
+   element, transformy się składają zamiast nadpisywać) */
+@keyframes lb-wolf-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+
+.wolf-pulse {
+  animation: lb-wolf-pulse 3.4s ease-in-out infinite;
+  animation-delay: 1.3s;
+}
+
+@keyframes lb-wolf-glow-pulse {
+  0%, 100% { opacity: 0.18; }
+  50% { opacity: 0.34; }
+}
+
+.wolf-glow-pulse {
+  animation: lb-wolf-glow-pulse 3.4s ease-in-out infinite;
+  animation-delay: 1.3s;
+}
+
 /* strzałka scroll-down — bounce w pętli, znika po pierwszym scrollu */
 @keyframes lb-arrow-bounce {
   0%,
@@ -720,6 +742,14 @@ h1, h2, h3, h4, h5, h6 {
   .kinetic-logo {
     animation-duration: 400ms !important;
     transform: none !important;
+  }
+  .wolf-pulse {
+    animation: none !important;
+    transform: none !important;
+  }
+  .wolf-glow-pulse {
+    animation: none !important;
+    opacity: 0.22 !important;
   }
   .kinetic-arrow {
     animation: none !important;

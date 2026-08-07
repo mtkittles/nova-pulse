@@ -74,27 +74,30 @@ export function HeroKinetic({ tips }: { tips: Tip[] }) {
         </span>
       </h1>
 
-      <p className="kinetic-sub mt-4 max-w-lg text-[15px] leading-7 text-[color:var(--text-muted)] md:text-base">
-        Model goli Poissona/Dixon-Coles, kalibracja prawdopodobieństw i własny Q-Score.
-        Każdy typ rozliczany automatycznie po meczu.
-      </p>
-
-      {/* sygnet pod claimem — sama głowa (bez powtarzania napisu "Lupus Pred",
-          który już jest wyżej jako kinetyczna typografia), z poświatą cyan w tle */}
-      <div className="kinetic-logo relative my-6 grid place-items-center self-start">
+      {/* sygnet między nagłówkiem a opisem — sama głowa (bez powtarzania
+          napisu "Lupus Pred", który już jest wyżej jako kinetyczna
+          typografia), z poświatą cyan w tle. Poświata i sygnet pulsują
+          niezależnie od jednorazowego wjazdu (.kinetic-logo na wrapperze),
+          więc oba ruchy się składają zamiast nadpisywać. */}
+      <div className="kinetic-logo relative my-4 grid place-items-center self-start md:my-6">
         <div
           aria-hidden
-          className="absolute h-40 w-40 rounded-full bg-[var(--cyan)] opacity-20 blur-[60px] md:h-48 md:w-48"
+          className="wolf-glow-pulse absolute h-56 w-56 rounded-full bg-[var(--cyan)] opacity-25 blur-[70px] md:h-72 md:w-72 md:blur-[90px]"
         />
         <Image
           src="/brand/wolf-icon-transparent.png"
-          width={160}
-          height={160}
+          width={320}
+          height={320}
           alt=""
           aria-hidden
-          className="relative h-[120px] w-[120px] object-contain md:h-[160px] md:w-[160px]"
+          className="wolf-pulse relative h-[180px] w-[180px] object-contain md:h-[260px] md:w-[260px]"
         />
       </div>
+
+      <p className="kinetic-sub max-w-lg text-[15px] leading-7 text-[color:var(--text-muted)] md:text-base">
+        Model goli Poissona/Dixon-Coles, kalibracja prawdopodobieństw i własny Q-Score.
+        Każdy typ rozliczany automatycznie po meczu.
+      </p>
 
       <p className="kinetic-sub mt-4 text-sm text-[color:var(--text-secondary)]">
         <CountUp to={tips.length} className="tnum font-semibold text-[color:var(--cyan)]" /> typów
