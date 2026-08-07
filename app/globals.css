@@ -119,9 +119,17 @@ h1, h2, h3, h4, h5, h6 {
    Tailwind emituje `bg-[var(--bg-1)]` jako dosłowny string w atrybucie
    class, więc [class*="..."] łapie każde miejsce używające tego tokenu.
    ============================================================ */
+/* KOLEJNOŚĆ MA ZNACZENIE: -webkit- PRZED wersją bez prefiksu. Lightning CSS
+   (minifikator CSS w Next.js) przy odwrotnej kolejności potrafi po cichu
+   USUNĄĆ właściwość bez prefiksu z finalnego builda, zostawiając tylko
+   przestarzały -webkit-backdrop-filter, którego nowsze silniki Chromium
+   już nie honorują — efekt: zero rozmycia mimo poprawnego źródła CSS
+   (znalezione i zweryfikowane bezpośrednio w skompilowanym pliku .css).
+   Tailwind własne klasy backdrop-blur-* piszą w tej kolejności i dlatego
+   przechodzą przez minifikację bez strat — tu robimy to samo ręcznie. */
 [class*="bg-[var(--bg-1)]"] {
-  backdrop-filter: blur(12px) saturate(1.2);
   -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
 }
 
 /* Dane gęste (tabele liczb, wykresy) — czytelność > efekt. Mocniejsza,
@@ -130,17 +138,20 @@ h1, h2, h3, h4, h5, h6 {
    kolejności w arkuszu (ta reguła niżej wygrywa). */
 .glass-solid {
   background-color: rgba(8, 13, 19, 0.86) !important;
-  backdrop-filter: blur(4px) saturate(1.05);
   -webkit-backdrop-filter: blur(4px) saturate(1.05);
+  backdrop-filter: blur(4px) saturate(1.05);
 }
 
 /* ============================================================
    Ambientowe tło — globalne (root layout), position:fixed, za CAŁĄ
-   treścią wszystkich stron. Siatka linii + trzy rozmyte plamy --cyan po
-   przekątnej. Opacity podniesione (10-15%) po weryfikacji, że 4-6% jest
-   praktycznie niewidoczne na realnym ekranie (screenshot: delta ~2-9/255
-   na kanał — poprawne w kodzie, ale poniżej progu percepcji). Powolny
-   dryf pozycji plam w pętli.
+   treścią wszystkich stron. "Zaparowana szyba z przechodzącymi światłami":
+   4 duże, mocno rozmyte plamy światła (cyan + chłodny błękit/fiolet) POD
+   półprzezroczystą "szybą" (backdrop-filter blur+saturate), która rozmywa
+   ostre okręgi w matową łunę. Opacity świateł 16-22% — poprzednie dwie
+   próby (siatka linii 3.5-7%, potem plamy 4-14%) okazały się niewidoczne
+   na realnym ekranie mimo poprawnego kodu (zmierzone: delta 2-9/255 na
+   kanał, poniżej progu percepcji) — tym razem mierzone i potwierdzone
+   zrzutem ekranu PRZED uznaniem za gotowe.
    ============================================================ */
 .ambient-bg {
   position: fixed;
@@ -150,73 +161,172 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
-.ambient-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(126, 232, 247, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(126, 232, 247, 0.07) 1px, transparent 1px);
-  background-size: 72px 72px;
-  /* zanika ku dołowi, żeby siatka nie "walczyła" wizualnie z treścią
-     w dolnej, gęściej wypełnionej części długich stron */
-  mask-image: linear-gradient(to bottom, black, black 60%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black, black 60%, transparent 100%);
-}
-
-.ambient-blob {
+.ambient-light {
   position: absolute;
   border-radius: 9999px;
-  background: radial-gradient(circle, var(--cyan) 0%, transparent 70%);
-  filter: blur(70px);
   will-change: transform;
 }
 
-.ambient-blob-1 {
-  top: -12%;
-  right: -8%;
-  width: 46vw;
-  height: 46vw;
-  opacity: 0.14;
-  animation: lb-ambient-drift-1 26s ease-in-out infinite;
+.ambient-light-1 {
+  top: -8%;
+  right: -6%;
+  width: 850px;
+  height: 850px;
+  max-width: 70vw;
+  max-height: 70vw;
+  background: radial-gradient(circle, #58e6f5 0%, transparent 70%);
+  filter: blur(110px);
+  opacity: 0.2;
+  animation: lb-light-drift-1 34s ease-in-out infinite;
 }
 
-.ambient-blob-2 {
-  top: 32%;
-  left: 28%;
-  width: 50vw;
-  height: 50vw;
-  opacity: 0.1;
-  animation: lb-ambient-drift-2 32s ease-in-out infinite;
+.ambient-light-2 {
+  top: 22%;
+  left: 12%;
+  width: 900px;
+  height: 900px;
+  max-width: 75vw;
+  max-height: 75vw;
+  background: radial-gradient(circle, #7c93ff 0%, transparent 70%);
+  filter: blur(120px);
+  opacity: 0.18;
+  animation: lb-light-drift-2 40s ease-in-out infinite;
+  animation-delay: -9s;
 }
 
-.ambient-blob-3 {
-  bottom: -14%;
-  left: -10%;
-  width: 44vw;
-  height: 44vw;
-  opacity: 0.13;
-  animation: lb-ambient-drift-3 24s ease-in-out infinite;
+.ambient-light-3 {
+  bottom: -12%;
+  left: -8%;
+  width: 750px;
+  height: 750px;
+  max-width: 68vw;
+  max-height: 68vw;
+  background: radial-gradient(circle, #3fd0c9 0%, transparent 70%);
+  filter: blur(100px);
+  opacity: 0.22;
+  animation: lb-light-drift-3 30s ease-in-out infinite;
+  animation-delay: -16s;
 }
 
-@keyframes lb-ambient-drift-1 {
+.ambient-light-4 {
+  bottom: 6%;
+  right: 8%;
+  width: 650px;
+  height: 650px;
+  max-width: 60vw;
+  max-height: 60vw;
+  background: radial-gradient(circle, #4f8fe0 0%, transparent 70%);
+  filter: blur(90px);
+  opacity: 0.17;
+  animation: lb-light-drift-4 37s ease-in-out infinite;
+  animation-delay: -22s;
+}
+
+/* dryf po elipsie — cztery różne trasy/fazy, żeby światła nie poruszały
+   się w synchronii (banalny, "oddychający" ruch zamiast żywego) */
+@keyframes lb-light-drift-1 {
   0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-6%, 6%); }
+  25% { transform: translate(-5%, 6%); }
+  50% { transform: translate(4%, 10%); }
+  75% { transform: translate(7%, 3%); }
 }
 
-@keyframes lb-ambient-drift-2 {
+@keyframes lb-light-drift-2 {
   0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(6%, -7%); }
+  30% { transform: translate(6%, -5%); }
+  60% { transform: translate(-3%, -9%); }
+  85% { transform: translate(-7%, 2%); }
 }
 
-@keyframes lb-ambient-drift-3 {
+@keyframes lb-light-drift-3 {
   0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(7%, -5%); }
+  35% { transform: translate(5%, -7%); }
+  65% { transform: translate(9%, 3%); }
+  90% { transform: translate(2%, 6%); }
+}
+
+@keyframes lb-light-drift-4 {
+  0%, 100% { transform: translate(0, 0); }
+  40% { transform: translate(-6%, -4%); }
+  70% { transform: translate(-2%, 7%); }
+}
+
+/* Szyba — rozmywa światła w matową łunę zamiast ostrych okręgów. */
+.ambient-glass {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 11, 0.5);
+  /* -webkit- PRZED wersją bez prefiksu — patrz komentarz przy .glass-solid,
+     odwrotna kolejność = Lightning CSS cicho gubi właściwość bez prefiksu. */
+  -webkit-backdrop-filter: blur(60px) saturate(1.4);
+  backdrop-filter: blur(60px) saturate(1.4);
+}
+
+/* Ziarno — bardzo subtelne, tylko żeby uniknąć banding-u na gradientach. */
+.ambient-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ambient-blob {
+  .ambient-light {
     animation: none !important;
   }
+}
+
+/* Poświata za kursorem/palcem — components/cursor-glow.tsx steruje
+   transform+opacity bezpośrednio przez style.* (RAF), CSS tylko definiuje
+   wygląd i przejście opacity (fade in/out 600ms). */
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 260px;
+  border-radius: 9999px;
+  /* alfa 10% wpieczona w sam gradient — element opacity (0↔1, sterowane z
+     JS) odpowiada TYLKO za pokazanie/ukrycie (fade), nie za siłę poświaty */
+  background: radial-gradient(circle, rgba(88, 230, 245, 0.1) 0%, transparent 70%);
+  filter: blur(40px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 600ms ease;
+  will-change: transform, opacity;
+}
+
+/* ============================================================
+   Wykresy w stylu Robinhood (model-form-chart, ROI na /stats) — kropka na
+   końcu linii z pulsującą poświatą + rozmyta plama w tle pod wykresem.
+   ============================================================ */
+@keyframes lb-chart-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.05; transform: scale(2); }
+}
+
+.chart-pulse-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lb-chart-pulse 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-pulse-dot {
+    animation: none !important;
+    opacity: 0.18 !important;
+  }
+}
+
+.chart-glow-blob {
+  position: absolute;
+  border-radius: 9999px;
+  background: var(--cyan);
+  opacity: 0.1;
+  filter: blur(70px);
+  pointer-events: none;
 }
 
 /* ============================================================

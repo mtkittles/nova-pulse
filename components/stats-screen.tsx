@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { Bar, BarChart, Brush, CartesianGrid, Cell, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import { useState } from "react"
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { BarChart3, Send, TrendingUp } from "lucide-react"
 import type { StatsResponse } from "@/lib/stats-types"
 import type { Tip } from "@/lib/types"
@@ -15,12 +15,33 @@ import { Card } from "./ui/card"
 import { Skeleton } from "./ui/skeleton"
 import { EmptyState } from "./ui/empty-state"
 import { StatusPill, type PillStatus } from "./ui/status-pill"
+import { RangePills, type RangeOption } from "./ui/range-pills"
 import { TeamBadge } from "./team-badge"
 import { ScrollReveal } from "./scroll-reveal"
 import { CalibrationChart } from "./stats/calibration-chart"
 import { BreakdownTable } from "./stats/breakdown-table"
 
-type Period = "7" | "30" | "all"
+type Period = "7" | "30" | "90" | "all"
+
+const PERIOD_OPTIONS: readonly RangeOption<Period>[] = [
+  { key: "7", label: "7D" },
+  { key: "30", label: "30D" },
+  { key: "90", label: "90D" },
+  { key: "all", label: "Wszystko" },
+]
+
+type RoiPoint = { date: string; roi: number; tips: number }
+
+function RoiEndDot(props: { cx?: number; cy?: number; index?: number; lastIndex: number }) {
+  const { cx, cy, index, lastIndex } = props
+  if (cx == null || cy == null || index !== lastIndex) return null
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={8} fill="var(--cyan)" className="chart-pulse-dot" />
+      <circle cx={cx} cy={cy} r={3.5} fill="var(--cyan)" stroke="var(--bg-0)" strokeWidth={1.5} />
+    </g>
+  )
+}
 
 // Data → "6 cze" (strefa urządzenia). Akceptuje "YYYY-MM-DD" lub pełne ISO.
 function fmtDay(val: string): string {
@@ -28,20 +49,6 @@ function fmtDay(val: string): string {
   return Number.isNaN(d.getTime())
     ? val
     : d.toLocaleDateString("pl-PL", { day: "numeric", month: "short" })
-}
-
-function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: { date: string; roi: number; tips: number } }[] }) {
-  if (!active || !payload?.length) return null
-  const p = payload[0].payload
-  // p.roi jest już w procentach (znormalizowane niżej)
-  return (
-    <div className="rounded-xl border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-3 py-2 text-xs">
-      <p className="text-[color:var(--text-muted)]">{fmtDay(p.date)}</p>
-      <p className="font-semibold text-[color:var(--cyan)] tnum">
-        ROI {p.roi >= 0 ? "+" : ""}{p.roi.toFixed(1)}% · {p.tips} {plTips(p.tips)}
-      </p>
-    </div>
-  )
 }
 
 // pl-PL liczba mnoga „typ/typy/typów"
@@ -111,33 +118,15 @@ export function StatsScreen({
     .map((t) => ({ date: t.date, roi: roiAlreadyPct ? t.roi : t.roi * 100, tips: t.tips }))
   const hasData = s.total_tips > 0
   const maxQWinRate = Math.max(1, ...data.q_score_buckets.map((b) => Math.round(b.win_rate * 100)))
-
-  // Brush kontrolowany — domyślnie okno wg wybranego okresu; user może przeciągać.
-  const [brush, setBrush] = useState<{ start: number; end: number }>({ start: 0, end: 0 })
-  useEffect(() => {
-    const len = chart.length
-    if (len === 0) return
-    const n = period === "7" ? 7 : period === "30" ? 30 : len
-    setBrush({ start: Math.max(0, len - n), end: len - 1 })
-    // zależność po długości i okresie (nie po referencji tablicy)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chart.length, period])
-
-  const periodBtn = (p: Period) =>
-    `rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
-      period === p ? "bg-[var(--cyan-soft)] text-[color:var(--cyan)]" : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"
-    }`
+  const lastIndex = chart.length - 1
+  const [roiHover, setRoiHover] = useState<RoiPoint | null>(null)
+  const roiDisplay = roiHover ?? chart[lastIndex]
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 lg:max-w-[1600px]">
       {/* [A] NAGŁÓWEK */}
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header>
         <h1 className="text-3xl font-semibold tracking-tight">Statystyki modelu</h1>
-        <div className="inline-flex rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-1)] p-0.5">
-          <button type="button" onClick={() => selectPeriod("7")} className={periodBtn("7")}>7 dni</button>
-          <button type="button" onClick={() => selectPeriod("30")} className={periodBtn("30")}>30 dni</button>
-          <button type="button" onClick={() => selectPeriod("all")} className={periodBtn("all")}>Wszystkie</button>
-        </div>
       </header>
 
       {!hasData ? (
@@ -172,41 +161,75 @@ export function StatsScreen({
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">
               <TrendingUp className="h-4 w-4 text-[color:var(--cyan)]" /> Skumulowany ROI
             </h2>
-            <Card hover={false} dense>
+            <Card hover={false} dense className="relative overflow-hidden">
               {loading ? (
                 <Skeleton className="h-64 w-full" />
               ) : chart.length === 0 ? (
                 <p className="py-12 text-center text-sm text-[color:var(--text-muted)]">Brak punktów w tym zakresie.</p>
               ) : (
-                <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={chart} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                    <CartesianGrid stroke="var(--border-soft)" vertical={false} />
-                    <XAxis dataKey="date" stroke="var(--text-muted)" tick={{ fontSize: 12 }} minTickGap={24} tickFormatter={fmtDay} />
-                    <YAxis
-                      stroke="var(--text-muted)"
-                      tick={{ fontSize: 12 }}
-                      width={48}
-                      domain={["dataMin - 2", "dataMax + 2"]}
-                      tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-                    />
-                    <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeDasharray="4 4" />
-                    <Tooltip content={<ChartTooltip />} />
-                    <Line type="monotone" dataKey="roi" stroke="#58E6F5" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                    <Brush
-                      dataKey="date"
-                      height={24}
-                      stroke="#58E6F5"
-                      fill="var(--surface-1)"
-                      travellerWidth={8}
-                      tickFormatter={(v: string) => fmtDay(v)}
-                      startIndex={brush.start}
-                      endIndex={brush.end}
-                      onChange={(r: { startIndex?: number; endIndex?: number }) => {
-                        if (r.startIndex != null && r.endIndex != null) setBrush({ start: r.startIndex, end: r.endIndex })
-                      }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <>
+                  <div className="chart-glow-blob left-1/4 top-8 h-40 w-2/3" />
+
+                  {/* wartość + data nad wykresem, nie w dymku */}
+                  <div className="relative mb-1">
+                    <p className={`text-2xl font-bold tabular-nums ${roiDisplay.roi >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+                      {roiDisplay.roi >= 0 ? "+" : ""}
+                      {roiDisplay.roi.toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-[color:var(--text-muted)]">
+                      {roiHover ? fmtDay(roiHover.date) : "dziś · ROI skumulowany"}
+                    </p>
+                  </div>
+
+                  <div className="relative h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={chart}
+                        margin={{ top: 8, right: 4, bottom: 0, left: 0 }}
+                        onMouseMove={(e) => {
+                          // activeTooltipIndex bywa stringiem ("4"), nie liczbą
+                          const idx = e?.activeTooltipIndex != null ? Number(e.activeTooltipIndex) : NaN
+                          if (!Number.isNaN(idx) && chart[idx]) setRoiHover(chart[idx])
+                        }}
+                        onMouseLeave={() => setRoiHover(null)}
+                      >
+                        <defs>
+                          <linearGradient id="lb-roi-fill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="var(--cyan)" stopOpacity={0.08} />
+                            <stop offset="100%" stopColor="var(--cyan)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="date" tick={{ fill: "var(--text-muted)", fontSize: 10 }} tickLine={false} axisLine={false} minTickGap={32} tickFormatter={fmtDay} />
+                        <YAxis
+                          tick={{ fill: "var(--text-muted)", fontSize: 10 }}
+                          tickLine={false}
+                          axisLine={false}
+                          width={38}
+                          domain={["dataMin - 2", "dataMax + 2"]}
+                          tickFormatter={(v: number) => `${v.toFixed(0)}%`}
+                        />
+                        <ReferenceLine y={0} stroke="var(--text-muted)" strokeOpacity={0.4} strokeDasharray="3 3" />
+                        <Tooltip content={() => null} cursor={{ stroke: "var(--cyan)", strokeOpacity: 0.35, strokeWidth: 1 }} />
+                        <Area
+                          type="monotone"
+                          dataKey="roi"
+                          stroke="var(--cyan)"
+                          strokeWidth={1.75}
+                          fill="url(#lb-roi-fill)"
+                          dot={(props: { cx?: number; cy?: number; index?: number }) => (
+                            <RoiEndDot key={props.index} {...props} lastIndex={lastIndex} />
+                          )}
+                          activeDot={{ r: 3.5, fill: "var(--cyan)", stroke: "var(--bg-0)", strokeWidth: 1.5 }}
+                          isAnimationActive
+                          animationDuration={900}
+                          animationEasing="ease-out"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <RangePills value={period} options={PERIOD_OPTIONS} onChange={selectPeriod} className="relative mt-3 justify-center" />
+                </>
               )}
             </Card>
           </section>

@@ -1,16 +1,22 @@
-// Stałe ambientowe tło (globalne, root layout) — siatka linii + trzy rozmyte
-// plamy --cyan ułożone po przekątnej (góra-prawo / środek / dół-lewo), jak
-// w Cerebrium. position:fixed — nie scrolluje się z treścią, cały czas
-// widoczne za stronami (wszystkimi, nie tylko landingiem — siatka wcześniej
-// żyła lokalnie tylko w app-shell.tsx). Powolny dryf plam (CSS, 24-30s pętla)
-// wyłączony pod prefers-reduced-motion — patrz globals.css.
+// Stałe ambientowe tło (globalne, root layout) — "zaparowana szyba z
+// przechodzącymi światłami". Trzy warstwy, position:fixed, pełny viewport,
+// nie scrolluje się z treścią:
+//  1. Światła — 4 duże, mocno rozmyte plamy (cyan + chłodny błękit/fiolet),
+//     każda z osobnym powolnym dryfem po elipsie.
+//  2. Szyba — półprzezroczysta warstwa z backdrop-filter (blur+saturate),
+//     rozmywa światła w matową łunę zamiast ostrych okręgów.
+//  3. Ziarno — bardzo subtelna tekstura SVG (feTurbulence), żeby uniknąć
+//     banding-u na gradientach.
+// Dryf świateł wyłączony pod prefers-reduced-motion — patrz globals.css.
 export function AmbientBackground() {
   return (
     <div className="ambient-bg" aria-hidden>
-      <div className="ambient-grid" />
-      <div className="ambient-blob ambient-blob-1" />
-      <div className="ambient-blob ambient-blob-2" />
-      <div className="ambient-blob ambient-blob-3" />
+      <div className="ambient-light ambient-light-1" />
+      <div className="ambient-light ambient-light-2" />
+      <div className="ambient-light ambient-light-3" />
+      <div className="ambient-light ambient-light-4" />
+      <div className="ambient-glass" />
+      <div className="ambient-noise" />
     </div>
   )
 }

@@ -1073,7 +1073,7 @@ export function demoBreakdown(nowMs: number = Date.now()): BreakdownData {
  */
 export function demoStatsPayload(period: string | undefined, nowMs: number = Date.now()): Record<string, unknown> {
   const pool = demoHistoricalPool(nowMs)
-  const days = period === "7" ? 7 : period === "30" ? 30 : 120
+  const days = period === "7" ? 7 : period === "30" ? 30 : period === "90" ? 90 : 120
   const cutoff = nowMs - days * 864e5
   const filtered = pool.filter((t) => Date.parse(t.date) >= cutoff)
 

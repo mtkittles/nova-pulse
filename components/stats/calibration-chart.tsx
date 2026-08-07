@@ -67,8 +67,9 @@ export function CalibrationChart({ points }: { points: CalibrationPoint[] }) {
   const data = points.map((p) => ({ ...p, x: p.declaredPct, y: p.actualPct }))
 
   return (
-    <div className="glass-solid rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
-      <div className="h-72 w-full">
+    <div className="glass-solid relative overflow-hidden rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 md:p-5">
+      <div className="chart-glow-blob left-1/4 top-1/4 h-40 w-2/3" />
+      <div className="relative h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
             <XAxis
