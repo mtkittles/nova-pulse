@@ -352,7 +352,7 @@ export default function LandingPage({
             </div>
           </div>
           <p className="mt-5 pb-8 text-xs leading-5 text-[color:var(--text-muted)]">
-            © 2026 LUPUS BETS. Interfejs nad silnikiem Lupus Bot.
+            © 2026 LUPUS PRED. Interfejs nad silnikiem Lupus Bot.
           </p>
         </footer>
       </main>

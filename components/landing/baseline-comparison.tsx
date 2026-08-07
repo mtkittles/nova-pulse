@@ -26,7 +26,7 @@ export function BaselineComparison({ winRate }: { winRate: number }) {
       valueCls: "text-[color:var(--text-secondary)]",
     },
     {
-      label: "Model Lupus Bets",
+      label: "Model Lupus Pred",
       value: modelPct,
       note: "realna skuteczność, dane demo",
       barCls: "bg-[var(--cyan)]",

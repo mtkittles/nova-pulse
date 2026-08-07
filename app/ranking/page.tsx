@@ -7,7 +7,7 @@ import { LocalDateTime } from "@/components/local-time"
 import { ScrollReveal } from "@/components/scroll-reveal"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Ranking typerów", description: "Ranking najlepszych typerów społeczności Lupus Bets." }
+export const metadata = { title: "Ranking typerów", description: "Ranking najlepszych typerów społeczności Lupus Pred." }
 
 const MEDAL = ["🥇", "🥈", "🥉"]
 // subtelne tła dla podium (gold / silver / bronze)
@@ -32,7 +32,7 @@ export default async function RankingPage() {
       <div className="mx-auto max-w-2xl lg:max-w-4xl">
         <header className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Ranking typerów</h1>
-          <p className="mt-2 text-[color:var(--text-secondary)]">Najlepsi użytkownicy społeczności Lupus Bets</p>
+          <p className="mt-2 text-[color:var(--text-secondary)]">Najlepsi użytkownicy społeczności Lupus Pred</p>
         </header>
 
         {error ? (

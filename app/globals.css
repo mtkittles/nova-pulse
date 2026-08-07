@@ -455,6 +455,24 @@ h1, h2, h3, h4, h5, h6 {
   animation-delay: 400ms;
 }
 
+/* duże logo pod claimem — wjeżdża po tekście (delay 600ms > 400ms .kinetic-sub) */
+@keyframes lb-logo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.kinetic-logo {
+  opacity: 0;
+  animation: lb-logo-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 600ms;
+}
+
 /* strzałka scroll-down — bounce w pętli, znika po pierwszym scrollu */
 @keyframes lb-arrow-bounce {
   0%,
@@ -696,6 +714,10 @@ h1, h2, h3, h4, h5, h6 {
     transform: none !important;
   }
   .kinetic-sub {
+    animation-duration: 400ms !important;
+    transform: none !important;
+  }
+  .kinetic-logo {
     animation-duration: 400ms !important;
     transform: none !important;
   }

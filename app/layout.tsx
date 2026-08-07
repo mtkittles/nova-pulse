@@ -24,29 +24,29 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://nova-pulse-sage.ve
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "LUPUS BETS — Analiza, nie przeczucie",
-    template: "%s · LUPUS BETS",
+    default: "LUPUS PRED — Analiza, nie przeczucie",
+    template: "%s · LUPUS PRED",
   },
   description:
     "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score. Typy z przewagą nad bukmacherem.",
-  applicationName: "LUPUS BETS",
-  authors: [{ name: "LUPUS BETS" }],
+  applicationName: "LUPUS PRED",
+  authors: [{ name: "LUPUS PRED" }],
   icons: {
-    icon: "/brand/lupus-bets-mark.png",
-    apple: "/brand/lupus-bets-mark.png",
+    icon: "/brand/wolf-icon.png",
+    apple: "/brand/wolf-icon.png",
   },
   openGraph: {
     type: "website",
-    siteName: "LUPUS BETS",
+    siteName: "LUPUS PRED",
     url: SITE_URL,
-    title: "LUPUS BETS — Analiza, nie przeczucie",
+    title: "LUPUS PRED — Analiza, nie przeczucie",
     description:
       "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score. Typy z przewagą nad bukmacherem.",
     // Obraz OG: dynamiczny app/opengraph-image.tsx (konwencja Next, auto-dołączany).
   },
   twitter: {
     card: "summary_large_image",
-    title: "LUPUS BETS — Analiza, nie przeczucie",
+    title: "LUPUS PRED — Analiza, nie przeczucie",
     description:
       "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score. Typy z przewagą nad bukmacherem.",
   },

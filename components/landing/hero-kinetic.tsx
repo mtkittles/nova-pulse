@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { ChevronDown } from "lucide-react"
 import type { Tip } from "@/lib/types"
 import { CountUp } from "../ui/count-up"
@@ -63,13 +64,13 @@ export function HeroKinetic({ tips }: { tips: Tip[] }) {
       className="relative flex min-h-[55vh] scroll-mt-20 flex-col justify-center md:min-h-[65vh]"
     >
       <h1
-        aria-label="LUPUS BETS"
+        aria-label="LUPUS PRED"
         className="text-[clamp(3rem,12vw,9rem)] font-bold leading-[0.95] tracking-[-0.03em]"
       >
         <span aria-hidden className="inline-flex flex-wrap items-baseline">
           <KineticWord word="LUPUS" startIndex={0} className="text-[color:var(--text-primary)]" />
           <span className="inline-block w-[0.28em]" aria-hidden />
-          <KineticWord word="BETS" startIndex={5} className="text-[color:var(--cyan)]" />
+          <KineticWord word="PRED" startIndex={5} className="text-[color:var(--cyan)]" />
         </span>
       </h1>
 
@@ -77,6 +78,23 @@ export function HeroKinetic({ tips }: { tips: Tip[] }) {
         Model goli Poissona/Dixon-Coles, kalibracja prawdopodobieństw i własny Q-Score.
         Każdy typ rozliczany automatycznie po meczu.
       </p>
+
+      {/* sygnet pod claimem — sama głowa (bez powtarzania napisu "Lupus Pred",
+          który już jest wyżej jako kinetyczna typografia), z poświatą cyan w tle */}
+      <div className="kinetic-logo relative my-6 grid place-items-center self-start">
+        <div
+          aria-hidden
+          className="absolute h-40 w-40 rounded-full bg-[var(--cyan)] opacity-20 blur-[60px] md:h-48 md:w-48"
+        />
+        <Image
+          src="/brand/wolf-icon-transparent.png"
+          width={160}
+          height={160}
+          alt=""
+          aria-hidden
+          className="relative h-[120px] w-[120px] object-contain md:h-[160px] md:w-[160px]"
+        />
+      </div>
 
       <p className="kinetic-sub mt-4 text-sm text-[color:var(--text-secondary)]">
         <CountUp to={tips.length} className="tnum font-semibold text-[color:var(--cyan)]" /> typów
