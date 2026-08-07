@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { Activity, ArrowRight, Check, CheckCircle2, Cpu, Send, ShieldCheck } from "lucide-react"
+import { ArrowRight, Check, Send, ShieldCheck } from "lucide-react"
 import type { Tip } from "@/lib/types"
 import type { TimelinePoint } from "@/lib/stats-types"
 import type { ThrillerSpotlight as ThrillerSpotlightData } from "@/lib/demo-tips"
+import { HOW_IT_WORKS } from "@/lib/how-it-works"
 import { Brand } from "./brand"
 import { RevealText } from "./ui/reveal-text"
 import { ScrollReveal } from "./scroll-reveal"
@@ -38,24 +39,6 @@ type LandingProps = {
   recentSettled: Tip[]
   thriller?: ThrillerSpotlightData | null
 }
-
-const HOW_IT_WORKS = [
-  {
-    icon: Activity,
-    title: "Dane i forma",
-    text: "Zbieramy wyniki, formę drużyn i historię H2H z dziesiątek lig.",
-  },
-  {
-    icon: Cpu,
-    title: "Model goli + kalibracja + Q-Score",
-    text: "Silnik łączy model goli Poissona/Dixon-Coles, kalibrację prawdopodobieństw i własny Q-Score.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Automatyczna weryfikacja na żywo",
-    text: "Aktualizujemy wynik na żywo i rozliczamy typy po zakończeniu meczu.",
-  },
-]
 
 const PLANS: {
   name: string

@@ -9,8 +9,11 @@
   --bg-0: #05070b;
   /* --bg-1: karty (landing/mecz/stats) — półprzezroczyste (glassmorphism),
      żeby ambientowe tło (siatka + plamy cyan) przebijało przez karty.
-     --bg-0 zostaje w pełni kryjące (tło strony/canvas). */
-  --bg-1: rgba(8, 13, 19, 0.62);
+     --bg-0 zostaje w pełni kryjące (tło strony/canvas). Alfa obniżona
+     (było 0.62) — karty mają wyglądać jak matowa szyba na tle świateł,
+     nie jak odrębne, mocno wykonturowane bloki; mocniejszy blur (patrz
+     [class*="bg-[var(--bg-1)]"] niżej) rekompensuje czytelność. */
+  --bg-1: rgba(8, 13, 19, 0.48);
   --surface-1: #0c131b;
   --surface-2: #111b25;
   --surface-3: #172431;
@@ -18,9 +21,11 @@
   /* obramowania */
   --border-soft: rgba(126, 232, 247, 0.1);
   --border-strong: rgba(126, 232, 247, 0.22);
-  /* subtelny 1px border z cyjanowym tintem (0.12) — flat karty dashboardu
-     na landingu/mecz/stats, spójny z jedynym akcentem palety (cyan). */
-  --border-subtle: rgba(88, 230, 245, 0.12);
+  /* subtelny 1px border z cyjanowym tintem — flat karty dashboardu na
+     landingu/mecz/stats, spójny z jedynym akcentem palety (cyan). Alfa
+     obniżona (było 0.12) — kontur ma się ledwo zaznaczać, nie wykrawać
+     kartę z tła. */
+  --border-subtle: rgba(88, 230, 245, 0.07);
 
   /* tekst */
   --text-primary: #f5f8fb;
@@ -128,30 +133,43 @@ h1, h2, h3, h4, h5, h6 {
    Tailwind własne klasy backdrop-blur-* piszą w tej kolejności i dlatego
    przechodzą przez minifikację bez strat — tu robimy to samo ręcznie. */
 [class*="bg-[var(--bg-1)]"] {
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
-  backdrop-filter: blur(12px) saturate(1.2);
+  /* blur podniesiony (było 12px) — mocniejsze "zlanie" karty z ambientowym
+     tłem, matowa szyba zamiast wyraźnie odrębnego bloku. */
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  backdrop-filter: blur(22px) saturate(1.3);
 }
 
 /* Dane gęste (tabele liczb, wykresy) — czytelność > efekt. Mocniejsza,
    prawie kryjąca alfa i słabszy blur, żeby siatka pod spodem nie rozmywała
    cyfr. Nakłada się na bg-[var(--bg-1)] dzięki równej specyficzności +
-   kolejności w arkuszu (ta reguła niżej wygrywa). */
+   kolejności w arkuszu (ta reguła niżej wygrywa). Celowo NIE obniżone tak
+   mocno jak zwykłe karty (P4) — tu czytelność liczb ma priorytet nad
+   efektem, zgodnie z zasadą projektu. */
 .glass-solid {
-  background-color: rgba(8, 13, 19, 0.86) !important;
-  -webkit-backdrop-filter: blur(4px) saturate(1.05);
-  backdrop-filter: blur(4px) saturate(1.05);
+  background-color: rgba(8, 13, 19, 0.82) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(1.1);
+  backdrop-filter: blur(6px) saturate(1.1);
 }
 
 /* ============================================================
    Ambientowe tło — globalne (root layout), position:fixed, za CAŁĄ
    treścią wszystkich stron. "Zaparowana szyba z przechodzącymi światłami":
-   4 duże, mocno rozmyte plamy światła (cyan + chłodny błękit/fiolet) POD
-   półprzezroczystą "szybą" (backdrop-filter blur+saturate), która rozmywa
-   ostre okręgi w matową łunę. Opacity świateł 16-22% — poprzednie dwie
-   próby (siatka linii 3.5-7%, potem plamy 4-14%) okazały się niewidoczne
-   na realnym ekranie mimo poprawnego kodu (zmierzone: delta 2-9/255 na
-   kanał, poniżej progu percepcji) — tym razem mierzone i potwierdzone
-   zrzutem ekranu PRZED uznaniem za gotowe.
+   4 duże, mocno rozmyte plamy światła POD półprzezroczystą "szybą"
+   (backdrop-filter blur+saturate), która rozmywa ostre okręgi w matową
+   łunę. Kolor każdej plamy powoli krąży przez spektrum (hue-rotate w
+   filter, pętla 44-56s, przesunięcie fazowe per plama), więc tło "mieni
+   się" zamiast stać w miejscu kolorystycznie — UI (badge/wykresy/karty)
+   zostaje mono-cyan, ta rotacja dotyczy WYŁĄCZNIE tej dekoracyjnej
+   warstwy. Opacity 27-35%, promień/blur zmniejszony (były 650-900px/
+   90-120px, teraz 420-580px/65-90px — bardziej skoncentrowane źródła niż
+   rozlana łuna) — świadomie mocniejsze niż poprzednia wersja: wcześniejsze
+   dwie próby (siatka linii 3.5-7%, potem plamy 4-14/16-22%) okazywały się
+   niewidoczne na realnym ekranie mimo poprawnego kodu, więc tym razem
+   mierzone i potwierdzone zrzutem ekranu PRZED uznaniem za gotowe. Brak
+   ograniczeń max-width/height w vw (tylko hojny 92vw) — na mobile efekt
+   ma być tak samo intensywny jak na desktopie, blob może wychodzić poza
+   krawędź ekranu (naturalne dla poświaty w rogu), `overflow:hidden` na
+   .ambient-bg i tak przycina nadmiar.
    ============================================================ */
 .ambient-bg {
   position: fixed;
@@ -164,62 +182,66 @@ h1, h2, h3, h4, h5, h6 {
 .ambient-light {
   position: absolute;
   border-radius: 9999px;
-  will-change: transform;
+  will-change: transform, filter;
 }
 
 .ambient-light-1 {
   top: -8%;
   right: -6%;
-  width: 850px;
-  height: 850px;
-  max-width: 70vw;
-  max-height: 70vw;
+  width: 560px;
+  height: 560px;
+  max-width: 92vw;
+  max-height: 92vw;
   background: radial-gradient(circle, #58e6f5 0%, transparent 70%);
-  filter: blur(110px);
-  opacity: 0.2;
-  animation: lb-light-drift-1 34s ease-in-out infinite;
+  opacity: 0.32;
+  animation:
+    lb-light-drift-1 34s ease-in-out infinite,
+    lb-hue-cycle-1 46s linear infinite;
 }
 
 .ambient-light-2 {
   top: 22%;
   left: 12%;
-  width: 900px;
-  height: 900px;
-  max-width: 75vw;
-  max-height: 75vw;
+  width: 580px;
+  height: 580px;
+  max-width: 92vw;
+  max-height: 92vw;
   background: radial-gradient(circle, #7c93ff 0%, transparent 70%);
-  filter: blur(120px);
-  opacity: 0.18;
-  animation: lb-light-drift-2 40s ease-in-out infinite;
-  animation-delay: -9s;
+  opacity: 0.28;
+  animation:
+    lb-light-drift-2 40s ease-in-out infinite,
+    lb-hue-cycle-2 52s linear infinite;
+  animation-delay: -9s, -18s;
 }
 
 .ambient-light-3 {
   bottom: -12%;
   left: -8%;
-  width: 750px;
-  height: 750px;
-  max-width: 68vw;
-  max-height: 68vw;
+  width: 480px;
+  height: 480px;
+  max-width: 90vw;
+  max-height: 90vw;
   background: radial-gradient(circle, #3fd0c9 0%, transparent 70%);
-  filter: blur(100px);
-  opacity: 0.22;
-  animation: lb-light-drift-3 30s ease-in-out infinite;
-  animation-delay: -16s;
+  opacity: 0.35;
+  animation:
+    lb-light-drift-3 30s ease-in-out infinite,
+    lb-hue-cycle-3 56s linear infinite;
+  animation-delay: -16s, -30s;
 }
 
 .ambient-light-4 {
   bottom: 6%;
   right: 8%;
-  width: 650px;
-  height: 650px;
-  max-width: 60vw;
-  max-height: 60vw;
+  width: 420px;
+  height: 420px;
+  max-width: 88vw;
+  max-height: 88vw;
   background: radial-gradient(circle, #4f8fe0 0%, transparent 70%);
-  filter: blur(90px);
-  opacity: 0.17;
-  animation: lb-light-drift-4 37s ease-in-out infinite;
-  animation-delay: -22s;
+  opacity: 0.27;
+  animation:
+    lb-light-drift-4 37s ease-in-out infinite,
+    lb-hue-cycle-4 50s linear infinite;
+  animation-delay: -22s, -6s;
 }
 
 /* dryf po elipsie — cztery różne trasy/fazy, żeby światła nie poruszały
@@ -251,6 +273,44 @@ h1, h2, h3, h4, h5, h6 {
   70% { transform: translate(-2%, 7%); }
 }
 
+/* krążenie koloru — pełny obrót barwy (cyan → fiolet → bursztyn/
+   pomarańcz → zieleń → cyan), blur wpieczony w każdą klatkę bo `filter`
+   nadpisuje się całościowo (nie da się animować samego hue-rotate obok
+   statycznego blur w tym samym property bez @property, słabo wspieranego
+   przez Lightning CSS/starsze silniki). Każda plama ma osobny keyframe
+   tylko po to, żeby zachować swój blur — sama sekwencja hue identyczna. */
+@keyframes lb-hue-cycle-1 {
+  0% { filter: blur(85px) hue-rotate(0deg); }
+  25% { filter: blur(85px) hue-rotate(90deg); }
+  50% { filter: blur(85px) hue-rotate(180deg); }
+  75% { filter: blur(85px) hue-rotate(270deg); }
+  100% { filter: blur(85px) hue-rotate(360deg); }
+}
+
+@keyframes lb-hue-cycle-2 {
+  0% { filter: blur(90px) hue-rotate(0deg); }
+  25% { filter: blur(90px) hue-rotate(90deg); }
+  50% { filter: blur(90px) hue-rotate(180deg); }
+  75% { filter: blur(90px) hue-rotate(270deg); }
+  100% { filter: blur(90px) hue-rotate(360deg); }
+}
+
+@keyframes lb-hue-cycle-3 {
+  0% { filter: blur(75px) hue-rotate(0deg); }
+  25% { filter: blur(75px) hue-rotate(90deg); }
+  50% { filter: blur(75px) hue-rotate(180deg); }
+  75% { filter: blur(75px) hue-rotate(270deg); }
+  100% { filter: blur(75px) hue-rotate(360deg); }
+}
+
+@keyframes lb-hue-cycle-4 {
+  0% { filter: blur(65px) hue-rotate(0deg); }
+  25% { filter: blur(65px) hue-rotate(90deg); }
+  50% { filter: blur(65px) hue-rotate(180deg); }
+  75% { filter: blur(65px) hue-rotate(270deg); }
+  100% { filter: blur(65px) hue-rotate(360deg); }
+}
+
 /* Szyba — rozmywa światła w matową łunę zamiast ostrych okręgów. */
 .ambient-glass {
   position: absolute;
@@ -272,8 +332,24 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* blur żył tylko w keyframes (patrz lb-hue-cycle-*) — bez animacji trzeba
+     go przywrócić statycznie, inaczej plamy renderowałyby się jako ostre,
+     nierozmyte koła zamiast matowej łuny. Kolor zamrożony na bazowym hue
+     (hue-rotate(0deg)), bez ruchu barwy. */
   .ambient-light {
     animation: none !important;
+  }
+  .ambient-light-1 {
+    filter: blur(85px) hue-rotate(0deg) !important;
+  }
+  .ambient-light-2 {
+    filter: blur(90px) hue-rotate(0deg) !important;
+  }
+  .ambient-light-3 {
+    filter: blur(75px) hue-rotate(0deg) !important;
+  }
+  .ambient-light-4 {
+    filter: blur(65px) hue-rotate(0deg) !important;
   }
 }
 

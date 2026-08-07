@@ -5,6 +5,7 @@ import Image from "next/image"
 import { ChevronDown } from "lucide-react"
 import type { Tip } from "@/lib/types"
 import { CountUp } from "../ui/count-up"
+import { RotatingSteps } from "./rotating-steps"
 
 // Litera jako osobny span z --i (kolejność w animacji CSS .kinetic-letter).
 // Index ciągły przez oba słowa, żeby stagger nie "resetował się" na spacji.
@@ -63,9 +64,25 @@ export function HeroKinetic({ tips }: { tips: Tip[] }) {
       id="hero"
       className="relative flex min-h-[55vh] scroll-mt-20 flex-col justify-center md:min-h-[65vh]"
     >
+      {/* winieta — przyciemnienie do --bg-0 na krawędziach hero, żeby logo
+          i typografia lepiej odcinały się od ambientowego tła. Ujemny
+          z-index działa lokalnie w obrębie tej (position:relative) sekcji:
+          maluje się PRZED nie-pozycjonowaną treścią sekcji, ale sekcja jako
+          całość i tak maluje się PO globalnym ambient-bg (position:fixed,
+          z-index:-1 na body) — więc końcowy porządek jest poprawny (bg →
+          winieta → tekst) bez pułapki "position:fixed + transform". */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(ellipse 75% 65% at 50% 42%, transparent 0%, transparent 40%, var(--bg-0) 100%)",
+        }}
+      />
+
       <h1
         aria-label="LUPUS PRED"
-        className="text-[clamp(3rem,12vw,9rem)] font-bold leading-[0.95] tracking-[-0.03em]"
+        className="text-[clamp(2.5rem,8vw,5.75rem)] font-bold leading-[0.95] tracking-[-0.03em]"
       >
         <span aria-hidden className="inline-flex flex-wrap items-baseline">
           <KineticWord word="LUPUS" startIndex={0} className="text-[color:var(--text-primary)]" />
@@ -74,24 +91,29 @@ export function HeroKinetic({ tips }: { tips: Tip[] }) {
         </span>
       </h1>
 
-      {/* sygnet między nagłówkiem a opisem — sama głowa (bez powtarzania
-          napisu "Lupus Pred", który już jest wyżej jako kinetyczna
-          typografia), z poświatą cyan w tle. Poświata i sygnet pulsują
-          niezależnie od jednorazowego wjazdu (.kinetic-logo na wrapperze),
-          więc oba ruchy się składają zamiast nadpisywać. */}
-      <div className="kinetic-logo relative my-4 grid place-items-center self-start md:my-6">
-        <div
-          aria-hidden
-          className="wolf-glow-pulse absolute h-56 w-56 rounded-full bg-[var(--cyan)] opacity-25 blur-[70px] md:h-72 md:w-72 md:blur-[90px]"
-        />
-        <Image
-          src="/brand/wolf-icon-transparent.png"
-          width={320}
-          height={320}
-          alt=""
-          aria-hidden
-          className="wolf-pulse relative h-[180px] w-[180px] object-contain md:h-[260px] md:w-[260px]"
-        />
+      {/* sygnet + rotujący opis "Jak działa model" — na desktopie obok
+          logo, na mobile pod nim (kolejność DOM + flex-col). Poświata i
+          sygnet pulsują niezależnie od jednorazowego wjazdu (.kinetic-logo
+          na wrapperze), więc oba ruchy się składają zamiast nadpisywać. */}
+      <div className="my-5 flex flex-col items-start gap-5 md:my-7 md:flex-row md:items-center md:gap-10">
+        <div className="kinetic-logo relative shrink-0 grid place-items-center self-start md:self-auto">
+          <div
+            aria-hidden
+            className="wolf-glow-pulse absolute h-64 w-64 rounded-full bg-[var(--cyan)] opacity-25 blur-[80px] md:h-80 md:w-80 md:blur-[100px]"
+          />
+          <Image
+            src="/brand/wolf-icon-transparent.png"
+            width={320}
+            height={320}
+            alt=""
+            aria-hidden
+            className="wolf-pulse relative h-[200px] w-[200px] object-contain md:h-[280px] md:w-[280px]"
+          />
+        </div>
+
+        <div className="kinetic-sub w-full md:max-w-sm">
+          <RotatingSteps />
+        </div>
       </div>
 
       <p className="kinetic-sub max-w-lg text-[15px] leading-7 text-[color:var(--text-muted)] md:text-base">
