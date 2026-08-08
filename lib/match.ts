@@ -2,6 +2,8 @@ import "server-only"
 import type { MatchDetailed, MatchInfo } from "./extra-types"
 import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptMatch, adaptMatchDetailed } from "./oracle-map"
+import { isDemoDataOn } from "./demo-source"
+import { demoMatchDetailed } from "./demo-tips"
 
 function notFound(id: string): MatchInfo {
   return {
@@ -108,6 +110,14 @@ function mockDetailed(id: string): MatchDetailed {
 }
 
 export async function getMatchDetailed(id: string): Promise<MatchDetailed> {
+  // Tryb demo — ten sam adapter co produkcja (adaptMatchDetailed), tylko inne
+  // źródło bajtów. Naprawia "nie znaleziono meczu" na kartach z /typy, /live
+  // i landingu w trybie demo (karty i tak linkują do /mecz/{event_id}).
+  if (await isDemoDataOn()) {
+    const data = demoMatchDetailed(id)
+    if (data.found === false) return detailedNotFound(id)
+    return adaptMatchDetailed(data)
+  }
   if (!isOracleConfigured()) return mockDetailed(id)
   try {
     await ensureLeagueNames()

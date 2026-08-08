@@ -52,6 +52,7 @@ function MarketRow({
   awayScore,
   loggedIn,
   tracked,
+  index = 0,
 }: {
   tip: Tip
   home: string
@@ -61,6 +62,7 @@ function MarketRow({
   awayScore: number | null
   loggedIn: boolean
   tracked: boolean
+  index?: number
 }) {
   const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, home, away)
   const settlement: Settlement = finished ? settleTip(tip, homeScore, awayScore) : "pending"
@@ -83,7 +85,7 @@ function MarketRow({
     <div className="flex items-stretch rounded-2xl border border-white/10 bg-white/[0.035]">
       <div className="min-w-0 flex-1">
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 p-3 text-left">
-        <QRing value={tip.q_score} size={42} stroke={4} />
+        <QRing value={tip.q_score} size={42} stroke={4} delay={Math.min(index, 8) * 0.03} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.short}</span>
@@ -101,19 +103,20 @@ function MarketRow({
             <span className="font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</span>
           </p>
         </div>
-        {/* desktop: pełne metryki od razu */}
+        {/* desktop: pełne metryki od razu — num-flip: krótki "flip" na mount,
+            czysty CSS (bez IntersectionObserver per liczba — dziesiątki wierszy na /typy) */}
         <div className="hidden shrink-0 items-center gap-3 text-right sm:flex">
           <div>
             <p className="text-[10px] text-white/50">Szansa</p>
-            <p className="text-sm font-semibold" style={{ color: tip.model_prob != null ? m.color : "var(--text-muted)" }}>{fmtProb(tip.model_prob)}</p>
+            <p className="num-flip text-sm font-semibold" style={{ color: tip.model_prob != null ? m.color : "var(--text-muted)" }}>{fmtProb(tip.model_prob)}</p>
           </div>
           <div>
             <p className="text-[10px] text-white/50">Kurs</p>
-            <p className="text-sm font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
+            <p className="num-flip text-sm font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
           </div>
           <div>
             <p className="text-[10px] text-white/50">Edge</p>
-            <p className={`text-sm font-semibold ${edgeClass}`}>{fmtEdge(tip.edge)}</p>
+            <p className={`num-flip text-sm font-semibold ${edgeClass}`}>{fmtEdge(tip.edge)}</p>
           </div>
         </div>
         <ChevronDown className={`h-4 w-4 shrink-0 text-white/40 transition sm:hidden ${open ? "rotate-180" : ""}`} />
@@ -183,10 +186,17 @@ export default function MatchTipCard({
 
   // prawy górny róg
   const right =
-    status === "live" ? <span className="font-bold text-rose-300">🔴 LIVE {minuteTxt}</span>
-    : status === "halftime" ? <span className="font-bold text-amber-300">🟡 PRZERWA</span>
-    : finished ? <span className="text-white/55">koniec</span>
-    : <span className="text-white/55">{formatKickoff(group.kickoff_utc)}</span>
+    status === "live" ? (
+      <span className="inline-flex items-center gap-1.5 font-bold text-rose-300">
+        <span className="live-glow h-1.5 w-1.5 rounded-full bg-[var(--danger)]" /> LIVE {minuteTxt}
+      </span>
+    ) : status === "halftime" ? (
+      <span className="font-bold text-amber-300">🟡 PRZERWA</span>
+    ) : finished ? (
+      <span className="text-white/55">koniec</span>
+    ) : (
+      <span className="text-white/55">{formatKickoff(group.kickoff_utc)}</span>
+    )
 
   // główna rekomendacja (is_primary) na górze, potem po Q-Score
   const sortedTips = [...group.tips].sort(
@@ -196,7 +206,7 @@ export default function MatchTipCard({
   // Sieroty — wyszarzony wygląd (kickoff/status/logo brak = brak strony analizy).
   const orphanClass = isOrphan ? " opacity-70 saturate-[.6]" : ""
   const cardClass =
-    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)]" +
+    "group/card relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-[color:var(--border-subtle)] bg-white/[0.055] p-5 shadow-2xl shadow-black/20 backdrop-blur-md backdrop-saturate-[1.2] transition-[transform,box-shadow,background-color] duration-200 will-change-transform hover:-translate-y-0.5 hover:bg-white/[0.085] hover:shadow-[0_8px_24px_rgba(0,0,0,0.4),0_0_0_1px_rgba(88,230,245,0.1)]" +
     orphanClass
 
   // Karta jednego meczu może zawierać wiele rynków (>10 zdarza się). Domyślnie pokaż 3
@@ -284,6 +294,7 @@ export default function MatchTipCard({
             awayScore={awayScore}
             loggedIn={loggedIn}
             tracked={Boolean(trackedKeys?.has(`${tip.event_id}|${tip.bet_type}`))}
+            index={i}
           />
         ))}
       </div>
@@ -298,6 +309,26 @@ export default function MatchTipCard({
           {showAll ? "Zwiń" : `+${extraCount} więcej`}
           <ChevronDown className={`h-3.5 w-3.5 transition ${showAll ? "rotate-180" : ""}`} />
         </button>
+      )}
+
+      {/* hover-podgląd (desktop) ukrytych rynków — bez klikania, samo najechanie
+          kursorem pokazuje co jeszcze jest w karcie. Czysty CSS (grid-template-rows
+          0fr→1fr), zero JS-owego stanu na hover (dziesiątki kart na liście). */}
+      {!showAll && extraCount > 0 && (
+        <div className="relative grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out group-hover/card:grid-rows-[1fr]">
+          <div className="overflow-hidden">
+            <div className="mt-2 flex flex-wrap gap-1.5 pt-0.5">
+              {sortedTips.slice(MAX_VISIBLE).map((tip, i) => {
+                const m = getMarketLabel(tip.bet_type_raw ?? tip.bet_type, tip.bet_side_raw ?? tip.bet_side, group.home, group.away)
+                return (
+                  <span key={i} className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${m.badge}`}>
+                    {m.short} · {fmtProb(tip.model_prob)}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        </div>
       )}
 
       {href && !isOrphan ? (

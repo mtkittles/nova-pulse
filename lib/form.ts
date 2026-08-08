@@ -2,6 +2,8 @@ import "server-only"
 import type { FormScope, TeamForm } from "./extra-types"
 import { isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptForm } from "./oracle-map"
+import { isDemoDataOn } from "./demo-source"
+import { demoTeamForm } from "./demo-tips"
 
 function emptyForm(): TeamForm {
   return { team: "—", matches: [], btts_pct: null, avg_gf: null, avg_ga: null }
@@ -49,6 +51,10 @@ function mockForm(scope: FormScope, count: number): TeamForm {
 }
 
 export async function getTeamForm(id: string, scope: FormScope, count: number): Promise<TeamForm> {
+  // Tryb demo — bez tego widget pokazywałby swój istniejący produkcyjny
+  // fallback (mockForm — statyczne japońskie kluby), niezwiązane z oglądanym
+  // meczem. adaptForm to ten sam adapter co produkcja.
+  if (await isDemoDataOn()) return adaptForm(demoTeamForm(id, scope, count))
   if (!isOracleConfigured()) return mockForm(scope, count)
   try {
     const data = await oracleFetch<unknown>(

@@ -139,7 +139,9 @@ export default function TipCard({
   // prawy górny róg: status + wynik zależnie od stanu meczu
   const rightNode =
     status === "live" ? (
-      <span className="font-bold text-rose-300">🔴 LIVE {minuteTxt}</span>
+      <span className="inline-flex items-center gap-1.5 font-bold text-rose-300">
+        <span className="live-glow h-1.5 w-1.5 rounded-full bg-[var(--danger)]" /> LIVE {minuteTxt}
+      </span>
     ) : status === "halftime" ? (
       <span className="font-bold text-amber-300">🟡 PRZERWA</span>
     ) : finished ? (
@@ -213,17 +215,17 @@ export default function TipCard({
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <MetricLabel label="Szansa modelu" hint={METRIC_HINTS.model} className="text-xs text-white/60" />
-          <p className="mt-1 text-xl font-semibold" style={{ color: probColor }}>
+          <p className="num-flip mt-1 text-xl font-semibold" style={{ color: probColor }}>
             {fmtProb(tip.model_prob)}
           </p>
         </div>
         <div className="rounded-2xl border border-[color:var(--accent)]/40 bg-[var(--accent)]/10 p-3">
           <MetricLabel label="Kurs" hint={METRIC_HINTS.odds} className="text-xs text-white/70" />
-          <p className="mt-1 text-2xl font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
+          <p className="num-flip mt-1 text-2xl font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <MetricLabel label="Edge" hint={METRIC_HINTS.edge} className="text-xs text-white/60" />
-          <p className={`mt-1 text-xl font-semibold ${edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+          <p className={`num-flip mt-1 text-xl font-semibold ${edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
             {fmtEdge(tip.edge)}
           </p>
         </div>

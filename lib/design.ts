@@ -1,4 +1,4 @@
-// === System designu LUPUS BETS ===
+// === System designu LUPUS PRED ===
 // Jedno źródło prawdy dla kolorów trybów, skali prawdopodobieństwa/Q-Score,
 // flag krajów i inicjałów drużyn. Używane w całej aplikacji (karty, wykresy, taby).
 

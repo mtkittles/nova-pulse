@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og"
 
-export const alt = "LUPUS BETS — Analiza, nie przeczucie"
+export const alt = "LUPUS PRED — Analiza, nie przeczucie"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
@@ -22,7 +22,7 @@ export default function Image() {
       >
         <div style={{ display: "flex", gap: 20, fontSize: 88, fontWeight: 800, letterSpacing: -3 }}>
           <span>LUPUS</span>
-          <span style={{ color: "#58E6F5" }}>BETS</span>
+          <span style={{ color: "#58E6F5" }}>PRED</span>
         </div>
 
         <div style={{ marginTop: 28, fontSize: 52, fontWeight: 700, color: "#58E6F5" }}>
