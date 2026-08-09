@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import Link from "next/link"
 import type { Tip } from "@/lib/types"
 import { useLiveMatches, mapLiveStatus } from "@/hooks/use-live-matches"
 import { mapMatchStatus } from "@/lib/tip-utils"
@@ -12,6 +13,9 @@ interface TickerItem {
   away: string
   right: string
   live: boolean
+  // null = sierota (brak pełnego powiązania z meczem) albo brak id — bez linku,
+  // patrz reguła "gate wszystkich linków /mecz" dla sierot w resztę aplikacji.
+  eventId: string | null
 }
 
 function fmtTime(iso: string): string {
@@ -21,8 +25,8 @@ function fmtTime(iso: string): string {
 }
 
 function TickerRow({ item }: { item: TickerItem }) {
-  return (
-    <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-5 text-sm">
+  const content = (
+    <>
       {/* wskaźnik "na żywo" — cyan, nie czerwony: poza sekcją "Ostatnio rozliczone"
           czerwień/zieleń jest z palety wyłączona, cyan zostaje jedynym akcentem */}
       {item.live && (
@@ -40,8 +44,20 @@ function TickerRow({ item }: { item: TickerItem }) {
       <span className={`tnum font-semibold ${item.live ? "text-[color:var(--cyan)]" : "text-[color:var(--text-secondary)]"}`}>
         {item.right}
       </span>
-    </span>
+    </>
   )
+
+  if (item.eventId) {
+    return (
+      <Link
+        href={`/mecz/${item.eventId}`}
+        className="pointer-events-auto inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-5 text-sm transition-colors hover:text-[color:var(--cyan)]"
+      >
+        {content}
+      </Link>
+    )
+  }
+  return <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-5 text-sm">{content}</span>
 }
 
 /**
@@ -68,6 +84,7 @@ export function LiveTicker({ tips }: { tips: Tip[] }) {
         away: m.away_team,
         right: mapLiveStatus(m.status_short) === "halftime" ? "PRZERWA" : m.minute != null ? `${m.minute}'` : "LIVE",
         live: true,
+        eventId: m.event_id || null,
       }))
 
     const liveIds = new Set(liveMatches.map((m) => m.event_id))
@@ -79,7 +96,7 @@ export function LiveTicker({ tips }: { tips: Tip[] }) {
       if (!id || liveIds.has(id) || seenLiveFallback.has(id)) continue
       if (mapMatchStatus(t.match_status) !== "live") continue
       seenLiveFallback.add(id)
-      live.push({ key: `live-tip-${id}`, league: t.league, home: t.home, away: t.away, right: "LIVE", live: true })
+      live.push({ key: `live-tip-${id}`, league: t.league, home: t.home, away: t.away, right: "LIVE", live: true, eventId: t.isOrphan ? null : id })
     }
 
     const coveredIds = new Set([...liveIds, ...seenLiveFallback])
@@ -99,6 +116,7 @@ export function LiveTicker({ tips }: { tips: Tip[] }) {
         away: t.away,
         right: fmtTime(t.kickoff_utc),
         live: false,
+        eventId: t.isOrphan ? null : id,
       })
       if (upcoming.length >= 10) break
     }

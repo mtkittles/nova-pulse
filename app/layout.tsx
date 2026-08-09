@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Space_Grotesk } from "next/font/google"
+import { FlaskConical } from "lucide-react"
 import "./globals.css"
 import { DEMO_MODE } from "@/lib/demo-mode"
 import { AmbientBackground } from "@/components/ambient-background"
@@ -75,7 +76,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ClickSoundListener />
         {DEMO_MODE && (
           <div className="flex h-8 items-center justify-center gap-2 border-b border-amber-400/20 bg-amber-400/10 px-4 text-center text-xs font-medium text-amber-300">
-            🔍 Tryb demonstracyjny — dane przykładowe, profil mockowy
+            <FlaskConical className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            Tryb demonstracyjny — dane przykładowe, profil mockowy
           </div>
         )}
         {children}

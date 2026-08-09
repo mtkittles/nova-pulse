@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Activity, BarChart3, Goal, Table2 } from "lucide-react"
+import { Activity, BarChart3, CalendarClock, Goal, Table2 } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import type { LeagueFormRow, Scorer, StandingRow } from "@/lib/extra-types"
 import { LEAGUES } from "@/lib/leagues"
 import { FormSquares, formPoints } from "./form-squares"
 import { AnimatedTabs } from "./ui/tabs"
 import { TeamBadge } from "./team-badge"
+import { EmptyState } from "./ui/empty-state"
 
 type Tab = "standings" | "scorers" | "form" | "stats"
 
@@ -315,6 +316,13 @@ export function LigiView() {
             <p className="p-8 text-center text-white/55">
               Brak danych historycznych dla tej ligi w aktualnym źródle danych.
             </p>
+          ) : leagueStats.matches === 0 ? (
+            <EmptyState
+              icon={CalendarClock}
+              title="Sezon jeszcze się nie rozpoczął"
+              description="Ta liga nie rozegrała jeszcze żadnego meczu w bieżącym sezonie — statystyki i wykresy pojawią się po pierwszych wynikach."
+              className="border-0 bg-transparent"
+            />
           ) : (
             <div className="space-y-5 p-5">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">

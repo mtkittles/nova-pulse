@@ -166,10 +166,10 @@ export function MatchDetail({
             )}
           </div>
 
-          <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <div className="flex flex-col items-center gap-2 sm:items-end">
+          <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 overflow-hidden">
+            <div className="flex min-w-0 flex-col items-center gap-2 sm:items-end">
               <TeamBadge teamName={match.home} logoUrl={match.homeLogo} size="md" />
-              <span className="text-center text-base font-semibold leading-tight sm:text-right">{match.home}</span>
+              <span className="line-clamp-2 max-w-full break-words text-center text-base font-semibold leading-tight sm:text-right">{match.home}</span>
             </div>
             <div className="flex flex-col items-center px-2">
               {liveOn || finished ? (
@@ -183,9 +183,9 @@ export function MatchDetail({
               )}
               {liveOn && <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--danger)]">{minuteTxt}</span>}
             </div>
-            <div className="flex flex-col items-center gap-2 sm:items-start">
+            <div className="flex min-w-0 flex-col items-center gap-2 sm:items-start">
               <TeamBadge teamName={match.away} logoUrl={match.awayLogo} size="md" />
-              <span className="text-center text-base font-semibold leading-tight sm:text-left">{match.away}</span>
+              <span className="line-clamp-2 max-w-full break-words text-center text-base font-semibold leading-tight sm:text-left">{match.away}</span>
             </div>
           </div>
 

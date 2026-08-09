@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { BarChart3, LineChart, Swords, Trophy } from "lucide-react"
 
 export type MeczTab = "prognoza" | "analiza" | "liga" | "h2h"
 
-const TABS: { key: MeczTab; emoji: string; label: string }[] = [
-  { key: "prognoza", emoji: "📊", label: "Prognoza" },
-  { key: "analiza", emoji: "📈", label: "Analiza" },
-  { key: "liga", emoji: "🏆", label: "Liga" },
-  { key: "h2h", emoji: "⚔️", label: "H2H" },
+const TABS: { key: MeczTab; icon: typeof BarChart3; label: string }[] = [
+  { key: "prognoza", icon: BarChart3, label: "Prognoza" },
+  { key: "analiza", icon: LineChart, label: "Analiza" },
+  { key: "liga", icon: Trophy, label: "Liga" },
+  { key: "h2h", icon: Swords, label: "H2H" },
 ]
 
 // SSR-safe layout effect (bez ostrzeżeń przy renderze serwerowym).
@@ -49,6 +50,7 @@ export function MeczTabs({
       <div className="relative flex gap-1 overflow-x-auto" role="tablist" aria-label="Sekcje meczu">
         {TABS.map((t) => {
           const on = active === t.key
+          const Icon = t.icon
           return (
             <button
               key={t.key}
@@ -63,7 +65,7 @@ export function MeczTabs({
                 on ? "text-[color:var(--cyan)]" : "text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]"
               }`}
             >
-              <span aria-hidden>{t.emoji}</span>
+              <Icon aria-hidden className="h-4 w-4" />
               <span className="hidden min-[380px]:inline">{t.label}</span>
               {t.key === "h2h" && h2hCount > 0 && (
                 <span className="rounded-full bg-[var(--surface-2)] px-1.5 text-[11px] font-semibold tnum text-[color:var(--text-secondary)]">

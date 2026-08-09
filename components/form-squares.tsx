@@ -7,13 +7,22 @@ const SQ: Record<FormResult, { label: string; cls: string }> = {
   L: { label: "P", cls: "bg-rose-400/90 text-[#1a0606]" },
 }
 
+// Ile ostatnich kwadracików pokazać na mobile, zanim reszta (do `count`,
+// max 15) ujawni się dopiero od breakpointu md — 15 kwadracików + gap nie
+// mieści się w wąskiej kolumnie tabeli na 390px (results[0] = najnowszy
+// mecz, więc obcinamy od końca tablicy, nie od początku).
+const MOBILE_VISIBLE = 6
+
 export function FormSquares({ results, size = "md" }: { results: FormResult[]; size?: "sm" | "md" }) {
   if (results.length === 0) return <span className="text-sm text-white/55">brak</span>
   const dim = size === "sm" ? "h-6 w-6 text-xs" : "h-8 w-8 text-sm"
   return (
     <div className="flex flex-wrap gap-1">
       {results.map((r, i) => (
-        <span key={i} className={`grid ${dim} place-items-center rounded-lg font-bold ${SQ[r].cls}`}>
+        <span
+          key={i}
+          className={`grid ${dim} place-items-center rounded-lg font-bold ${SQ[r].cls} ${i >= MOBILE_VISIBLE ? "hidden md:grid" : ""}`}
+        >
           {SQ[r].label}
         </span>
       ))}

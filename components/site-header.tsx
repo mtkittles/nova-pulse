@@ -173,24 +173,30 @@ export function SiteHeader({ loggedIn, isAdmin = false }: { loggedIn: boolean; i
                 {item.label}
               </Link>
             ))}
+          </nav>
+
+          {/* sekcja użytkownika — oddzielona separatorem od nawigacji, przypięta
+              do dołu ekranu (poza wyśrodkowanym `nav` powyżej), żeby "Mój panel"
+              nie wyglądał jak kolejna pozycja menu wciśnięta przed Wyloguj. */}
+          <div className="border-t border-[color:var(--border-subtle)] px-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-5">
             <Link
               href={loggedIn ? "/profil" : "/login"}
               onClick={closeAnd()}
-              className={`menu-item ${itemsVisible ? "is-visible" : ""} mt-4 inline-flex w-fit items-center rounded-full bg-[var(--cyan)] px-6 py-3 text-base font-semibold text-[color:var(--on-accent)]`}
+              className={`menu-item ${itemsVisible ? "is-visible" : ""} inline-flex w-fit items-center rounded-full bg-[var(--cyan)] px-6 py-3 text-base font-semibold text-[color:var(--on-accent)]`}
               style={{ "--i": items.length } as React.CSSProperties}
             >
               {loggedIn ? "Mój panel" : "Zaloguj"}
             </Link>
             {loggedIn && (
               <div
-                className={`menu-item ${itemsVisible ? "is-visible" : ""} mt-1`}
+                className={`menu-item ${itemsVisible ? "is-visible" : ""} mt-3`}
                 style={{ "--i": items.length + 1 } as React.CSSProperties}
                 onClick={closeAnd()}
               >
                 <LogoutButton variant="flat-lg" />
               </div>
             )}
-          </nav>
+          </div>
         </div>
       )}
     </>

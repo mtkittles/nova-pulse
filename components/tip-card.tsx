@@ -103,7 +103,15 @@ export default function TipCard({
   // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem.
   // W demo z odblokowanym premium NIE pokazuj kłódki — pełne dane dla testera.
   if (locked && !DEMO_UNLOCK_PREMIUM) {
-    const lockedRight = liveOn && live ? `🔴 ${live.home_score}:${live.away_score}` : formatKickoff(tip.kickoff_utc)
+    const lockedRight =
+      liveOn && live ? (
+        <span className="inline-flex items-center gap-1.5">
+          <span className="live-glow h-1.5 w-1.5 rounded-full bg-[var(--danger)]" aria-hidden />
+          {live.home_score}:{live.away_score}
+        </span>
+      ) : (
+        formatKickoff(tip.kickoff_utc)
+      )
     return (
       <article className="relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
         <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />

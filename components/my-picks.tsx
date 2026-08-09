@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { Plus, Trash2, X } from "lucide-react"
+import { CheckCircle2, Plus, Trash2, X, XCircle } from "lucide-react"
 import type { BetType, Tip } from "@/lib/types"
 import type { UserPick } from "@/lib/extra-types"
 import { BET_TYPE_SHORT } from "@/lib/labels"
@@ -16,7 +16,11 @@ function statusBadge(s: UserPick["status"]) {
   if (s === "lost") return "border-rose-300/30 bg-rose-300/10 text-rose-200"
   return "border-white/15 bg-white/[0.06] text-white/55"
 }
-const statusLabel = (s: UserPick["status"]) => (s === "won" ? "trafiony ✅" : s === "lost" ? "nietrafiony ❌" : "oczekuje")
+function StatusLabel({ status }: { status: UserPick["status"] }) {
+  if (status === "won") return <><CheckCircle2 className="mr-1 inline h-3 w-3" aria-hidden />trafiony</>
+  if (status === "lost") return <><XCircle className="mr-1 inline h-3 w-3" aria-hidden />nietrafiony</>
+  return <>oczekuje</>
+}
 
 export function MyPicks() {
   const [picks, setPicks] = useState<UserPick[] | null>(null)
@@ -188,7 +192,7 @@ export function MyPicks() {
                 <span className="text-white/70">{BET_TYPE_SHORT[p.bet_type]} · {p.bet_side}</span>
                 <span className="text-white/55">@ {p.odds.toFixed(2)}</span>
                 <span className="text-white/55">{p.stake} zł</span>
-                <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${statusBadge(p.status)}`}>{statusLabel(p.status)}</span>
+                <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${statusBadge(p.status)}`}><StatusLabel status={p.status} /></span>
                 {p.status === "pending" && (
                   <button type="button" onClick={() => remove(p.id)} aria-label="Usuń" className="text-white/60 hover:text-rose-300">
                     <Trash2 className="h-4 w-4" />

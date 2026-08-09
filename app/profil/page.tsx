@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ArrowRight, BarChart3, Send, Ticket } from "lucide-react"
+import { ArrowRight, BarChart3, Flame, Gem, Send, Star, Target, Ticket } from "lucide-react"
 import { getSession } from "@/lib/auth"
 import { getUserPicks } from "@/lib/picks"
 import { DEMO_MODE, DEMO_USER } from "@/lib/demo-mode"
@@ -40,10 +40,10 @@ export default async function ProfilPage() {
   const streak3 = lastSettled.length >= 3 && lastSettled.slice(0, 3).every((p) => p.status === "won")
 
   const badges = [
-    { icon: "🎯", label: "Pierwszy typ", earned: picks.length >= 1, hint: "Dodaj pierwszy typ do kuponu." },
-    { icon: "🔥", label: "Seria 3", earned: streak3, hint: "Trafienie 3 typów pod rząd." },
-    { icon: "💎", label: "Weteran", earned: picks.length >= 20, hint: "Zbierz 20 typów." },
-    { icon: "⭐", label: "Wysoka jakość", earned: false, hint: "Typy ze średnim Q-Score ≥ 80 (wkrótce)." },
+    { icon: Target, label: "Pierwszy typ", earned: picks.length >= 1, hint: "Dodaj pierwszy typ do kuponu." },
+    { icon: Flame, label: "Seria 3", earned: streak3, hint: "Trafienie 3 typów pod rząd." },
+    { icon: Gem, label: "Weteran", earned: picks.length >= 20, hint: "Zbierz 20 typów." },
+    { icon: Star, label: "Wysoka jakość", earned: false, hint: "Typy ze średnim Q-Score ≥ 80 (wkrótce)." },
   ]
 
   return (
@@ -58,18 +58,23 @@ export default async function ProfilPage() {
         <Card hover={false}>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Odznaki</h2>
           <div className="flex flex-wrap gap-3">
-            {badges.map((b) => (
-              <span
-                key={b.label}
-                title={b.earned ? b.label : `${b.label} — ${b.hint}`}
-                className={`flex flex-col items-center gap-1 ${b.earned ? "" : "opacity-30"}`}
-              >
-                <span className={`grid h-12 w-12 place-items-center rounded-2xl border text-2xl ${b.earned ? "border-[color:var(--cyan)] bg-[var(--cyan-soft)]" : "border-[color:var(--border-soft)] bg-[var(--surface-2)]"}`}>
-                  {b.icon}
+            {badges.map((b) => {
+              const Icon = b.icon
+              return (
+                <span
+                  key={b.label}
+                  title={b.earned ? b.label : `${b.label} — ${b.hint}`}
+                  className={`flex flex-col items-center gap-1 ${b.earned ? "" : "opacity-30"}`}
+                >
+                  <span
+                    className={`grid h-12 w-12 place-items-center rounded-2xl border ${b.earned ? "border-[color:var(--cyan)] bg-[var(--cyan-soft)] text-[color:var(--cyan)]" : "border-[color:var(--border-soft)] bg-[var(--surface-2)] text-[color:var(--text-muted)]"}`}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden />
+                  </span>
+                  <span className="text-[10px] text-[color:var(--text-muted)]">{b.label}</span>
                 </span>
-                <span className="text-[10px] text-[color:var(--text-muted)]">{b.label}</span>
-              </span>
-            ))}
+              )
+            })}
           </div>
         </Card>
 

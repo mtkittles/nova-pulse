@@ -80,9 +80,14 @@ export function HeroKinetic({ tips }: { tips: Tip[] }) {
         }}
       />
 
+      {/* Na mobile znika wizualnie (sr-only — zostaje w DOM/a11y-tree jako
+          H1 strony, więc SEO/screen readery nadal go widzą) — header ma już
+          widoczny "LUPUS PRED" cały czas, a samo logo niesie markę, więc
+          na wąskim ekranie ten sam napis drugi raz tuż pod headerem był
+          zdublowany. Na desktopie zostaje jako główny wizualny akcent hero. */}
       <h1
         aria-label="LUPUS PRED"
-        className="text-[clamp(2.5rem,8vw,5.75rem)] font-bold leading-[0.95] tracking-[-0.03em]"
+        className="sr-only text-[clamp(2.5rem,8vw,5.75rem)] font-bold leading-[0.95] tracking-[-0.03em] md:not-sr-only md:static"
       >
         <span aria-hidden className="inline-flex flex-wrap items-baseline">
           <KineticWord word="LUPUS" startIndex={0} className="text-[color:var(--text-primary)]" />
@@ -94,12 +99,15 @@ export function HeroKinetic({ tips }: { tips: Tip[] }) {
       {/* sygnet + rotujący opis "Jak działa model" — na desktopie obok
           logo, na mobile pod nim (kolejność DOM + flex-col). Poświata i
           sygnet pulsują niezależnie od jednorazowego wjazdu (.kinetic-logo
-          na wrapperze), więc oba ruchy się składają zamiast nadpisywać. */}
+          na wrapperze), więc oba ruchy się składają zamiast nadpisywać.
+          Logo większe na mobile (240px, było 200px) — H1 nad nim zniknął,
+          więc jest miejsce, a puste ekrany bez tekstu wyglądały na "za
+          małe względem pustej przestrzeni". */}
       <div className="my-5 flex flex-col items-start gap-5 md:my-7 md:flex-row md:items-center md:gap-10">
         <div className="kinetic-logo relative shrink-0 grid place-items-center self-start md:self-auto">
           <div
             aria-hidden
-            className="wolf-glow-pulse absolute h-64 w-64 rounded-full bg-[var(--cyan)] opacity-25 blur-[80px] md:h-80 md:w-80 md:blur-[100px]"
+            className="wolf-glow-pulse absolute h-72 w-72 rounded-full bg-[var(--cyan)] opacity-25 blur-[85px] md:h-80 md:w-80 md:blur-[100px]"
           />
           <Image
             src="/brand/wolf-icon-transparent.png"
@@ -107,8 +115,15 @@ export function HeroKinetic({ tips }: { tips: Tip[] }) {
             height={320}
             alt=""
             aria-hidden
-            className="wolf-pulse relative h-[200px] w-[200px] object-contain md:h-[280px] md:w-[280px]"
+            className="wolf-pulse relative h-[240px] w-[240px] object-contain md:h-[280px] md:w-[280px]"
           />
+          {/* nakładka rozświetlająca oczy — PNG nie ma wydzielonych ścieżek
+              do animowania samego rysunku oka, więc dwie małe rozmyte plamy
+              cyan pozycjonowane procentowo (skalują się z logo) nad
+              współrzędnymi oczu na sprite'cie, pulsujące niezależnie od
+              .wolf-pulse (transformy się składają). */}
+          <span aria-hidden className="wolf-eye-glow" style={{ left: "39.5%", top: "35%" }} />
+          <span aria-hidden className="wolf-eye-glow" style={{ left: "60.5%", top: "35%", animationDelay: "1.7s" }} />
         </div>
 
         <div className="kinetic-sub w-full md:max-w-sm">

@@ -571,6 +571,29 @@ h1, h2, h3, h4, h5, h6 {
   animation-delay: 1.3s;
 }
 
+/* Nakładka na oczy sygnetu — dwie małe rozmyte plamy cyan pozycjonowane
+   procentowo (left/top w inline style, patrz hero-kinetic.tsx) nad
+   współrzędnymi oczu na PNG. Logo to rastrowa grafika bez wydzielonych
+   ścieżek SVG do animowania samego rysunku oka — nakładka z blurem to
+   fallback z briefu zadania, gdy SVG nie jest dostępne. */
+@keyframes lb-wolf-eye-pulse {
+  0%, 100% { opacity: 0.25; filter: blur(2.5px); }
+  50% { opacity: 0.8; filter: blur(4.5px); }
+}
+
+.wolf-eye-glow {
+  position: absolute;
+  width: 7%;
+  height: 7%;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(88, 230, 245, 0.95) 0%, rgba(88, 230, 245, 0.45) 45%, transparent 75%);
+  opacity: 0.25;
+  animation: lb-wolf-eye-pulse 3.6s ease-in-out infinite;
+  animation-delay: 1.3s;
+  pointer-events: none;
+}
+
 /* strzałka scroll-down — bounce w pętli, znika po pierwszym scrollu */
 @keyframes lb-arrow-bounce {
   0%,
@@ -826,6 +849,11 @@ h1, h2, h3, h4, h5, h6 {
   .wolf-glow-pulse {
     animation: none !important;
     opacity: 0.22 !important;
+  }
+  .wolf-eye-glow {
+    animation: none !important;
+    opacity: 0.4 !important;
+    filter: blur(3px) !important;
   }
   .kinetic-arrow {
     animation: none !important;
