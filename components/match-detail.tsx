@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, BarChart3, ChevronDown, MapPin } from "lucide-react"
 import type { MatchDetailed, MatchPrediction, OddsMarkets, SideStats } from "@/lib/extra-types"
@@ -132,17 +132,13 @@ export function MatchDetail({
 
   const om = match.odds_markets
 
-  // zakładki
+  // zakładki — MeczTabs jest sticky (top-16), więc raz odsłonięty zostaje
+  // widoczny pod headerem sam z siebie. Żadnego ręcznego przewijania przy
+  // zmianie zakładki: poprzednia wersja skakała do scoreboardu (górny
+  // brzeg strony) przy KAŻDYM kliknięciu, co w praktyce wyglądało jak
+  // "reset scrolla na samą górę" niezależnie od tego, gdzie user czytał.
   const [tab, setTab] = useState<MeczTab>("prognoza")
-  const scoreRef = useRef<HTMLDivElement>(null)
-  const changeTab = (t: MeczTab) => {
-    setTab(t)
-    if (typeof window !== "undefined") {
-      const rect = scoreRef.current?.getBoundingClientRect()
-      const top = rect ? rect.top + window.scrollY - 72 : 0
-      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" })
-    }
-  }
+  const changeTab = (t: MeczTab) => setTab(t)
   // płynny fade między zakładkami (bez slide → brak layout shift na mobile)
   const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3 } }
 
@@ -153,7 +149,7 @@ export function MatchDetail({
       </Link>
 
       {/* [A] SCOREBOARD — zawsze nad zakładkami */}
-      <div ref={scoreRef}>
+      <div>
         <Card hover={false}>
           <div className="flex items-center justify-between gap-3">
             <span className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">{leagueText}</span>

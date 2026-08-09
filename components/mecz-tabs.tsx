@@ -35,8 +35,18 @@ export function MeczTabs({
   }, [active])
 
   useEffect(() => {
+    // Wycentrowanie aktywnej zakładki w poziomo-scrollowalnym pasku —
+    // WYŁĄCZNIE scrollLeft tego konkretnego kontenera (rodzica przycisku),
+    // nigdy scrollIntoView(). scrollIntoView potrafi po drodze przesunąć
+    // też scroll CAŁEJ strony (przegląda wszystkich scrollowalnych
+    // przodków aż do document, nie tylko najbliższego) — to była realna
+    // przyczyna "skoku" scrolla strony przy każdej zmianie zakładki.
     const el = refs.current[active]
-    el?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" })
+    const container = el?.parentElement
+    if (el && container) {
+      const target = el.offsetLeft - container.clientWidth / 2 + el.offsetWidth / 2
+      container.scrollTo({ left: Math.max(0, target), behavior: "smooth" })
+    }
     const onResize = () => {
       const a = refs.current[active]
       if (a) setInd({ left: a.offsetLeft, width: a.offsetWidth })
