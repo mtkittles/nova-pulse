@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Flag, Heart, Loader2, MoreVertical, Trash2 } from "lucide-react"
+import { EyeOff, Flag, Heart, Loader2, MoreVertical, Trash2 } from "lucide-react"
 import type { MatchComment } from "@/lib/extra-types"
 import { formatRelativeTime } from "@/lib/time"
 import { teamInitials } from "@/lib/design"
+import { Badge } from "../ui/badge"
 
 // Odcień awatara z nazwy — deterministyczny (ta sama osoba = ten sam kolor),
 // ten sam wzorzec co components/team-badge.tsx (tam nieeksportowany).
@@ -86,6 +87,17 @@ export function CommentItem({
         </div>
 
         <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-[color:var(--text-secondary)]">{comment.body}</p>
+
+        {/* Sygnał moderacji — TYLKO przy własnym komentarzu, przy TYM
+            konkretnym wpisie (nie globalny baner nad polem). Inaczej autor
+            myśli że komentarz zniknął i wysyła go ponownie → trafia na
+            filtr duplikatu (409). */}
+        {comment.is_mine && comment.status === "hidden_auto" && (
+          <Badge tone="warning" className="mt-1.5">
+            <EyeOff className="h-3 w-3" aria-hidden />
+            Widoczny tylko dla Ciebie — czeka na moderację
+          </Badge>
+        )}
 
         <div className="mt-2 flex items-center gap-1">
           <button

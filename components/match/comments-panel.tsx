@@ -78,7 +78,6 @@ export function CommentsPanel({
   const [text, setText] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [composerError, setComposerError] = useState<string | null>(null)
-  const [pendingNotice, setPendingNotice] = useState(false)
 
   const requestId = useRef(0)
 
@@ -128,7 +127,6 @@ export function CommentsPanel({
     if (!body || body.length > MAX_LEN || submitting) return
     setSubmitting(true)
     setComposerError(null)
-    setPendingNotice(false)
     try {
       const res = await fetch(`/api/match/${encodeURIComponent(eventId)}/comments`, {
         method: "POST",
@@ -139,24 +137,28 @@ export function CommentsPanel({
         setComposerError(await friendlyError(res, "Nie udało się dodać komentarza."))
         return
       }
-      const created = (await res.json().catch(() => null)) as (MatchComment & { status?: string }) | null
+      const raw = await res.json().catch(() => null)
+      // Odpowiedź bywa zawinięta ({ comment: {...} }) zamiast płaskiej — bierzemy
+      // to, co faktycznie wygląda jak komentarz (ma `id`).
+      const wrapped = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null
+      const created = (
+        wrapped && wrapped.comment && typeof wrapped.comment === "object" ? wrapped.comment : wrapped
+      ) as (MatchComment & { status?: string }) | null
       setText("")
-      // Backend odpowiada generycznie — jeśli status jednoznacznie NIE jest
-      // "visible", zakładamy moderację (bezpieczniejszy domyślny wariant niż
-      // pokazanie komentarza, który tak naprawdę jest ukryty). Brak pola
-      // status w ogóle → traktujemy jak widoczny (typowa ścieżka, nie ma
-      // powodu podejrzewać moderacji bez sygnału).
-      if (created && created.status && created.status !== "visible") {
-        setPendingNotice(true)
-        return
-      }
       if (created && created.id != null) {
+        // TYLKO "hidden_auto" liczy się jako moderacja — każda inna wartość
+        // (w tym pole `status` będące częścią koperty odpowiedzi, np.
+        // "success"/"ok", a nie statusem komentarza) traktujemy jak widoczny.
+        // Fałszywie pozytywne "czeka na weryfikację" na KAŻDYM poście było
+        // dokładnie tym błędem — zbyt szerokie "status !== visible".
         setComments((prev) => [{ ...created, is_mine: true }, ...prev])
-        setTotal((t) => {
-          const nt = t + 1
-          onCountChange?.(nt)
-          return nt
-        })
+        if (created.status !== "hidden_auto") {
+          setTotal((t) => {
+            const nt = t + 1
+            onCountChange?.(nt)
+            return nt
+          })
+        }
       } else {
         // nieznany kształt odpowiedzi — bezpieczniej odświeżyć listę niż zgadywać
         load(0, true)
@@ -256,11 +258,6 @@ export function CommentsPanel({
             </button>
           </div>
           {composerError && <p className="mt-2 text-sm text-[color:var(--danger)]">{composerError}</p>}
-          {pendingNotice && (
-            <p className="mt-2 rounded-lg border border-[color:var(--warning)]/30 bg-[color:var(--warning)]/10 px-3 py-2 text-sm text-[color:var(--warning)]">
-              Komentarz czeka na weryfikację.
-            </p>
-          )}
         </div>
       ) : (
         <div className="flex flex-col items-stretch gap-3 rounded-[var(--radius-card)] border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
