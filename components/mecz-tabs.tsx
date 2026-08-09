@@ -1,15 +1,16 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { BarChart3, LineChart, Swords, Trophy } from "lucide-react"
+import { BarChart3, LineChart, MessageCircle, Swords, Trophy } from "lucide-react"
 
-export type MeczTab = "prognoza" | "analiza" | "liga" | "h2h"
+export type MeczTab = "prognoza" | "analiza" | "liga" | "h2h" | "komentarze"
 
 const TABS: { key: MeczTab; icon: typeof BarChart3; label: string }[] = [
   { key: "prognoza", icon: BarChart3, label: "Prognoza" },
   { key: "analiza", icon: LineChart, label: "Analiza" },
   { key: "liga", icon: Trophy, label: "Liga" },
   { key: "h2h", icon: Swords, label: "H2H" },
+  { key: "komentarze", icon: MessageCircle, label: "Komentarze" },
 ]
 
 // SSR-safe layout effect (bez ostrzeżeń przy renderze serwerowym).
@@ -21,10 +22,13 @@ export function MeczTabs({
   active,
   onChange,
   h2hCount = 0,
+  commentsCount,
 }: {
   active: MeczTab
   onChange: (t: MeczTab) => void
   h2hCount?: number
+  /** undefined = jeszcze nie wiadomo (nie renderuj licznika), 0 = wiadomo że zero. */
+  commentsCount?: number
 }) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({})
   const [ind, setInd] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
@@ -80,6 +84,11 @@ export function MeczTabs({
               {t.key === "h2h" && h2hCount > 0 && (
                 <span className="rounded-full bg-[var(--surface-2)] px-1.5 text-[11px] font-semibold tnum text-[color:var(--text-secondary)]">
                   {h2hCount}
+                </span>
+              )}
+              {t.key === "komentarze" && commentsCount != null && commentsCount > 0 && (
+                <span className="rounded-full bg-[var(--surface-2)] px-1.5 text-[11px] font-semibold tnum text-[color:var(--text-secondary)]">
+                  {commentsCount}
                 </span>
               )}
             </button>

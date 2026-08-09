@@ -30,6 +30,7 @@ import { MetricLabel, METRIC_HINTS } from "./ui/metric-tooltip"
 import { TeamStrength } from "./match/team-strength"
 import { ScoreMatrix } from "./match/score-matrix"
 import { H2HPanel } from "./match/h2h-panel"
+import { CommentsPanel } from "./match/comments-panel"
 
 // rynek wybrany przez bota → klucz siatki kursów (do podświetlenia)
 function chosenMarketKey(p?: MatchPrediction): keyof OddsMarkets | null {
@@ -71,11 +72,15 @@ export function MatchDetail({
   homeSide,
   awaySide,
   trackedKeys = [],
+  loggedIn = false,
+  isAdmin = false,
 }: {
   match: MatchDetailed
   homeSide?: SideStats | null
   awaySide?: SideStats | null
   trackedKeys?: string[]
+  loggedIn?: boolean
+  isAdmin?: boolean
 }) {
   const trackedSet = new Set(trackedKeys)
   const trackDataFor = (p: MatchPrediction): TrackTipData => ({
@@ -139,6 +144,10 @@ export function MatchDetail({
   // "reset scrolla na samą górę" niezależnie od tego, gdzie user czytał.
   const [tab, setTab] = useState<MeczTab>("prognoza")
   const changeTab = (t: MeczTab) => setTab(t)
+  // Licznik w pigułce zakładki — podbijany przez CommentsPanel po każdym
+  // pobraniu listy, żyje tu (nie w samym panelu), więc przetrwa odmontowanie
+  // panelu przy przełączeniu na inną zakładkę.
+  const [commentsCount, setCommentsCount] = useState<number | undefined>(undefined)
   // płynny fade między zakładkami (bez slide → brak layout shift na mobile)
   const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3 } }
 
@@ -231,7 +240,7 @@ export function MatchDetail({
       )}
 
       {/* PASEK ZAKŁADEK (sticky pod headerem) */}
-      <MeczTabs active={tab} onChange={changeTab} h2hCount={match.h2h_matches.length} />
+      <MeczTabs active={tab} onChange={changeTab} h2hCount={match.h2h_matches.length} commentsCount={commentsCount} />
 
       {/* ── PROGNOZA: [B] [H] [C] ── */}
       {tab === "prognoza" && (
@@ -451,6 +460,18 @@ export function MatchDetail({
               </div>
             )}
           </Card>
+        </motion.div>
+      )}
+
+      {/* ── KOMENTARZE ── */}
+      {tab === "komentarze" && (
+        <motion.div key="komentarze" {...fade}>
+          <CommentsPanel
+            eventId={String(match.event_id)}
+            loggedIn={loggedIn}
+            isAdmin={isAdmin}
+            onCountChange={setCommentsCount}
+          />
         </motion.div>
       )}
     </div>

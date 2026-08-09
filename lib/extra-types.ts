@@ -317,3 +317,26 @@ export interface MatchDetailed {
   lambda_home?: number | null
   lambda_away?: number | null
 }
+
+// — Komentarze pod meczami (public_api, tabela match_comments) —
+export type CommentStatus = "visible" | "hidden_auto" | "hidden_admin" | "deleted"
+
+export interface MatchComment {
+  id: string | number
+  event_id: string
+  telegram_id: string
+  username?: string | null
+  body: string
+  created_at: string
+  edited_at?: string | null
+  status?: CommentStatus
+  likes_count: number
+  /** Doklejane przez nasz route handler (GET listy jest publiczne/anonimowe
+   *  po stronie Oracle, więc tylko my znamy sesję pytającego). */
+  is_mine?: boolean
+}
+
+export interface CommentsListResponse {
+  comments: MatchComment[]
+  total?: number
+}
