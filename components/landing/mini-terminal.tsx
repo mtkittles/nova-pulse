@@ -9,10 +9,18 @@ const CHAR_MS = 30
 const LINE_PAUSE_MS = 250
 const LOOP_PAUSE_MS = 4000
 const VISIBLE_LINES = 6
+// Budżet znaków na linię (font-mono 13px w kontenerze ~308px) — dłuższe fakty
+// (np. z długimi nazwami drużyn) są cięte z wielokropkiem, żeby nigdy nie
+// nachodziły na `truncate` z CSS (co wyglądało jak zawieszona animacja).
+const MAX_LINE_CHARS = 36
 
 function isLive(t: Tip, nowMs: number): boolean {
   const s = mapMatchStatus(t.match_status) ?? statusFromKickoff(t.kickoff_utc, nowMs)
   return s === "live"
+}
+
+function capLine(s: string): string {
+  return s.length > MAX_LINE_CHARS ? `${s.slice(0, MAX_LINE_CHARS - 1).trimEnd()}…` : s
 }
 
 // Krótkie fakty dnia z tego samego źródła co reszta demo (todayTips + winRate
@@ -37,7 +45,7 @@ function buildFacts(tips: Tip[], winRate: number, nowMs: number): string[] {
   const valueCount = tips.filter((t) => t.tier === "value").length
   if (valueCount > 0) lines.push(`${valueCount} ${valueCount === 1 ? "typ value" : "typów value"} w dzisiejszej puli`)
 
-  return lines.slice(0, VISIBLE_LINES)
+  return lines.slice(0, VISIBLE_LINES).map(capLine)
 }
 
 /**

@@ -9,10 +9,10 @@ const BOOKMAKER_AVG_PCT = 52.5
 /**
  * "Model vs punkt odniesienia" — trzy poziome słupki: rzut monetą (50%,
  * neutralny punkt odniesienia), średnia bukmacherska (szacunek branżowy) i
- * realna skuteczność modelu z danych demo. Słupki rysują się od zera przy
- * wejściu w viewport — ta sama konwencja co pozostałe wykresy landingu.
+ * realna skuteczność modelu. Słupki rysują się od zera przy wejściu w
+ * viewport — ta sama konwencja co pozostałe wykresy landingu.
  */
-export function BaselineComparison({ winRate }: { winRate: number }) {
+export function BaselineComparison({ winRate, isDemo = false }: { winRate: number; isDemo?: boolean }) {
   const [ref, inView] = useInViewOnce<HTMLDivElement>()
   const modelPct = Math.max(0, Math.min(100, winRate * 100))
 
@@ -28,7 +28,7 @@ export function BaselineComparison({ winRate }: { winRate: number }) {
     {
       label: "Model Lupus Pred",
       value: modelPct,
-      note: "realna skuteczność, dane demo",
+      note: isDemo ? "realna skuteczność, dane demo" : "dane z rozliczonych typów",
       barCls: "bg-[var(--cyan)]",
       valueCls: "text-[color:var(--cyan)]",
     },
@@ -56,8 +56,10 @@ export function BaselineComparison({ winRate }: { winRate: number }) {
       </div>
       <p className="mt-4 border-t border-[color:var(--border-subtle)] pt-3 text-xs leading-5 text-[color:var(--text-muted)]">
         Metodologia: skuteczność = odsetek rozliczonych typów trafionych. „Rzut monetą" to matematyczny punkt
-        odniesienia (50%), „średnia bukmacherska" to szacunkowa referencja branżowa (nie pomiar z danych demo) —
-        wartość modelu pochodzi z realnych, rozliczonych typów w trybie demonstracyjnym.
+        odniesienia (50%), „średnia bukmacherska" to szacunkowa referencja branżowa (nie pomiar z danych demo) —{" "}
+        {isDemo
+          ? "wartość modelu pochodzi z realnych, rozliczonych typów w trybie demonstracyjnym."
+          : "wartość modelu pochodzi z realnych, rozliczonych typów."}
       </p>
     </div>
   )

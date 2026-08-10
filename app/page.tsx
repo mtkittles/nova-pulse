@@ -2,6 +2,7 @@ import LandingPage from "@/components/landing-page"
 import { getStats } from "@/lib/stats"
 import { getTipsHistory, getTodayTips, getThrillerSpotlight } from "@/lib/tips"
 import { getSession } from "@/lib/auth"
+import { isDemoDataOn } from "@/lib/demo-source"
 import { sortKey } from "@/lib/format"
 import type { Tip } from "@/lib/types"
 
@@ -11,12 +12,13 @@ export const dynamic = "force-dynamic"
 export default async function Home() {
   // getTipsHistory zasila sekcję „Ostatnio rozliczone" (proof bar).
   // getThrillerSpotlight: null poza trybem demo (sekcja się wtedy nie renderuje).
-  const [stats, today, session, history, thriller] = await Promise.all([
+  const [stats, today, session, history, thriller, isDemo] = await Promise.all([
     getStats(),
     getTodayTips(),
     getSession(),
     getTipsHistory(12),
     getThrillerSpotlight(),
+    isDemoDataOn(),
   ])
 
   const tips = today.tips
@@ -43,6 +45,7 @@ export default async function Home() {
       timeline={stats.timeline}
       recentSettled={history}
       thriller={thriller}
+      isDemo={isDemo}
     />
   )
 }

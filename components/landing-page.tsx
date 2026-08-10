@@ -38,6 +38,7 @@ type LandingProps = {
   timeline: TimelinePoint[]
   recentSettled: Tip[]
   thriller?: ThrillerSpotlightData | null
+  isDemo?: boolean
 }
 
 const PLANS: {
@@ -119,6 +120,7 @@ export default function LandingPage({
   timeline,
   recentSettled,
   thriller = null,
+  isDemo = false,
 }: LandingProps) {
   const roiPositive = roi >= 0
 
@@ -186,7 +188,7 @@ export default function LandingPage({
             </ScrollReveal>
           </div>
           <ScrollReveal delay={120} className="mt-4">
-            <BaselineComparison winRate={winRate} />
+            <BaselineComparison winRate={winRate} isDemo={isDemo} />
           </ScrollReveal>
         </section>
 

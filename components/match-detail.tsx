@@ -152,7 +152,7 @@ export function MatchDetail({
   const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3 } }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-16 lg:max-w-5xl">
+    <div className="mx-auto max-w-2xl pb-16 lg:max-w-5xl">
       <Link href="/typy" className="mb-5 inline-flex items-center gap-2 text-sm text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]">
         <ArrowLeft className="h-4 w-4" /> Wróć do typów
       </Link>
@@ -171,26 +171,26 @@ export function MatchDetail({
             )}
           </div>
 
-          <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 overflow-hidden">
-            <div className="flex min-w-0 flex-col items-center gap-2 sm:items-end">
+          <div className="-mx-2 mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-hidden sm:mx-0 sm:gap-3">
+            <div className="flex w-full min-w-0 flex-col items-center gap-2 sm:items-end">
               <TeamBadge teamName={match.home} logoUrl={match.homeLogo} size="md" />
-              <span className="line-clamp-2 max-w-full break-words text-center text-base font-semibold leading-tight sm:text-right">{match.home}</span>
+              <span className="line-clamp-2 w-full [text-wrap:balance] break-words text-center text-sm font-semibold leading-tight sm:text-right sm:text-base">{match.home}</span>
             </div>
-            <div className="flex flex-col items-center px-2">
+            <div className="flex max-w-[88px] flex-col items-center px-1 sm:max-w-none sm:px-2">
               {liveOn || finished ? (
                 <span className={`text-3xl font-extrabold tnum ${liveOn ? "text-[color:var(--danger)]" : "text-[color:var(--text-primary)]"}`}>
                   {hasScore ? `${homeScore} : ${awayScore}` : "—"}
                 </span>
               ) : (
-                <span className="whitespace-nowrap text-sm font-medium text-[color:var(--text-secondary)]">
+                <span className="text-center text-xs font-medium text-[color:var(--text-secondary)] sm:whitespace-nowrap sm:text-sm">
                   {formatKickoff(match.kickoff_utc)}
                 </span>
               )}
               {liveOn && <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--danger)]">{minuteTxt}</span>}
             </div>
-            <div className="flex min-w-0 flex-col items-center gap-2 sm:items-start">
+            <div className="flex w-full min-w-0 flex-col items-center gap-2 sm:items-start">
               <TeamBadge teamName={match.away} logoUrl={match.awayLogo} size="md" />
-              <span className="line-clamp-2 max-w-full break-words text-center text-base font-semibold leading-tight sm:text-left">{match.away}</span>
+              <span className="line-clamp-2 w-full [text-wrap:balance] break-words text-center text-sm font-semibold leading-tight sm:text-left sm:text-base">{match.away}</span>
             </div>
           </div>
 
