@@ -137,32 +137,13 @@ export function CommentsPanel({
         setComposerError(await friendlyError(res, "Nie udało się dodać komentarza."))
         return
       }
-      const raw = await res.json().catch(() => null)
-      // Odpowiedź bywa zawinięta ({ comment: {...} }) zamiast płaskiej — bierzemy
-      // to, co faktycznie wygląda jak komentarz (ma `id`).
-      const wrapped = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null
-      const created = (
-        wrapped && wrapped.comment && typeof wrapped.comment === "object" ? wrapped.comment : wrapped
-      ) as (MatchComment & { status?: string }) | null
       setText("")
-      if (created && created.id != null) {
-        // TYLKO "hidden_auto" liczy się jako moderacja — każda inna wartość
-        // (w tym pole `status` będące częścią koperty odpowiedzi, np.
-        // "success"/"ok", a nie statusem komentarza) traktujemy jak widoczny.
-        // Fałszywie pozytywne "czeka na weryfikację" na KAŻDYM poście było
-        // dokładnie tym błędem — zbyt szerokie "status !== visible".
-        setComments((prev) => [{ ...created, is_mine: true }, ...prev])
-        if (created.status !== "hidden_auto") {
-          setTotal((t) => {
-            const nt = t + 1
-            onCountChange?.(nt)
-            return nt
-          })
-        }
-      } else {
-        // nieznany kształt odpowiedzi — bezpieczniej odświeżyć listę niż zgadywać
-        load(0, true)
-      }
+      // POST zwraca tylko wynik zapisu (id/comment_status), nie pełny
+      // rekord (username, created_at z serwera itd.) — prościej i pewniej
+      // odświeżyć listę z GET (z X-Comment-Token, patrz `load`), która
+      // teraz zwraca własny hidden_auto z poprawnym `pending_moderation`,
+      // niż składać komentarz ręcznie z niepełnych danych.
+      await load(0, true)
     } catch {
       setComposerError("Nie udało się dodać komentarza.")
     } finally {

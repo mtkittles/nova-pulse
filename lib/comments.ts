@@ -4,8 +4,11 @@ import type { Session } from "./auth"
 
 // Warstwa dostępu do komentarzy pod meczami — public_api na Hetznerze
 // (ten sam serwis co reszta danych bota, ORACLE_API_URL/ORACLE_API_KEY).
-// GET (lista) jest publiczne — tylko X-API-Key. Akcje (POST/DELETE) dodają
-// X-Comment-Token mintowany z sesji (patrz comment-token.ts).
+// GET (lista) bierze X-API-Key zawsze i X-Comment-Token OPCJONALNIE (gdy
+// jest sesja) — z tokenem backend dokłada WŁASNE hidden_auto wołającego,
+// oznaczone `pending_moderation: true`; bez tokenu / z tokenem
+// uszkodzonym/wygasłym backend cicho spada do listy anonimowej (bez 401).
+// Akcje (POST/DELETE) zawsze wymagają X-Comment-Token mintowanego z sesji.
 
 export function isCommentsConfigured(): boolean {
   return Boolean(process.env.ORACLE_API_URL && process.env.ORACLE_API_KEY && process.env.COMMENT_TOKEN_SECRET)
@@ -16,6 +19,20 @@ export interface CommentApiResult<T> {
   status: number
   data: T | null
   error: string | null
+}
+
+// Płaski, stabilny kształt odpowiedzi POST — `status` to status REQUESTU
+// ("ok" przy 200), NIE status moderacji. Status moderacji to `comment_status`
+// / `pending_moderation`.
+export interface CreateCommentResult {
+  status: "ok"
+  id: number
+  comment_id: number
+  event_id: string
+  comment_status: "visible" | "hidden_auto"
+  visible: boolean
+  pending_moderation: boolean
+  message: string | null
 }
 
 function oracleBase(): string {
@@ -53,9 +70,12 @@ function errorMessage(data: unknown): string | null {
   return null
 }
 
-// GET — bez tokenu komentarza, tylko X-API-Key.
-async function publicGet<T>(path: string): Promise<CommentApiResult<T>> {
-  const res = await rawFetch(path, "GET", undefined, null)
+// GET — token opcjonalny (dołączony tylko gdy jest sesja). Backend sam
+// obsługuje brak/zły token łagodnie (fallback do anonimowej listy, bez
+// 401) — więc bez retry, w przeciwieństwie do authedAction poniżej.
+async function optionalAuthedGet<T>(path: string, session?: Session): Promise<CommentApiResult<T>> {
+  const token = session ? mintCommentToken(session) : null
+  const res = await rawFetch(path, "GET", undefined, token)
   const data = await parseBody<T>(res)
   return { ok: res.ok, status: res.status, data, error: res.ok ? null : (errorMessage(data) ?? "Błąd serwera.") }
 }
@@ -95,17 +115,23 @@ async function authedAction<T>(
   return { ok: res.ok, status: res.status, data, error: res.ok ? null : (errorMessage(data) ?? "Błąd serwera.") }
 }
 
-export function listComments(eventId: string, params: { sort?: "newest" | "top"; limit?: number; offset?: number }) {
+// `session` opcjonalna — gdy podana, dokładamy X-Comment-Token, żeby
+// backend dorzucił własne hidden_auto wołającego do wyniku.
+export function listComments(
+  eventId: string,
+  params: { sort?: "newest" | "top"; limit?: number; offset?: number },
+  session?: Session,
+) {
   const qs = new URLSearchParams()
   if (params.sort) qs.set("sort", params.sort)
   if (params.limit != null) qs.set("limit", String(params.limit))
   if (params.offset != null) qs.set("offset", String(params.offset))
   const q = qs.toString()
-  return publicGet<unknown>(`/match/${encodeURIComponent(eventId)}/comments${q ? `?${q}` : ""}`)
+  return optionalAuthedGet<unknown>(`/match/${encodeURIComponent(eventId)}/comments${q ? `?${q}` : ""}`, session)
 }
 
 export function createComment(eventId: string, session: Session, body: string) {
-  return authedAction<unknown>(`/match/${encodeURIComponent(eventId)}/comments`, "POST", session, { body })
+  return authedAction<CreateCommentResult>(`/match/${encodeURIComponent(eventId)}/comments`, "POST", session, { body })
 }
 
 export function likeComment(commentId: string, session: Session) {

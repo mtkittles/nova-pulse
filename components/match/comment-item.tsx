@@ -88,11 +88,15 @@ export function CommentItem({
 
         <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-[color:var(--text-secondary)]">{comment.body}</p>
 
-        {/* Sygnał moderacji — TYLKO przy własnym komentarzu, przy TYM
-            konkretnym wpisie (nie globalny baner nad polem). Inaczej autor
-            myśli że komentarz zniknął i wysyła go ponownie → trafia na
-            filtr duplikatu (409). */}
-        {comment.is_mine && comment.status === "hidden_auto" && (
+        {/* Sygnał moderacji — z `pending_moderation` (nie `status`; backend
+            celowo nie zwraca surowego statusu, żeby nie ułatwiać sondowania
+            kolejki moderacji). Oracle i tak zwraca to pole WYŁĄCZNIE na
+            własnych hidden_auto wołającego (z X-Comment-Token na GET), więc
+            `is_mine` tu to tylko dodatkowa warstwa obrony, nie jedyny
+            warunek. TYLKO przy tym konkretnym wpisie (nie globalny baner nad
+            polem) — inaczej autor myśli że komentarz zniknął i wysyła go
+            ponownie → trafia na filtr duplikatu (409). */}
+        {comment.is_mine && comment.pending_moderation && (
           <Badge tone="warning" className="mt-1.5">
             <EyeOff className="h-3 w-3" aria-hidden />
             Widoczny tylko dla Ciebie — czeka na moderację

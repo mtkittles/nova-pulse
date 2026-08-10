@@ -331,9 +331,13 @@ export interface MatchComment {
   edited_at?: string | null
   status?: CommentStatus
   likes_count: number
-  /** Doklejane przez nasz route handler (GET listy jest publiczne/anonimowe
-   *  po stronie Oracle, więc tylko my znamy sesję pytającego). */
+  /** Doklejane przez nasz route handler — porównanie telegram_id z sesją. */
   is_mine?: boolean
+  /** Z Oracle (GET z X-Comment-Token) — TYLKO na własnych hidden_auto
+   *  wołającego. Backend celowo nie zwraca surowego `status`, żeby nie
+   *  ułatwiać sondowania kolejki moderacji — UI ma się opierać na tym polu,
+   *  nie zgadywać po `status`. */
+  pending_moderation?: boolean
 }
 
 export interface CommentsListResponse {

@@ -24,9 +24,11 @@ function normalizeList(data: unknown): { comments: MatchComment[]; total?: numbe
   return { comments: [] }
 }
 
-// GET — lista widocznych komentarzy, publiczne (tylko X-API-Key po stronie
-// Oracle, bez tokenu). Doklejamy `is_mine` tu, bo Oracle o tym nie wie —
-// lista jest anonimowa, a sesję (lb_session) znamy tylko my.
+// GET — lista komentarzy. X-Comment-Token dołączany OPCJONALNIE, gdy jest
+// sesja — wtedy Oracle dokłada do wyniku WŁASNE hidden_auto wołającego
+// (oznaczone `pending_moderation: true`). Bez sesji / z tokenem złym —
+// Oracle cicho spada do listy anonimowej (bez 401 do obsłużenia tutaj).
+// `is_mine` dokładamy sami, bo to porównanie telegram_id z sesją.
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const url = new URL(req.url)
@@ -39,12 +41,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 
   try {
-    const result = await listComments(id, { sort, limit, offset })
+    const session = await getSession()
+    const result = await listComments(id, { sort, limit, offset }, session ?? undefined)
     if (!result.ok) {
       return NextResponse.json({ error: result.error ?? "Nie udało się pobrać komentarzy." }, { status: result.status || 502 })
     }
     const { comments, total } = normalizeList(result.data)
-    const session = await getSession()
     const enriched = session ? comments.map((c) => ({ ...c, is_mine: String(c.telegram_id) === session.uid })) : comments
     return NextResponse.json({ comments: enriched, total })
   } catch (err) {
