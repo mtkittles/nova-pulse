@@ -31,11 +31,18 @@ function hasSummary(x: unknown): boolean {
 }
 
 // period: "7" | "30" | "all"
-export async function getStats(period?: string): Promise<StatsResponse> {
+// includeLegacy: dołącz typy sprzed obecnej wersji modelu (v1, od 2026-08-10) —
+// domyślnie API Oracle zwraca tylko bieżącą wersję, więc tuż po jej starcie
+// (zanim rozliczą się pierwsze typy) total=0 to oczekiwany stan przejściowy.
+export async function getStats(period?: string, includeLegacy?: boolean): Promise<StatsResponse> {
   // Tryb demo — pula historyczna (lib/demo-tips.ts), ten sam adapter co produkcja.
   if (await isDemoDataOn()) return adaptStats(demoStatsPayload(period))
   if (!isOracleConfigured()) return mockStats
-  const path = period ? `/stats?period=${encodeURIComponent(period)}` : "/stats"
+  const params = new URLSearchParams()
+  if (period) params.set("period", period)
+  if (includeLegacy) params.set("include_legacy", "true")
+  const qs = params.toString()
+  const path = qs ? `/stats?${qs}` : "/stats"
   try {
     const data = await oracleFetch<unknown>(path)
     if (!hasSummary(data)) {

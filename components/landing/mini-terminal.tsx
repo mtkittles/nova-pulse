@@ -26,7 +26,7 @@ function capLine(s: string): string {
 // Krótkie fakty dnia z tego samego źródła co reszta demo (todayTips + winRate
 // z app/page.tsx) — liczone DOPIERO w efekcie po wejściu w viewport (nie
 // w initializerze useState), żeby Date.now() nie dał rozjazdu SSR/hydratacja.
-function buildFacts(tips: Tip[], winRate: number, nowMs: number): string[] {
+function buildFacts(tips: Tip[], winRate: number, nowMs: number, hasStatsData = true): string[] {
   const lines: string[] = []
   const leagues = new Set(tips.map((t) => t.leagueCode || t.league).filter(Boolean)).size
   lines.push(`${tips.length} typów wygenerowanych z ${leagues} ${leagues === 1 ? "ligi" : "lig"}`)
@@ -40,7 +40,9 @@ function buildFacts(tips: Tip[], winRate: number, nowMs: number): string[] {
   const liveMatches = new Set(tips.filter((t) => isLive(t, nowMs)).map((t) => t.event_id)).size
   if (liveMatches > 0) lines.push(`${liveMatches} ${liveMatches === 1 ? "mecz live" : "mecze live"} w tej chwili`)
 
-  lines.push(`skuteczność 30 dni: ${(winRate * 100).toFixed(1)}%`)
+  // Model w nowej wersji bez rozliczonych typów (total_tips=0) → nie pokazuj
+  // "skuteczność 30 dni: 0.0%" (myląca fałszywa wartość zero).
+  if (hasStatsData) lines.push(`skuteczność 30 dni: ${(winRate * 100).toFixed(1)}%`)
 
   const valueCount = tips.filter((t) => t.tier === "value").length
   if (valueCount > 0) lines.push(`${valueCount} ${valueCount === 1 ? "typ value" : "typów value"} w dzisiejszej puli`)
@@ -54,7 +56,15 @@ function buildFacts(tips: Tip[], winRate: number, nowMs: number): string[] {
  * linia po linii (typewriter, ~30ms/znak), potem pauza 4s, czyszczenie,
  * restart w pętli. Start dopiero przy wejściu w viewport.
  */
-export function MiniTerminal({ tips, winRate }: { tips: Tip[]; winRate: number }) {
+export function MiniTerminal({
+  tips,
+  winRate,
+  hasStatsData = true,
+}: {
+  tips: Tip[]
+  winRate: number
+  hasStatsData?: boolean
+}) {
   const [containerRef, inView] = useInViewOnce<HTMLDivElement>()
   const reduced = usePrefersReducedMotion()
   const [doneLines, setDoneLines] = useState<string[]>([])
@@ -63,7 +73,7 @@ export function MiniTerminal({ tips, winRate }: { tips: Tip[]; winRate: number }
 
   useEffect(() => {
     if (!inView) return
-    const facts = buildFacts(tips, winRate, Date.now())
+    const facts = buildFacts(tips, winRate, Date.now(), hasStatsData)
     if (facts.length === 0) return
 
     const schedule = (fn: () => void, ms: number) => {

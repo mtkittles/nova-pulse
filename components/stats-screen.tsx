@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { BarChart3, Send, TrendingUp } from "lucide-react"
+import { BarChart3, History, Send, TrendingUp } from "lucide-react"
 import type { StatsResponse } from "@/lib/stats-types"
 import type { Tip } from "@/lib/types"
 import type { DemoAnalytics } from "@/lib/stats"
@@ -92,19 +92,41 @@ export function StatsScreen({
   const [period, setPeriod] = useState<Period>("30")
   const [data, setData] = useState<StatsResponse>(initial)
   const [loading, setLoading] = useState(false)
+  // Model w nowej wersji (v1, od 10 sierpnia) domyślnie pokazuje tylko własne
+  // rozliczone typy — total=0 w okresie przejściowym, zanim rozliczą się
+  // pierwsze mecze. `include_legacy=true` dociąga pełną historię (starsza
+  // wersja modelu), oznaczoną w UI jako nieaktualna próbka.
+  const [includeLegacy, setIncludeLegacy] = useState(false)
+  const [legacyLoading, setLegacyLoading] = useState(false)
 
   async function selectPeriod(p: Period) {
     if (p === period) return
     setPeriod(p)
     setLoading(true)
     try {
-      const res = await fetch(`/api/stats?period=${p}`)
+      const res = await fetch(`/api/stats?period=${p}&include_legacy=${includeLegacy}`)
       const d = await res.json()
       if (d && d.summary) setData(d)
     } catch {
       /* zostaw poprzednie dane */
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function toggleLegacy(next: boolean) {
+    setLegacyLoading(true)
+    try {
+      const res = await fetch(`/api/stats?period=${period}&include_legacy=${next}`)
+      const d = await res.json()
+      if (d && d.summary) {
+        setData(d)
+        setIncludeLegacy(next)
+      }
+    } catch {
+      /* zostaw poprzednie dane */
+    } finally {
+      setLegacyLoading(false)
     }
   }
 
@@ -130,9 +152,41 @@ export function StatsScreen({
       </header>
 
       {!hasData ? (
-        <EmptyState icon={BarChart3} title="Brak danych statystycznych" description="Model dopiero zbiera próbę — wróć po kilku rozliczonych typach." />
+        includeLegacy ? (
+          <EmptyState icon={BarChart3} title="Brak danych statystycznych" description="Także pełna historia jest pusta — model dopiero zbiera próbę." />
+        ) : (
+          <EmptyState
+            icon={BarChart3}
+            title="Model w nowej wersji zbiera dane"
+            description="Model w nowej wersji zbiera dane od 10 sierpnia. Pierwsze rozliczone typy pojawią się po najbliższych meczach."
+            cta={{
+              label: legacyLoading ? "Wczytywanie…" : "Pokaż pełną historię (starsza wersja modelu)",
+              onClick: () => {
+                if (!legacyLoading) toggleLegacy(true)
+              },
+            }}
+          />
+        )
       ) : (
         <>
+          {includeLegacy && (
+            <div className="flex flex-col items-start gap-2 rounded-[var(--radius-card)] border border-[color:var(--warning)]/30 bg-[color:var(--warning)]/[0.08] px-4 py-3 text-sm text-[color:var(--text-secondary)] sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-2 sm:items-center">
+                <History className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--warning)] sm:mt-0" />
+                <span>
+                  Pokazujesz pełną historię, łącznie ze starszą wersją modelu — te wyniki nie odzwierciedlają obecnej jakości typowania.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggleLegacy(false)}
+                className="shrink-0 whitespace-nowrap font-semibold text-[color:var(--cyan)] transition hover:underline"
+              >
+                Wróć do aktualnej wersji
+              </button>
+            </div>
+          )}
+
           {/* [B] KARTY PODSUMOWANIA */}
           <section className="grid grid-cols-2 gap-3">
             {loading ? (

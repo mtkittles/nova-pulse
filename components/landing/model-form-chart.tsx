@@ -66,8 +66,8 @@ export function ModelFormChart({ timeline }: { timeline: TimelinePoint[] }) {
 
   if (full.length === 0) {
     return (
-      <div className="grid h-64 place-items-center rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] text-sm text-[color:var(--text-muted)]">
-        Brak danych historycznych
+      <div className="grid h-64 place-items-center rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] px-6 text-center text-sm text-[color:var(--text-muted)]">
+        Model w nowej wersji zbiera dane od 10 sierpnia — wykres pojawi się po pierwszych rozliczonych typach.
       </div>
     )
   }

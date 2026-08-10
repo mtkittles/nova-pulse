@@ -12,9 +12,30 @@ const BOOKMAKER_AVG_PCT = 52.5
  * realna skuteczność modelu. Słupki rysują się od zera przy wejściu w
  * viewport — ta sama konwencja co pozostałe wykresy landingu.
  */
-export function BaselineComparison({ winRate, isDemo = false }: { winRate: number; isDemo?: boolean }) {
+export function BaselineComparison({
+  winRate,
+  isDemo = false,
+  hasData = true,
+}: {
+  winRate: number
+  isDemo?: boolean
+  /** false gdy model w nowej wersji nie ma jeszcze rozliczonych typów (total_tips=0) */
+  hasData?: boolean
+}) {
   const [ref, inView] = useInViewOnce<HTMLDivElement>()
   const modelPct = Math.max(0, Math.min(100, winRate * 100))
+
+  if (!hasData) {
+    return (
+      <div ref={ref} className="glass-solid rounded-xl border border-[color:var(--border-subtle)] bg-[var(--bg-1)] p-5">
+        <p className="mb-2 text-sm font-semibold text-[color:var(--text-primary)]">Model vs punkt odniesienia</p>
+        <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
+          Model w nowej wersji zbiera dane od 10 sierpnia — porównanie ze średnią bukmacherską i rzutem monetą pojawi
+          się po pierwszych rozliczonych typach.
+        </p>
+      </div>
+    )
+  }
 
   const rows: { label: string; value: number; note: string; barCls: string; valueCls: string }[] = [
     { label: "Rzut monetą", value: 50, note: "punkt odniesienia", barCls: "bg-[color:var(--border-subtle)]", valueCls: "text-[color:var(--text-secondary)]" },

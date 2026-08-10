@@ -116,6 +116,7 @@ export default function LandingPage({
   todayTips,
   winRate,
   roi,
+  totalTips,
   settledTips,
   timeline,
   recentSettled,
@@ -123,6 +124,9 @@ export default function LandingPage({
   isDemo = false,
 }: LandingProps) {
   const roiPositive = roi >= 0
+  // Model w nowej wersji (v1, od 10 sierpnia): total_tips=0 dopóki pierwsze
+  // typy się nie rozliczą — pokaż komunikat zamiast mylącego 0.0%.
+  const hasStatsData = totalTips > 0
 
   return (
     <div className="min-h-screen text-[color:var(--text-primary)]">
@@ -141,7 +145,7 @@ export default function LandingPage({
 
         {/* ——— MINI TERMINAL "Dziś w piłce" ——— */}
         <div className="pt-6 md:pt-8">
-          <MiniTerminal tips={todayTips} winRate={winRate} />
+          <MiniTerminal tips={todayTips} winRate={winRate} hasStatsData={hasStatsData} />
         </div>
 
         {/* ——— 2. DZIŚ W SKRÓCIE ——— */}
@@ -188,7 +192,7 @@ export default function LandingPage({
             </ScrollReveal>
           </div>
           <ScrollReveal delay={120} className="mt-4">
-            <BaselineComparison winRate={winRate} isDemo={isDemo} />
+            <BaselineComparison winRate={winRate} isDemo={isDemo} hasData={hasStatsData} />
           </ScrollReveal>
         </section>
 
