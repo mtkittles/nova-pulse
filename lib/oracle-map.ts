@@ -1,5 +1,5 @@
 import "server-only"
-import { getLeagueName } from "./leagues"
+import { getLeagueName, leagueCodeByName } from "./leagues"
 import type { BetType, RecommendationTier, Tip, TipsResponse } from "./types"
 import type {
   LeagueStat,
@@ -895,7 +895,17 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
       ? (m.predictions as unknown[])
       : []
 
-  const rawH2h = Array.isArray(r.h2h) ? (r.h2h as unknown[]) : Array.isArray(m.h2h) ? (m.h2h as unknown[]) : []
+  // Nowy kształt Oracle: r.h2h to OBIEKT { count, btts_pct, ..., matches: [...] },
+  // nie płaska tablica — lista jest zagnieżdżona pod .matches. Stary kształt
+  // (r.h2h jako tablica, wciąż używany w trybie demo — lib/demo-tips.ts) zostaje
+  // pierwszym sprawdzanym wariantem dla kompatybilności wstecznej.
+  const rawH2h = Array.isArray(r.h2h)
+    ? (r.h2h as unknown[])
+    : Array.isArray(rec(r.h2h).matches)
+      ? (rec(r.h2h).matches as unknown[])
+      : Array.isArray(m.h2h)
+        ? (m.h2h as unknown[])
+        : []
   const h2h_matches: H2HMatch[] = rawH2h.map((x) => {
     const o = rec(x)
     return {
@@ -908,6 +918,13 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
 
   const predictions = (preds as unknown[]).map(adaptPrediction)
 
+  // Oracle nie zwraca już osobnego pola z kodem ligi w /detailed — m.league to
+  // teraz pełna nazwa ("Major League Soccer"), NIE kod ("MLS"). Wpisanie jej
+  // wprost jako leagueCode psuło /league/{code}/standings i formę drużyn (kod
+  // z pełną spacjowaną nazwą nigdy nie trafi w Oracle). Mapujemy przez
+  // leagueCodeByName (lib/leagues.ts) zanim odpadniemy do samej nazwy.
+  const leagueCode = String(m.league_code ?? r.league_code ?? leagueCodeByName(String(m.league ?? "")) ?? "")
+
   return {
     found: Boolean(found),
     event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.fixture_id ?? m.match_id ?? m.id ?? "") as string | number,
@@ -915,16 +932,19 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     away,
     homeLogo: pickLogo(m.home_team_logo ?? m.home_logo),
     awayLogo: pickLogo(m.away_team_logo ?? m.away_logo),
-    league: getLeagueName(String(m.league_code ?? r.league_code ?? m.league ?? "")),
-    leagueCode: String(m.league_code ?? r.league_code ?? m.league ?? ""),
+    league: leagueCode ? getLeagueName(leagueCode) : String(m.league ?? "—"),
+    leagueCode,
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
     stadium: m.stadium != null ? String(m.stadium) : m.venue != null ? String(m.venue) : null,
     status: mapStatus(m.status ?? r.status, normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date)),
     // Wynik końcowy (źródło prawdy po meczu) — defensywnie z wielu nazw pól.
     home_score: numOrNull(m.home_score ?? m.actual_home_score ?? m.final_home_score ?? r.home_score ?? r.actual_home_score),
     away_score: numOrNull(m.away_score ?? m.actual_away_score ?? m.final_away_score ?? r.away_score ?? r.actual_away_score),
-    home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
-    away_id: pickId(m, ["away_id", "away_team_id", "awayId"]),
+    // Nowy kształt Oracle trzyma home_team_id/away_team_id na najwyższym
+    // poziomie odpowiedzi (obok "match"), nie wewnątrz r.match — stąd druga
+    // próba na `r`, gdy `m` (zagnieżdżony "match") ich nie ma.
+    home_id: pickId(m, ["home_id", "home_team_id", "homeId"]) ?? pickId(r, ["home_id", "home_team_id", "homeId"]),
+    away_id: pickId(m, ["away_id", "away_team_id", "awayId"]) ?? pickId(r, ["away_id", "away_team_id", "awayId"]),
     predictions,
     odds_markets: adaptOddsMarkets(r),
     home_metrics: teamMetrics(r.home_stats ?? m.home_stats ?? r.home ?? m.home, home),
@@ -949,8 +969,10 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
       r.score_matrix ?? m.score_matrix ?? r.scoreline_matrix ?? r.dixon_coles_matrix,
       adaptScoreDist(r.score_distribution ?? r.score_dist ?? m.score_distribution),
     ),
-    home_scorers: adaptScorers(r.home_scorers ?? r.home_top_scorers ?? rec(r.home).scorers),
-    away_scorers: adaptScorers(r.away_scorers ?? r.away_top_scorers ?? rec(r.away).scorers),
+    // Nowy kształt: strzelcy pod r.scorers.{home,away} (stare pola zostają
+    // jako pierwszeństwo dla kompatybilności wstecznej, np. trybu demo).
+    home_scorers: adaptScorers(r.home_scorers ?? r.home_top_scorers ?? rec(r.home).scorers ?? rec(r.scorers).home),
+    away_scorers: adaptScorers(r.away_scorers ?? r.away_top_scorers ?? rec(r.away).scorers ?? rec(r.scorers).away),
     home_elo: numOrNull(r.home_elo),
     away_elo: numOrNull(r.away_elo),
     home_form5: form5OrUndefined(r.home_form5),
