@@ -16,17 +16,30 @@ export async function getStandings(code: string): Promise<StandingRow[]> {
   }
 }
 
+export interface StandingsWithMeta {
+  standings: StandingRow[]
+  leagueLogo: string | null
+  // Sezon jeszcze nie wystartował / brak danych do wysiania tabeli — Oracle
+  // sygnalizuje to jawnie (zamiast pustej/nieaktualnej tabeli).
+  seasonNotSeeded: boolean
+  season: string | null
+}
+
 // Tabela + logo ligi (gdy Oracle je zwraca w nagłówku).
-export async function getStandingsWithMeta(
-  code: string,
-): Promise<{ standings: StandingRow[]; leagueLogo: string | null }> {
-  if (!isOracleConfigured()) return { standings: [], leagueLogo: null }
+export async function getStandingsWithMeta(code: string): Promise<StandingsWithMeta> {
+  if (!isOracleConfigured()) return { standings: [], leagueLogo: null, seasonNotSeeded: false, season: null }
   try {
     const data = await oracleFetch<unknown>(`/league/${encodeURIComponent(code)}/standings`)
-    return { standings: adaptStandings(data), leagueLogo: adaptLeagueLogo(data) }
+    const r = data && typeof data === "object" ? (data as Record<string, unknown>) : {}
+    return {
+      standings: adaptStandings(data),
+      leagueLogo: adaptLeagueLogo(data),
+      seasonNotSeeded: r.season_not_seeded === true,
+      season: r.season != null ? String(r.season) : null,
+    }
   } catch (err) {
     console.error("getStandingsWithMeta: Oracle niedostępne →", err)
-    return { standings: [], leagueLogo: null }
+    return { standings: [], leagueLogo: null, seasonNotSeeded: false, season: null }
   }
 }
 

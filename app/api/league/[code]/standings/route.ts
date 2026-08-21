@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic"
 export async function GET(_req: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params
   try {
-    const { standings, leagueLogo } = await getStandingsWithMeta(code)
-    return NextResponse.json({ standings, league_logo: leagueLogo })
+    const { standings, leagueLogo, seasonNotSeeded, season } = await getStandingsWithMeta(code)
+    return NextResponse.json({ standings, league_logo: leagueLogo, season_not_seeded: seasonNotSeeded, season })
   } catch {
     return NextResponse.json({ error: "Dane chwilowo niedostępne" }, { status: 502 })
   }

@@ -383,11 +383,22 @@ export function MatchDetail({
           <Card hover={false} dense>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona/Dixon-Coles)</h2>
             {match.score_matrix ? (
-              <LazyMount height={360}>
-                <ScoreHeatmap matrix={match.score_matrix} home={match.home} away={match.away} highlightThriller={hasThriller} />
-              </LazyMount>
+              <>
+                <p className="mb-3 text-xs leading-5 text-[color:var(--text-muted)]">
+                  Siatka prawdopodobieństw każdego dokładnego wyniku, wyliczona z modelu
+                  Poissona/Dixon-Coles: wiersze = gole {match.home}, kolumny = gole {match.away}.
+                  Im jaśniejsza komórka, tym wyższa szansa na taki wynik.
+                </p>
+                <LazyMount height={360}>
+                  <ScoreHeatmap matrix={match.score_matrix} home={match.home} away={match.away} highlightThriller={hasThriller} />
+                </LazyMount>
+              </>
             ) : (
-              <EmptyState icon={BarChart3} title="Brak macierzy" description="Dostępna tylko dla meczów z pełnym modelem (np. MŚ)." />
+              <EmptyState
+                icon={BarChart3}
+                title="Brak macierzy"
+                description="Macierz pojawia się, gdy model ma wystarczające dane historyczne obu drużyn, by wyliczyć rozkład prawdopodobieństwa wyników (Poisson/Dixon-Coles) — niedostępna dla części lig i meczów."
+              />
             )}
           </Card>
         </motion.div>
