@@ -258,6 +258,7 @@ export interface OddsMarkets {
   home_win: number | null
   draw: number | null
   away_win: number | null
+  over15: number | null
   over25: number | null
   over35: number | null
   cs_32: number | null

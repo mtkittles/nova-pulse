@@ -43,14 +43,27 @@ export async function getStandingsWithMeta(code: string): Promise<StandingsWithM
   }
 }
 
-export async function getScorers(code: string): Promise<Scorer[]> {
-  if (!isOracleConfigured()) return []
+export interface ScorersWithMeta {
+  scorers: Scorer[]
+  // Ten sam wzorzec co StandingsWithMeta — sezon jeszcze nie wystartował,
+  // Oracle sygnalizuje to jawnie zamiast pustej/nieaktualnej listy.
+  seasonNotSeeded: boolean
+  season: string | null
+}
+
+export async function getScorers(code: string): Promise<ScorersWithMeta> {
+  if (!isOracleConfigured()) return { scorers: [], seasonNotSeeded: false, season: null }
   try {
     const data = await oracleFetch<unknown>(`/league/${encodeURIComponent(code)}/scorers`)
-    return adaptScorers(data)
+    const r = data && typeof data === "object" ? (data as Record<string, unknown>) : {}
+    return {
+      scorers: adaptScorers(data),
+      seasonNotSeeded: r.season_not_seeded === true,
+      season: r.season != null ? String(r.season) : null,
+    }
   } catch (err) {
     console.error("getScorers: Oracle niedostępne →", err)
-    return []
+    return { scorers: [], seasonNotSeeded: false, season: null }
   }
 }
 

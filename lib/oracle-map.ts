@@ -474,11 +474,19 @@ export function adaptForm(raw: unknown): TeamForm {
 
     const score = gf != null && ga != null ? `${gf}:${ga}` : m.score != null ? String(m.score) : undefined
     // Rynki: preferuj jawne pola Oracle; w razie braku policz z gf/ga.
+    // Realny kontrakt /team/{id}/form (form_by_market[]) używa "over_15" /
+    // "over_25" / "team_over_15" (bez kropki dziesiętnej w nazwie pola) —
+    // zweryfikowane bezpośrednim curl. Ta drużyna nie ma home_score/away_score
+    // ani gf/ga w tym payloadzie (tylko połączone "score"), więc total/gf tu
+    // zwykle i tak wychodzą null — bez jawnego pola te trzy flagi zawsze
+    // renderowały się jako "—" mimo że BTTS (osobne, zawsze jawne pole)
+    // działał poprawnie. Stare nazwy zostają jako fallback (kompatybilność
+    // z /match/{id}/detailed i trybem demo).
     const total = gf != null && ga != null ? gf + ga : null
     const btts = boolOrNull(m.btts) ?? (gf != null && ga != null ? gf > 0 && ga > 0 : null)
-    const over15 = boolOrNull(m.over_1_5 ?? m.over15) ?? (total != null ? total > 1 : null)
-    const over25 = boolOrNull(m.over_2_5 ?? m.over25) ?? (total != null ? total > 2 : null)
-    const teamOver15 = boolOrNull(m.team_over_1_5 ?? m.team_over15) ?? (gf != null ? gf > 1 : null)
+    const over15 = boolOrNull(m.over_15 ?? m.over_1_5 ?? m.over15) ?? (total != null ? total > 1 : null)
+    const over25 = boolOrNull(m.over_25 ?? m.over_2_5 ?? m.over25) ?? (total != null ? total > 2 : null)
+    const teamOver15 = boolOrNull(m.team_over_15 ?? m.team_over_1_5 ?? m.team_over15) ?? (gf != null ? gf > 1 : null)
     return {
       result: formResult(m),
       opponent: m.opponent != null ? String(m.opponent) : undefined,
@@ -862,19 +870,27 @@ function mapStatus(raw: unknown, kickoffUtc?: string): MatchStatus {
   return s ? "unknown" : "upcoming"
 }
 
-// Kursy rynków: czytaj 1:1 z r.odds_markets (klucze zgodne z Oracle). Brak → null.
+// Kursy rynków. Realny kontrakt Oracle (/match/{id}/detailed): pole "odds"
+// {home, draw, away, btts_yes, btts_no, over_1_5, over_2_5, over_3_5} —
+// zweryfikowane bezpośrednim curl (raporty/PODLACZENIE_odds_form_scorers.md),
+// NIE "odds_markets" z home_win/away_win/over25/over35, jak wcześniej
+// zakładał ten adapter (stąd zawsze same „—" na /mecz/{id}). Stary klucz
+// "odds_markets" zostaje jako fallback — tego kształtu używa tryb demo
+// (lib/demo-tips.ts, demoOddsMarkets()). Brak pola → null.
 export function adaptOddsMarkets(r: unknown): OddsMarkets | null {
-  const raw = (r as Record<string, unknown>)?.odds_markets
+  const rr = r as Record<string, unknown>
+  const raw = rr?.odds ?? rr?.odds_markets
   if (!raw || typeof raw !== "object") return null
   const o = raw as Record<string, number | null>
   return {
     btts_yes: o.btts_yes ?? null,
     btts_no: o.btts_no ?? null,
-    home_win: o.home_win ?? null,
+    home_win: o.home_win ?? o.home ?? null,
     draw: o.draw ?? null,
-    away_win: o.away_win ?? null,
-    over25: o.over25 ?? null,
-    over35: o.over35 ?? null,
+    away_win: o.away_win ?? o.away ?? null,
+    over15: o.over_1_5 ?? o.over15 ?? null,
+    over25: o.over25 ?? o.over_2_5 ?? null,
+    over35: o.over35 ?? o.over_3_5 ?? null,
     cs_32: o.cs_32 ?? null,
     cs_23: o.cs_23 ?? null,
     home_team_o15: o.home_team_o15 ?? null,

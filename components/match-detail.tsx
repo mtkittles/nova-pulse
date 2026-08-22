@@ -41,6 +41,7 @@ function chosenMarketKey(p?: MatchPrediction): keyof OddsMarkets | null {
   if (bt === "1" || (bt === "1x2" && side === "home")) return "home_win"
   if (bt === "x" || (bt === "1x2" && (side === "x" || side === "draw"))) return "draw"
   if (bt === "2" || (bt === "1x2" && side === "away")) return "away_win"
+  if (bt === "o15" || bt === "over15") return "over15"
   if (bt === "o25" || bt === "over25") return "over25"
   if (bt === "o35" || bt === "over35") return "over35"
   if (bt.includes("thril") || bt.includes("exact") || bt.includes("32") || bt.includes("23"))
@@ -54,6 +55,7 @@ const MARKET_CELLS: { key: keyof OddsMarkets; label: string; thriller?: boolean 
   { key: "home_win", label: "1 · Gospodarz" },
   { key: "draw", label: "X · Remis" },
   { key: "away_win", label: "2 · Gość" },
+  { key: "over15", label: "Over 1.5" },
   { key: "over25", label: "Over 2.5" },
   { key: "over35", label: "Over 3.5" },
   { key: "home_team_o15", label: "Gospodarz O1.5" },

@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Zap } from "lucide-react"
+import { Trophy, Zap } from "lucide-react"
 import type { Scorer } from "@/lib/extra-types"
 import { Skeleton } from "./ui/skeleton"
+import { EmptyState } from "./ui/empty-state"
 
 const norm = (s: string) => (s || "").toLowerCase().replace(/\s+/g, " ").trim()
 
@@ -24,14 +25,28 @@ export function TopScorers({
   const [rows, setRows] = useState<Scorer[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(false)
+  // Ten sam wzorzec co StandingsTable — sezon jeszcze nie wystartował, Oracle
+  // sygnalizuje to jawnie zamiast pustej/nieaktualnej listy.
+  const [seasonNotSeeded, setSeasonNotSeeded] = useState(false)
+  const [season, setSeason] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
     setLoading(true)
     fetch(`/api/league/${encodeURIComponent(leagueCode)}/scorers`)
       .then((r) => r.json())
-      .then((d) => active && setRows(Array.isArray(d?.scorers) ? d.scorers : []))
-      .catch(() => active && setRows([]))
+      .then((d) => {
+        if (!active) return
+        setSeasonNotSeeded(d?.season_not_seeded === true)
+        setSeason(d?.season != null ? String(d.season) : null)
+        setRows(Array.isArray(d?.scorers) ? d.scorers : [])
+      })
+      .catch(() => {
+        if (!active) return
+        setSeasonNotSeeded(false)
+        setSeason(null)
+        setRows([])
+      })
       .finally(() => active && setLoading(false))
     return () => {
       active = false
@@ -47,6 +62,19 @@ export function TopScorers({
             <Skeleton key={i} className="h-9 w-full" />
           ))}
         </div>
+      </section>
+    )
+  }
+
+  if (seasonNotSeeded) {
+    return (
+      <section className="mt-5">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Top strzelcy</h2>
+        <EmptyState
+          icon={Trophy}
+          title="Lista niedostępna"
+          description={season ? `Lista strzelców sezonu ${season} jeszcze niedostępna.` : "Lista strzelców tego sezonu jeszcze niedostępna."}
+        />
       </section>
     )
   }
