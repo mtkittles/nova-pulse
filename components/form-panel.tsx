@@ -68,12 +68,24 @@ function FormSparkline({ matches }: { matches: FormMatch[] }) {
   }))
   if (data.length < 2) return null
   return (
-    <div className="mb-1.5 h-12 w-full">
+    <div className="mb-1.5 h-16 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 6, right: 4, bottom: 6, left: 4 }}>
-          <YAxis hide domain={[-0.1, 1.1]} />
+          {/* domena ciasno wokół realnych wartości (0/0.5/1) — większa
+              amplituda pików niż poprzednie -0.1..1.1; type="linear" (nie
+              monotone) — ostre, kanciaste piki W/D/L zamiast wygładzonych
+              krzywych, które spłaszczały wrażenie zmienności formy. */}
+          <YAxis hide domain={[-0.05, 1.05]} />
           <Tooltip content={<SparkTooltip />} cursor={{ stroke: "rgba(255,255,255,0.15)" }} />
-          <Line type="monotone" dataKey="v" stroke="#58E6F5" strokeWidth={2} dot={<BttsDot />} isAnimationActive={false} />
+          <Line
+            type="linear"
+            dataKey="v"
+            stroke="#58E6F5"
+            strokeWidth={2.5}
+            dot={<BttsDot />}
+            activeDot={{ r: 5, fill: "#58E6F5", stroke: "#03050a", strokeWidth: 1.5 }}
+            isAnimationActive={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
