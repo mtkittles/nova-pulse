@@ -2,6 +2,8 @@ import "server-only"
 import type { MatchDetailed, MatchInfo } from "./extra-types"
 import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptMatch, adaptMatchDetailed } from "./oracle-map"
+import { isDemoDataOn } from "./demo-source"
+import { demoMatchDetailed } from "./demo-tips"
 
 function notFound(id: string): MatchInfo {
   return {
@@ -76,7 +78,7 @@ function mockDetailed(id: string): MatchDetailed {
     ],
     odds_markets: {
       btts_yes: 1.8, btts_no: 1.95, home_win: 2.1, draw: 3.3, away_win: 3.4,
-      over25: 1.95, over35: 3.1, cs_32: 21, cs_23: 26, home_team_o15: null, away_team_o15: null,
+      over15: 1.25, over25: 1.95, over35: 3.1, cs_32: 21, cs_23: 26, home_team_o15: null, away_team_o15: null,
     },
     home_metrics: { name: "FC Tokyo", gf_avg: 1.8, ga_avg: 1.1, btts_pct: 58, over15_pct: 82, clean_sheets_pct: 32, form_points: 73 },
     away_metrics: { name: "Cerezo Osaka", gf_avg: 1.5, ga_avg: 1.3, btts_pct: 61, over15_pct: 78, clean_sheets_pct: 26, form_points: 60 },
@@ -108,6 +110,14 @@ function mockDetailed(id: string): MatchDetailed {
 }
 
 export async function getMatchDetailed(id: string): Promise<MatchDetailed> {
+  // Tryb demo — ten sam adapter co produkcja (adaptMatchDetailed), tylko inne
+  // źródło bajtów. Naprawia "nie znaleziono meczu" na kartach z /typy, /live
+  // i landingu w trybie demo (karty i tak linkują do /mecz/{event_id}).
+  if (await isDemoDataOn()) {
+    const data = demoMatchDetailed(id)
+    if (data.found === false) return detailedNotFound(id)
+    return adaptMatchDetailed(data)
+  }
   if (!isOracleConfigured()) return mockDetailed(id)
   try {
     await ensureLeagueNames()

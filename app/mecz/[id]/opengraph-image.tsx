@@ -3,7 +3,7 @@ import { getMatchDetailed } from "@/lib/match"
 import { getMarketLabel } from "@/lib/market-label"
 import { fmtEdge, fmtQ } from "@/lib/format"
 
-export const alt = "Mecz — LUPUS BETS"
+export const alt = "Mecz — LUPUS PRED"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
@@ -82,7 +82,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 28 }}>
           <div style={{ display: "flex", gap: 12, fontWeight: 800, letterSpacing: -1 }}>
             <span>LUPUS</span>
-            <span style={{ color: "#58E6F5" }}>BETS</span>
+            <span style={{ color: "#58E6F5" }}>PRED</span>
           </div>
           <span style={{ color: "rgba(255,255,255,0.6)" }}>{m.league || "—"}</span>
         </div>

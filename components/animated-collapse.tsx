@@ -21,7 +21,7 @@ export function AnimatedCollapse({
     if (!el) return
     if (open) {
       setHeight(`${el.scrollHeight}px`)
-      const t = window.setTimeout(() => setHeight("auto"), 320)
+      const t = window.setTimeout(() => setHeight("auto"), 210)
       return () => window.clearTimeout(t)
     }
     // auto → konkretna wartość → 0 (żeby transition zadziałał)
@@ -32,7 +32,7 @@ export function AnimatedCollapse({
 
   return (
     <div
-      style={{ height, overflow: "hidden", transition: "height 0.3s ease, opacity 0.3s ease", opacity: open ? 1 : 0 }}
+      style={{ height, overflow: "hidden", transition: "height 0.2s ease, opacity 0.2s ease", opacity: open ? 1 : 0 }}
       className={className}
       aria-hidden={!open}
     >

@@ -1,42 +1,42 @@
 import Link from "next/link"
 import Image from "next/image"
 
-// Sygnet (głowa ogara) — nagłówek, favicon-zastępnik.
+// Sygnet (głowa wilka) — nagłówek, favicon-zastępnik.
 export function OgarMark({ size = 40 }: { size?: number }) {
   return (
     <Image
-      src="/brand/lupus-bets-mark.png"
+      src="/brand/wolf-icon.png"
       width={size}
       height={size}
-      alt="Lupus Bets"
+      alt="Lupus Pred"
       priority
       className="object-contain"
     />
   )
 }
 
-// Logo poziome — hero, share, emaile.
+// Pełny lockup (głowa + napis + tagline) — hero, share, emaile.
 export function OgarHorizontal({ height = 48 }: { height?: number }) {
   return (
     <Image
-      src="/brand/lupus-bets-horizontal.png"
-      width={Math.round(height * 4.5)}
+      src="/brand/lupus-pred-full.png"
+      width={height}
       height={height}
-      alt="Lupus Bets"
+      alt="Lupus Pred"
       priority
       className="object-contain"
     />
   )
 }
 
-// Logo pionowe — karty, social media.
+// Sam sygnet w większym rozmiarze — karty, social media.
 export function OgarStacked({ width = 200 }: { width?: number }) {
   return (
     <Image
-      src="/brand/lupus-bets-stacked.png"
+      src="/brand/wolf-icon.png"
       width={width}
-      height={Math.round(width * 1.1)}
-      alt="Lupus Bets"
+      height={width}
+      alt="Lupus Pred"
       priority
       className="object-contain"
     />
@@ -51,7 +51,7 @@ export function Brand({ href = "/" }: { href?: string }) {
         <OgarMark size={36} />
       </span>
       <span className="text-xl font-semibold tracking-tight text-white">
-        LUPUS <span className="text-[color:var(--accent)]">BETS</span>
+        LUPUS <span className="text-[color:var(--accent)]">PRED</span>
       </span>
     </Link>
   )

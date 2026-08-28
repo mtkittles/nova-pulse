@@ -19,12 +19,7 @@ export default async function LoginPage() {
   await createPendingToken(token)
 
   return (
-    <main className="grid min-h-screen place-items-center overflow-hidden bg-[var(--bg)] px-6 text-white">
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute left-[-120px] top-[-120px] h-96 w-96 rounded-full bg-[var(--glow-1)] blur-3xl" />
-        <div className="absolute right-[-120px] bottom-10 h-96 w-96 rounded-full bg-[var(--glow-2)] blur-3xl" />
-      </div>
-
+    <main className="grid min-h-screen place-items-center overflow-hidden px-6 text-white">
       <div className="w-full max-w-md">
         <Link
           href="/"

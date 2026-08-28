@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { RefreshCw, ShieldCheck } from "lucide-react"
+import { CheckCircle2, RefreshCw, ShieldCheck, XCircle } from "lucide-react"
 
 export function AdminPanel({ name }: { name: string }) {
   const [loading, setLoading] = useState(false)
@@ -55,13 +55,13 @@ export function AdminPanel({ name }: { name: string }) {
 
         {status && (
           <p
-            className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${
+            className={`mt-5 flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm ${
               status.ok
                 ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
                 : "border-rose-300/30 bg-rose-300/10 text-rose-200"
             }`}
           >
-            {status.ok ? "✅ " : "❌ "}
+            {status.ok ? <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden /> : <XCircle className="h-4 w-4 shrink-0" aria-hidden />}
             {status.text}
           </p>
         )}

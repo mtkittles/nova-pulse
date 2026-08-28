@@ -9,11 +9,17 @@ export function QRing({
   size = 56,
   stroke = 5,
   label = "Q",
+  delay = 0,
 }: {
   value: number | null // 0..100
   size?: number
   stroke?: number
   label?: string
+  // sekundy — rozjeżdża moment odpalenia animacji, gdy wiele pierścieni
+  // wchodzi w viewport naraz (gęsta lista kart): stroke-dashoffset wymaga
+  // repaintu, więc dużo jednoczesnych animacji w tej samej klatce daje
+  // zauważalny spadek FPS przy szybkim scrollu.
+  delay?: number
 }) {
   const has = value != null && Number.isFinite(value)
   const v = has ? Math.max(0, Math.min(100, value as number)) : 0
@@ -38,7 +44,7 @@ export function QRing({
           initial={{ strokeDashoffset: c }}
           whileInView={{ strokeDashoffset: c - (v / 100) * c }}
           viewport={{ once: true }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut", delay }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">

@@ -1,7 +1,15 @@
+"use client"
+
 import { qScoreColor } from "@/lib/design"
+import { useInViewOnce } from "@/hooks/use-scroll-animation"
 
 // QScoreRing — pierścień Q-Score. Kolor wg progów:
 // <50 szary · 50–70 żółty · 70–85 cyan · 85+ zielony.
+//
+// Dorysowuje się (stroke-dashoffset: pełny obwód → docelowy) przy wejściu
+// w viewport — ta sama konwencja obserwatora co ScrollReveal (threshold
+// 0.1, rootMargin -40px od dołu), tylko raz, bez JS-owego RAF (czysty
+// CSS transition na zmianę atrybutu).
 export function QScoreRing({
   value,
   size = 56,
@@ -17,13 +25,16 @@ export function QScoreRing({
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const color = qScoreColor(v)
-  const offset = c - (v / 100) * c
+  const targetOffset = c - (v / 100) * c
+
+  const [ref, drawn] = useInViewOnce<SVGCircleElement>()
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface-3)" strokeWidth={stroke} />
         <circle
+          ref={ref}
           cx={size / 2}
           cy={size / 2}
           r={r}
@@ -32,8 +43,8 @@ export function QScoreRing({
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={c}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 0.9s ease" }}
+          strokeDashoffset={drawn ? targetOffset : c}
+          style={{ transition: "stroke-dashoffset 500ms ease" }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">

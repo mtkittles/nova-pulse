@@ -1,4 +1,4 @@
-import { Trophy } from "lucide-react"
+import { Flame, Medal, Trophy } from "lucide-react"
 import { getUserRankings } from "@/lib/rankings"
 import { getSession } from "@/lib/auth"
 import { AppShell } from "@/components/app-shell"
@@ -7,9 +7,10 @@ import { LocalDateTime } from "@/components/local-time"
 import { ScrollReveal } from "@/components/scroll-reveal"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Ranking typerów", description: "Ranking najlepszych typerów społeczności Lupus Bets." }
+export const metadata = { title: "Ranking typerów", description: "Ranking najlepszych typerów społeczności Lupus Pred." }
 
-const MEDAL = ["🥇", "🥈", "🥉"]
+// kolory podium (gold / silver / bronze) — ta sama paleta co PODIUM_BG niżej
+const MEDAL_COLOR = ["#f4b852", "#a4b1be", "#ff7a50"]
 // subtelne tła dla podium (gold / silver / bronze)
 const PODIUM_BG = [
   "linear-gradient(90deg, rgba(244,184,82,0.14), transparent 70%)",
@@ -17,12 +18,15 @@ const PODIUM_BG = [
   "linear-gradient(90deg, rgba(255,122,80,0.12), transparent 70%)",
 ]
 
+function PodiumMedal({ place }: { place: number }) {
+  return <Medal className="h-5 w-5" style={{ color: MEDAL_COLOR[place] }} aria-label={`Miejsce ${place + 1}`} />
+}
+
 // null/undefined → "—" dla nowych pól
 const roiText = (roi: number | null) => (roi == null ? "—" : `${roi >= 0 ? "+" : ""}${(roi * 100).toFixed(1)}%`)
 const roiClass = (roi: number | null) =>
   roi == null ? "text-[color:var(--text-muted)]" : roi >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"
 const oddsText = (v: number | null) => (v == null ? "—" : v.toFixed(2))
-const streakText = (n: number | null) => (n != null && n > 0 ? `🔥 ${n}` : "—")
 
 export default async function RankingPage() {
   const [{ users, updated_at, error }, session] = await Promise.all([getUserRankings(), getSession()])
@@ -32,7 +36,7 @@ export default async function RankingPage() {
       <div className="mx-auto max-w-2xl lg:max-w-4xl">
         <header className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Ranking typerów</h1>
-          <p className="mt-2 text-[color:var(--text-secondary)]">Najlepsi użytkownicy społeczności Lupus Bets</p>
+          <p className="mt-2 text-[color:var(--text-secondary)]">Najlepsi użytkownicy społeczności Lupus Pred</p>
         </header>
 
         {error ? (
@@ -68,14 +72,25 @@ export default async function RankingPage() {
                       className="border-b border-[color:var(--border-soft)] transition last:border-0 hover:bg-[var(--surface-2)]"
                       style={i < 3 ? { backgroundImage: PODIUM_BG[i] } : undefined}
                     >
-                      <td className="px-3 py-3 text-center text-lg font-bold tnum">{i < 3 ? MEDAL[i] : <span className="text-[color:var(--text-muted)]">{i + 1}</span>}</td>
+                      <td className="px-3 py-3 text-center text-lg font-bold tnum">
+                        {i < 3 ? <PodiumMedal place={i} /> : <span className="text-[color:var(--text-muted)]">{i + 1}</span>}
+                      </td>
                       <td className="px-3 py-3 font-medium tnum">{u.display_id}</td>
                       <td className="px-3 py-3 text-center tnum text-[color:var(--text-secondary)]">{u.total_picks}</td>
                       <td className="px-3 py-3 text-center tnum text-[color:var(--text-secondary)]">{u.won_picks}</td>
                       <td className="px-3 py-3 text-center font-bold tnum text-[color:var(--cyan)]">{u.win_rate}%</td>
                       <td className={`px-3 py-3 text-right font-semibold tnum ${roiClass(u.roi)}`}>{roiText(u.roi)}</td>
                       <td className="px-3 py-3 text-right tnum text-[color:var(--text-secondary)]">{oddsText(u.avg_odds)}</td>
-                      <td className="px-3 py-3 text-right tnum">{streakText(u.current_streak)}</td>
+                      <td className="px-3 py-3 text-right tnum">
+                        {u.current_streak != null && u.current_streak > 0 ? (
+                          <span className="inline-flex items-center justify-end gap-1">
+                            <Flame className="h-3.5 w-3.5 text-[color:var(--warning)]" aria-hidden />
+                            {u.current_streak}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -91,12 +106,15 @@ export default async function RankingPage() {
                   style={i < 3 ? { backgroundImage: PODIUM_BG[i] } : undefined}
                 >
                   {u.current_streak != null && u.current_streak > 0 && (
-                    <span className="absolute right-3 top-3 rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-2 py-0.5 text-xs font-semibold">
-                      🔥 {u.current_streak}
+                    <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[var(--surface-2)] px-2 py-0.5 text-xs font-semibold">
+                      <Flame className="h-3.5 w-3.5 text-[color:var(--warning)]" aria-hidden />
+                      {u.current_streak}
                     </span>
                   )}
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold tnum">{i < 3 ? MEDAL[i] : <span className="text-[color:var(--text-muted)]">{i + 1}</span>}</span>
+                    <span className="text-lg font-bold tnum">
+                      {i < 3 ? <PodiumMedal place={i} /> : <span className="text-[color:var(--text-muted)]">{i + 1}</span>}
+                    </span>
                     <span className="font-medium tnum">{u.display_id}</span>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-center">

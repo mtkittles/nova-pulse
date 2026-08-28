@@ -50,7 +50,7 @@ export function AnimatedTabs({
               <motion.span
                 layoutId={`${groupId}-indicator`}
                 transition={spring}
-                className="absolute inset-0 -z-10 rounded-full bg-[var(--accent)]/15"
+                className="absolute inset-0 -z-10 rounded-full bg-[var(--accent)]/15 shadow-[0_0_0_3px_var(--cyan-soft)]"
               />
             )}
             {Icon && (

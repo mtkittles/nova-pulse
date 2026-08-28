@@ -88,6 +88,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           homeSide={homeTeam?.home_stats ?? null}
           awaySide={awayTeam?.away_stats ?? null}
           trackedKeys={trackedKeys}
+          loggedIn
+          isAdmin={session.isAdmin}
         />
       ) : (
         <div className="mx-auto grid min-h-[40vh] max-w-md place-items-center px-4">

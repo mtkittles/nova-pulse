@@ -3,6 +3,8 @@ import type { CalendarDay } from "./extra-types"
 import { isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptCalendar } from "./oracle-map"
 import { getDates } from "./dates"
+import { isDemoDataOn } from "./demo-source"
+import { demoCalendarDays } from "./demo-tips"
 
 // Dane testowe (mock) — kilka dni z różną liczbą typów, do podglądu bez Oracle.
 function mockCalendar(): CalendarDay[] {
@@ -33,6 +35,9 @@ function ymd(d: Date): string {
 }
 
 export async function getCalendar(fromArg?: string, toArg?: string): Promise<CalendarDay[]> {
+  // Tryb demo — liczniki muszą pochodzić z tego samego generatora co typy,
+  // inaczej /typy wybrałoby datę, dla której nie ma żadnych meczów.
+  if (await isDemoDataOn()) return demoCalendarDays()
   if (!isOracleConfigured()) return mockCalendar()
 
   // Oracle wymaga zakresu — domyślnie poprzedni miesiąc … +2 miesiące (pokrywa nawigację).

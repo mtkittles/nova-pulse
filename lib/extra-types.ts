@@ -258,6 +258,7 @@ export interface OddsMarkets {
   home_win: number | null
   draw: number | null
   away_win: number | null
+  over15: number | null
   over25: number | null
   over35: number | null
   cs_32: number | null
@@ -304,4 +305,43 @@ export interface MatchDetailed {
   score_matrix: number[][] | null
   home_scorers: Scorer[]
   away_scorers: Scorer[]
+
+  // — Elo + forma + λ Poissona — WYŁĄCZNIE tryb demo. Brak odpowiednika w
+  // kontrakcie Oracle, więc poza demo zawsze null/undefined — sekcje
+  // match/team-strength.tsx i match/score-matrix.tsx po prostu się nie renderują.
+  home_elo?: number | null
+  away_elo?: number | null
+  /** Najnowszy wynik pierwszy (index 0). */
+  home_form5?: ("W" | "D" | "L")[]
+  away_form5?: ("W" | "D" | "L")[]
+  /** λ (oczekiwana liczba goli) z modelu Poissona — wejście dla match/score-matrix.tsx. */
+  lambda_home?: number | null
+  lambda_away?: number | null
+}
+
+// — Komentarze pod meczami (public_api, tabela match_comments) —
+export type CommentStatus = "visible" | "hidden_auto" | "hidden_admin" | "deleted"
+
+export interface MatchComment {
+  id: string | number
+  event_id: string
+  telegram_id: string
+  username?: string | null
+  body: string
+  created_at: string
+  edited_at?: string | null
+  status?: CommentStatus
+  likes_count: number
+  /** Doklejane przez nasz route handler — porównanie telegram_id z sesją. */
+  is_mine?: boolean
+  /** Z Oracle (GET z X-Comment-Token) — TYLKO na własnych hidden_auto
+   *  wołającego. Backend celowo nie zwraca surowego `status`, żeby nie
+   *  ułatwiać sondowania kolejki moderacji — UI ma się opierać na tym polu,
+   *  nie zgadywać po `status`. */
+  pending_moderation?: boolean
+}
+
+export interface CommentsListResponse {
+  comments: MatchComment[]
+  total?: number
 }

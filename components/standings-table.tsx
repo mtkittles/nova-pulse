@@ -23,6 +23,11 @@ export function StandingsTable({
 }) {
   const [rows, setRows] = useState<StandingRow[] | null>(null)
   const [loading, setLoading] = useState(true)
+  // Sezon jeszcze nie wystartował / brak danych do wysiania tabeli — Oracle
+  // sygnalizuje to jawnie w season_not_seeded. Sprawdzane PRZED rows.length,
+  // bo standings może przyjść niepuste-ale-nieaktualne mimo tej flagi.
+  const [seasonNotSeeded, setSeasonNotSeeded] = useState(false)
+  const [season, setSeason] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -31,6 +36,8 @@ export function StandingsTable({
       .then((r) => r.json())
       .then((d) => {
         if (!active) return
+        setSeasonNotSeeded(d?.season_not_seeded === true)
+        setSeason(d?.season != null ? String(d.season) : null)
         const list: StandingRow[] = Array.isArray(d?.standings) ? d.standings : []
         // dedup po nazwie drużyny (zostaw pierwszy rekord)
         const seen = new Set<string>()
@@ -42,7 +49,12 @@ export function StandingsTable({
         })
         setRows(deduped)
       })
-      .catch(() => active && setRows([]))
+      .catch(() => {
+        if (!active) return
+        setSeasonNotSeeded(false)
+        setSeason(null)
+        setRows([])
+      })
       .finally(() => active && setLoading(false))
     return () => {
       active = false
@@ -56,6 +68,16 @@ export function StandingsTable({
           <Skeleton key={i} className="h-9 w-full" />
         ))}
       </div>
+    )
+  }
+
+  if (seasonNotSeeded) {
+    return (
+      <EmptyState
+        icon={Table2}
+        title="Tabela niedostępna"
+        description={season ? `Tabela sezonu ${season} jeszcze niedostępna.` : "Tabela tego sezonu jeszcze niedostępna."}
+      />
     )
   }
 

@@ -1,5 +1,5 @@
 import "server-only"
-import { getLeagueName } from "./leagues"
+import { getLeagueName, leagueCodeByName } from "./leagues"
 import type { BetType, RecommendationTier, Tip, TipsResponse } from "./types"
 import type {
   LeagueStat,
@@ -474,11 +474,19 @@ export function adaptForm(raw: unknown): TeamForm {
 
     const score = gf != null && ga != null ? `${gf}:${ga}` : m.score != null ? String(m.score) : undefined
     // Rynki: preferuj jawne pola Oracle; w razie braku policz z gf/ga.
+    // Realny kontrakt /team/{id}/form (form_by_market[]) używa "over_15" /
+    // "over_25" / "team_over_15" (bez kropki dziesiętnej w nazwie pola) —
+    // zweryfikowane bezpośrednim curl. Ta drużyna nie ma home_score/away_score
+    // ani gf/ga w tym payloadzie (tylko połączone "score"), więc total/gf tu
+    // zwykle i tak wychodzą null — bez jawnego pola te trzy flagi zawsze
+    // renderowały się jako "—" mimo że BTTS (osobne, zawsze jawne pole)
+    // działał poprawnie. Stare nazwy zostają jako fallback (kompatybilność
+    // z /match/{id}/detailed i trybem demo).
     const total = gf != null && ga != null ? gf + ga : null
     const btts = boolOrNull(m.btts) ?? (gf != null && ga != null ? gf > 0 && ga > 0 : null)
-    const over15 = boolOrNull(m.over_1_5 ?? m.over15) ?? (total != null ? total > 1 : null)
-    const over25 = boolOrNull(m.over_2_5 ?? m.over25) ?? (total != null ? total > 2 : null)
-    const teamOver15 = boolOrNull(m.team_over_1_5 ?? m.team_over15) ?? (gf != null ? gf > 1 : null)
+    const over15 = boolOrNull(m.over_15 ?? m.over_1_5 ?? m.over15) ?? (total != null ? total > 1 : null)
+    const over25 = boolOrNull(m.over_25 ?? m.over_2_5 ?? m.over25) ?? (total != null ? total > 2 : null)
+    const teamOver15 = boolOrNull(m.team_over_15 ?? m.team_over_1_5 ?? m.team_over15) ?? (gf != null ? gf > 1 : null)
     return {
       result: formResult(m),
       opponent: m.opponent != null ? String(m.opponent) : undefined,
@@ -862,19 +870,27 @@ function mapStatus(raw: unknown, kickoffUtc?: string): MatchStatus {
   return s ? "unknown" : "upcoming"
 }
 
-// Kursy rynków: czytaj 1:1 z r.odds_markets (klucze zgodne z Oracle). Brak → null.
+// Kursy rynków. Realny kontrakt Oracle (/match/{id}/detailed): pole "odds"
+// {home, draw, away, btts_yes, btts_no, over_1_5, over_2_5, over_3_5} —
+// zweryfikowane bezpośrednim curl (raporty/PODLACZENIE_odds_form_scorers.md),
+// NIE "odds_markets" z home_win/away_win/over25/over35, jak wcześniej
+// zakładał ten adapter (stąd zawsze same „—" na /mecz/{id}). Stary klucz
+// "odds_markets" zostaje jako fallback — tego kształtu używa tryb demo
+// (lib/demo-tips.ts, demoOddsMarkets()). Brak pola → null.
 export function adaptOddsMarkets(r: unknown): OddsMarkets | null {
-  const raw = (r as Record<string, unknown>)?.odds_markets
+  const rr = r as Record<string, unknown>
+  const raw = rr?.odds ?? rr?.odds_markets
   if (!raw || typeof raw !== "object") return null
   const o = raw as Record<string, number | null>
   return {
     btts_yes: o.btts_yes ?? null,
     btts_no: o.btts_no ?? null,
-    home_win: o.home_win ?? null,
+    home_win: o.home_win ?? o.home ?? null,
     draw: o.draw ?? null,
-    away_win: o.away_win ?? null,
-    over25: o.over25 ?? null,
-    over35: o.over35 ?? null,
+    away_win: o.away_win ?? o.away ?? null,
+    over15: o.over_1_5 ?? o.over15 ?? null,
+    over25: o.over25 ?? o.over_2_5 ?? null,
+    over35: o.over35 ?? o.over_3_5 ?? null,
     cs_32: o.cs_32 ?? null,
     cs_23: o.cs_23 ?? null,
     home_team_o15: o.home_team_o15 ?? null,
@@ -895,7 +911,17 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
       ? (m.predictions as unknown[])
       : []
 
-  const rawH2h = Array.isArray(r.h2h) ? (r.h2h as unknown[]) : Array.isArray(m.h2h) ? (m.h2h as unknown[]) : []
+  // Nowy kształt Oracle: r.h2h to OBIEKT { count, btts_pct, ..., matches: [...] },
+  // nie płaska tablica — lista jest zagnieżdżona pod .matches. Stary kształt
+  // (r.h2h jako tablica, wciąż używany w trybie demo — lib/demo-tips.ts) zostaje
+  // pierwszym sprawdzanym wariantem dla kompatybilności wstecznej.
+  const rawH2h = Array.isArray(r.h2h)
+    ? (r.h2h as unknown[])
+    : Array.isArray(rec(r.h2h).matches)
+      ? (rec(r.h2h).matches as unknown[])
+      : Array.isArray(m.h2h)
+        ? (m.h2h as unknown[])
+        : []
   const h2h_matches: H2HMatch[] = rawH2h.map((x) => {
     const o = rec(x)
     return {
@@ -908,6 +934,13 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
 
   const predictions = (preds as unknown[]).map(adaptPrediction)
 
+  // Oracle nie zwraca już osobnego pola z kodem ligi w /detailed — m.league to
+  // teraz pełna nazwa ("Major League Soccer"), NIE kod ("MLS"). Wpisanie jej
+  // wprost jako leagueCode psuło /league/{code}/standings i formę drużyn (kod
+  // z pełną spacjowaną nazwą nigdy nie trafi w Oracle). Mapujemy przez
+  // leagueCodeByName (lib/leagues.ts) zanim odpadniemy do samej nazwy.
+  const leagueCode = String(m.league_code ?? r.league_code ?? leagueCodeByName(String(m.league ?? "")) ?? "")
+
   return {
     found: Boolean(found),
     event_id: (r.af_fixture_id ?? m.af_fixture_id ?? r.event_id ?? m.event_id ?? m.fixture_id ?? m.match_id ?? m.id ?? "") as string | number,
@@ -915,16 +948,19 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
     away,
     homeLogo: pickLogo(m.home_team_logo ?? m.home_logo),
     awayLogo: pickLogo(m.away_team_logo ?? m.away_logo),
-    league: getLeagueName(String(m.league_code ?? r.league_code ?? m.league ?? "")),
-    leagueCode: String(m.league_code ?? r.league_code ?? m.league ?? ""),
+    league: leagueCode ? getLeagueName(leagueCode) : String(m.league ?? "—"),
+    leagueCode,
     kickoff_utc: normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date),
     stadium: m.stadium != null ? String(m.stadium) : m.venue != null ? String(m.venue) : null,
     status: mapStatus(m.status ?? r.status, normalizeIso(m.match_date ?? m.kickoff_utc ?? m.date)),
     // Wynik końcowy (źródło prawdy po meczu) — defensywnie z wielu nazw pól.
     home_score: numOrNull(m.home_score ?? m.actual_home_score ?? m.final_home_score ?? r.home_score ?? r.actual_home_score),
     away_score: numOrNull(m.away_score ?? m.actual_away_score ?? m.final_away_score ?? r.away_score ?? r.actual_away_score),
-    home_id: pickId(m, ["home_id", "home_team_id", "homeId"]),
-    away_id: pickId(m, ["away_id", "away_team_id", "awayId"]),
+    // Nowy kształt Oracle trzyma home_team_id/away_team_id na najwyższym
+    // poziomie odpowiedzi (obok "match"), nie wewnątrz r.match — stąd druga
+    // próba na `r`, gdy `m` (zagnieżdżony "match") ich nie ma.
+    home_id: pickId(m, ["home_id", "home_team_id", "homeId"]) ?? pickId(r, ["home_id", "home_team_id", "homeId"]),
+    away_id: pickId(m, ["away_id", "away_team_id", "awayId"]) ?? pickId(r, ["away_id", "away_team_id", "awayId"]),
     predictions,
     odds_markets: adaptOddsMarkets(r),
     home_metrics: teamMetrics(r.home_stats ?? m.home_stats ?? r.home ?? m.home, home),
@@ -949,9 +985,29 @@ export function adaptMatchDetailed(raw: unknown): MatchDetailed {
       r.score_matrix ?? m.score_matrix ?? r.scoreline_matrix ?? r.dixon_coles_matrix,
       adaptScoreDist(r.score_distribution ?? r.score_dist ?? m.score_distribution),
     ),
-    home_scorers: adaptScorers(r.home_scorers ?? r.home_top_scorers ?? rec(r.home).scorers),
-    away_scorers: adaptScorers(r.away_scorers ?? r.away_top_scorers ?? rec(r.away).scorers),
+    // Nowy kształt: strzelcy pod r.scorers.{home,away} (stare pola zostają
+    // jako pierwszeństwo dla kompatybilności wstecznej, np. trybu demo).
+    home_scorers: adaptScorers(r.home_scorers ?? r.home_top_scorers ?? rec(r.home).scorers ?? rec(r.scorers).home),
+    away_scorers: adaptScorers(r.away_scorers ?? r.away_top_scorers ?? rec(r.away).scorers ?? rec(r.scorers).away),
+    home_elo: numOrNull(r.home_elo),
+    away_elo: numOrNull(r.away_elo),
+    home_form5: form5OrUndefined(r.home_form5),
+    away_form5: form5OrUndefined(r.away_form5),
+    lambda_home: numOrNull(r.lambda_home),
+    lambda_away: numOrNull(r.lambda_away),
   }
+}
+
+// Sekwencja W/D/L (najnowszy pierwszy) — akceptuje tablicę liter/słów. Brak/puste → undefined
+// (nie pusta tablica), żeby UI mogło łatwo rozróżnić "brak danych" od "0 meczów".
+function form5OrUndefined(raw: unknown): ("W" | "D" | "L")[] | undefined {
+  if (!Array.isArray(raw) || raw.length === 0) return undefined
+  const out: ("W" | "D" | "L")[] = []
+  for (const v of raw) {
+    const c = String(v ?? "").trim().toUpperCase()[0]
+    if (c === "W" || c === "D" || c === "L") out.push(c)
+  }
+  return out.length > 0 ? out : undefined
 }
 
 // ——— kupony użytkownika ———

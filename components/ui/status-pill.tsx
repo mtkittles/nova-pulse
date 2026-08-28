@@ -15,7 +15,7 @@ export function StatusPill({ status, className = "" }: { status: PillStatus; cla
   const { tone, label } = MAP[status]
   return (
     <Badge tone={tone} className={className}>
-      {status === "LIVE" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--danger)]" />}
+      {status === "LIVE" && <span className="live-glow h-1.5 w-1.5 rounded-full bg-[var(--danger)]" />}
       {status === "WON" && "✓ "}
       {status === "LOST" && "✗ "}
       {label}

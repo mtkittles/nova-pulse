@@ -46,19 +46,46 @@ function SparkTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   )
 }
 
+// Kolor kropki na sparkline = wynik rynku BTTS w tym meczu (nie forma W/D/L,
+// która już ma własną linię/kwadraty obok) — tak żeby wzorzec BTTS był
+// widoczny na pierwszy rzut oka, bez scrollowania do listy meczów pod spodem.
+const BTTS_DOT_COLOR = { true: "#34d399", false: "#fb7185", unknown: "rgba(255,255,255,0.35)" } as const
+
+function bttsDotColor(btts: boolean | null | undefined): string {
+  return btts == null ? BTTS_DOT_COLOR.unknown : btts ? BTTS_DOT_COLOR.true : BTTS_DOT_COLOR.false
+}
+
+function BttsDot({ cx, cy, payload }: { cx?: number; cy?: number; payload?: { btts: boolean | null | undefined } }) {
+  if (cx == null || cy == null) return null
+  return <circle cx={cx} cy={cy} r={3.5} fill={bttsDotColor(payload?.btts)} stroke="#03050a" strokeWidth={1} />
+}
+
 function FormSparkline({ matches }: { matches: FormMatch[] }) {
   const data = [...matches].reverse().map((m) => ({
     v: m.result === "W" ? 1 : m.result === "D" ? 0.5 : 0,
+    btts: m.btts,
     label: `${m.date ? m.date.slice(5, 10) : "—"} ${m.result}${m.opponent ? ` vs ${m.opponent}` : ""}${m.score ? ` ${m.score}` : ""}`,
   }))
   if (data.length < 2) return null
   return (
-    <div className="mb-3 h-12 w-full">
+    <div className="mb-1.5 h-16 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 6, right: 4, bottom: 6, left: 4 }}>
-          <YAxis hide domain={[-0.1, 1.1]} />
+          {/* domena ciasno wokół realnych wartości (0/0.5/1) — większa
+              amplituda pików niż poprzednie -0.1..1.1; type="linear" (nie
+              monotone) — ostre, kanciaste piki W/D/L zamiast wygładzonych
+              krzywych, które spłaszczały wrażenie zmienności formy. */}
+          <YAxis hide domain={[-0.05, 1.05]} />
           <Tooltip content={<SparkTooltip />} cursor={{ stroke: "rgba(255,255,255,0.15)" }} />
-          <Line type="monotone" dataKey="v" stroke="#58E6F5" strokeWidth={2} dot={false} isAnimationActive={false} />
+          <Line
+            type="linear"
+            dataKey="v"
+            stroke="#58E6F5"
+            strokeWidth={2.5}
+            dot={<BttsDot />}
+            activeDot={{ r: 5, fill: "#58E6F5", stroke: "#03050a", strokeWidth: 1.5 }}
+            isAnimationActive={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -158,8 +185,16 @@ export function FormPanel({ teamId, teamName }: { teamId: string | number | null
                 })}
               </div>
 
-              {/* sparkline trendu formy (W=1/D=0.5/L=0) */}
+              {/* sparkline trendu formy (W=1/D=0.5/L=0), kropki = wynik BTTS */}
               <FormSparkline matches={form.matches} />
+              <div className="mb-3 flex items-center gap-3 text-[10px] text-white/45">
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full" style={{ background: BTTS_DOT_COLOR.true }} /> BTTS tak
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full" style={{ background: BTTS_DOT_COLOR.false }} /> BTTS nie
+                </span>
+              </div>
 
               {/* podsumowanie rynków z aktualnego zakresu (5/10/15) */}
               <div className="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-xs">

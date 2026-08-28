@@ -10,6 +10,7 @@ import { FormSquares } from "./form-squares"
 import { TeamFormTable } from "./team-form-table"
 import { TeamSplitStats } from "./team-split-stats"
 import { AnimatedTabs, TabPanel } from "./ui/tabs"
+import { EmptyState } from "./ui/empty-state"
 
 const TABS = ["stats", "form", "fixtures", "scorers"] as const
 type Tab = (typeof TABS)[number]
@@ -151,36 +152,43 @@ export function TeamPage({ team, upcoming }: { team: TeamSeason; upcoming: Upcom
       />
 
       <TabPanel tabKey={tab} direction={dir}>
-        {tab === "stats" && (
-          <div>
-            <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Stat label="Mecze" value={`${team.played}`} />
-              <Stat label="Bramki" value={`${team.gf}:${team.ga}`} />
-              <Stat label="BTTS" value={pctTxt(team.btts_pct)} />
-              <Stat label="Over 2.5" value={pctTxt(team.over25_pct)} />
-            </div>
-
-            <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-              <div className="mb-2 flex justify-between text-sm">
-                <span className="text-emerald-300">{team.wins} W</span>
-                <span className="text-amber-200">{team.draws} R</span>
-                <span className="text-rose-300">{team.losses} P</span>
-              </div>
-              <div className="flex h-3 overflow-hidden rounded-full bg-white/10">
-                <span className="bg-emerald-400/90" style={{ width: `${wPct}%` }} />
-                <span className="bg-amber-300/70" style={{ width: `${dPct}%` }} />
-                <span className="bg-rose-400/90" style={{ width: `${lPct}%` }} />
-              </div>
-            </div>
-
-            <h3 className="mb-3 text-lg font-semibold">Dom vs Wyjazd</h3>
-            <TeamSplitStats
-              teamId={team.team_id}
-              fallbackHome={team.home_stats}
-              fallbackAway={team.away_stats}
+        {tab === "stats" &&
+          (team.played === 0 ? (
+            <EmptyState
+              icon={CalendarClock}
+              title="Sezon jeszcze się nie rozpoczął"
+              description="Ta drużyna nie rozegrała jeszcze żadnego meczu w bieżącym sezonie — statystyki i wykresy pojawią się po pierwszych wynikach."
             />
-          </div>
-        )}
+          ) : (
+            <div>
+              <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Stat label="Mecze" value={`${team.played}`} />
+                <Stat label="Bramki" value={`${team.gf}:${team.ga}`} />
+                <Stat label="BTTS" value={pctTxt(team.btts_pct)} />
+                <Stat label="Over 2.5" value={pctTxt(team.over25_pct)} />
+              </div>
+
+              <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <div className="mb-2 flex justify-between text-sm">
+                  <span className="text-emerald-300">{team.wins} W</span>
+                  <span className="text-amber-200">{team.draws} R</span>
+                  <span className="text-rose-300">{team.losses} P</span>
+                </div>
+                <div className="flex h-3 overflow-hidden rounded-full bg-white/10">
+                  <span className="bg-emerald-400/90" style={{ width: `${wPct}%` }} />
+                  <span className="bg-amber-300/70" style={{ width: `${dPct}%` }} />
+                  <span className="bg-rose-400/90" style={{ width: `${lPct}%` }} />
+                </div>
+              </div>
+
+              <h3 className="mb-3 text-lg font-semibold">Dom vs Wyjazd</h3>
+              <TeamSplitStats
+                teamId={team.team_id}
+                fallbackHome={team.home_stats}
+                fallbackAway={team.away_stats}
+              />
+            </div>
+          ))}
 
         {tab === "form" && <TeamFormTable teamId={team.team_id} teamName={team.name} />}
 

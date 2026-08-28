@@ -103,7 +103,15 @@ export default function TipCard({
   // wariant zablokowany (anonim) — mecz widoczny, ale typ/kurs/Q-Score za logowaniem.
   // W demo z odblokowanym premium NIE pokazuj kłódki — pełne dane dla testera.
   if (locked && !DEMO_UNLOCK_PREMIUM) {
-    const lockedRight = liveOn && live ? `🔴 ${live.home_score}:${live.away_score}` : formatKickoff(tip.kickoff_utc)
+    const lockedRight =
+      liveOn && live ? (
+        <span className="inline-flex items-center gap-1.5">
+          <span className="live-glow h-1.5 w-1.5 rounded-full bg-[var(--danger)]" aria-hidden />
+          {live.home_score}:{live.away_score}
+        </span>
+      ) : (
+        formatKickoff(tip.kickoff_utc)
+      )
     return (
       <article className="relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-white/12 bg-white/[0.055] p-6 shadow-2xl shadow-black/20 backdrop-blur">
         <div className="absolute right-[-40px] top-[-40px] h-28 w-28 rounded-full bg-[var(--glow-1)] blur-2xl" />
@@ -139,7 +147,9 @@ export default function TipCard({
   // prawy górny róg: status + wynik zależnie od stanu meczu
   const rightNode =
     status === "live" ? (
-      <span className="font-bold text-rose-300">🔴 LIVE {minuteTxt}</span>
+      <span className="inline-flex items-center gap-1.5 font-bold text-rose-300">
+        <span className="live-glow h-1.5 w-1.5 rounded-full bg-[var(--danger)]" /> LIVE {minuteTxt}
+      </span>
     ) : status === "halftime" ? (
       <span className="font-bold text-amber-300">🟡 PRZERWA</span>
     ) : finished ? (
@@ -213,17 +223,17 @@ export default function TipCard({
       <div className="relative mt-4 grid grid-cols-3 gap-3 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <MetricLabel label="Szansa modelu" hint={METRIC_HINTS.model} className="text-xs text-white/60" />
-          <p className="mt-1 text-xl font-semibold" style={{ color: probColor }}>
+          <p className="num-flip mt-1 text-xl font-semibold" style={{ color: probColor }}>
             {fmtProb(tip.model_prob)}
           </p>
         </div>
         <div className="rounded-2xl border border-[color:var(--accent)]/40 bg-[var(--accent)]/10 p-3">
           <MetricLabel label="Kurs" hint={METRIC_HINTS.odds} className="text-xs text-white/70" />
-          <p className="mt-1 text-2xl font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
+          <p className="num-flip mt-1 text-2xl font-bold text-[color:var(--accent)]">{fmtOdds(tip.odds)}</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
           <MetricLabel label="Edge" hint={METRIC_HINTS.edge} className="text-xs text-white/60" />
-          <p className={`mt-1 text-xl font-semibold ${edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
+          <p className={`num-flip mt-1 text-xl font-semibold ${edgeMuted ? "text-[color:var(--text-muted)]" : (tip.edge as number) >= 0 ? "text-[color:var(--success)]" : "text-[color:var(--danger)]"}`}>
             {fmtEdge(tip.edge)}
           </p>
         </div>

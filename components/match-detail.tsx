@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, BarChart3, ChevronDown, MapPin } from "lucide-react"
 import type { MatchDetailed, MatchPrediction, OddsMarkets, SideStats } from "@/lib/extra-types"
@@ -27,6 +27,10 @@ import { StatusPill } from "./ui/status-pill"
 import { EmptyState } from "./ui/empty-state"
 import { QScoreRing } from "./ui/q-score-ring"
 import { MetricLabel, METRIC_HINTS } from "./ui/metric-tooltip"
+import { TeamStrength } from "./match/team-strength"
+import { ScoreMatrix } from "./match/score-matrix"
+import { H2HPanel } from "./match/h2h-panel"
+import { CommentsPanel } from "./match/comments-panel"
 
 // rynek wybrany przez bota → klucz siatki kursów (do podświetlenia)
 function chosenMarketKey(p?: MatchPrediction): keyof OddsMarkets | null {
@@ -37,6 +41,7 @@ function chosenMarketKey(p?: MatchPrediction): keyof OddsMarkets | null {
   if (bt === "1" || (bt === "1x2" && side === "home")) return "home_win"
   if (bt === "x" || (bt === "1x2" && (side === "x" || side === "draw"))) return "draw"
   if (bt === "2" || (bt === "1x2" && side === "away")) return "away_win"
+  if (bt === "o15" || bt === "over15") return "over15"
   if (bt === "o25" || bt === "over25") return "over25"
   if (bt === "o35" || bt === "over35") return "over35"
   if (bt.includes("thril") || bt.includes("exact") || bt.includes("32") || bt.includes("23"))
@@ -50,6 +55,7 @@ const MARKET_CELLS: { key: keyof OddsMarkets; label: string; thriller?: boolean 
   { key: "home_win", label: "1 · Gospodarz" },
   { key: "draw", label: "X · Remis" },
   { key: "away_win", label: "2 · Gość" },
+  { key: "over15", label: "Over 1.5" },
   { key: "over25", label: "Over 2.5" },
   { key: "over35", label: "Over 3.5" },
   { key: "home_team_o15", label: "Gospodarz O1.5" },
@@ -68,11 +74,15 @@ export function MatchDetail({
   homeSide,
   awaySide,
   trackedKeys = [],
+  loggedIn = false,
+  isAdmin = false,
 }: {
   match: MatchDetailed
   homeSide?: SideStats | null
   awaySide?: SideStats | null
   trackedKeys?: string[]
+  loggedIn?: boolean
+  isAdmin?: boolean
 }) {
   const trackedSet = new Set(trackedKeys)
   const trackDataFor = (p: MatchPrediction): TrackTipData => ({
@@ -129,28 +139,28 @@ export function MatchDetail({
 
   const om = match.odds_markets
 
-  // zakładki
+  // zakładki — MeczTabs jest sticky (top-16), więc raz odsłonięty zostaje
+  // widoczny pod headerem sam z siebie. Żadnego ręcznego przewijania przy
+  // zmianie zakładki: poprzednia wersja skakała do scoreboardu (górny
+  // brzeg strony) przy KAŻDYM kliknięciu, co w praktyce wyglądało jak
+  // "reset scrolla na samą górę" niezależnie od tego, gdzie user czytał.
   const [tab, setTab] = useState<MeczTab>("prognoza")
-  const scoreRef = useRef<HTMLDivElement>(null)
-  const changeTab = (t: MeczTab) => {
-    setTab(t)
-    if (typeof window !== "undefined") {
-      const rect = scoreRef.current?.getBoundingClientRect()
-      const top = rect ? rect.top + window.scrollY - 72 : 0
-      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" })
-    }
-  }
+  const changeTab = (t: MeczTab) => setTab(t)
+  // Licznik w pigułce zakładki — podbijany przez CommentsPanel po każdym
+  // pobraniu listy, żyje tu (nie w samym panelu), więc przetrwa odmontowanie
+  // panelu przy przełączeniu na inną zakładkę.
+  const [commentsCount, setCommentsCount] = useState<number | undefined>(undefined)
   // płynny fade między zakładkami (bez slide → brak layout shift na mobile)
   const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3 } }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-16 lg:max-w-5xl">
+    <div className="mx-auto max-w-2xl pb-16 lg:max-w-5xl">
       <Link href="/typy" className="mb-5 inline-flex items-center gap-2 text-sm text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]">
         <ArrowLeft className="h-4 w-4" /> Wróć do typów
       </Link>
 
       {/* [A] SCOREBOARD — zawsze nad zakładkami */}
-      <div ref={scoreRef}>
+      <div>
         <Card hover={false}>
           <div className="flex items-center justify-between gap-3">
             <span className="min-w-0 truncate text-xs uppercase tracking-[0.16em] text-[color:var(--text-secondary)]">{leagueText}</span>
@@ -163,26 +173,26 @@ export function MatchDetail({
             )}
           </div>
 
-          <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <div className="flex flex-col items-center gap-2 sm:items-end">
+          <div className="-mx-2 mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-hidden sm:mx-0 sm:gap-3">
+            <div className="flex w-full min-w-0 flex-col items-center gap-2 sm:items-end">
               <TeamBadge teamName={match.home} logoUrl={match.homeLogo} size="md" />
-              <span className="text-center text-base font-semibold leading-tight sm:text-right">{match.home}</span>
+              <span className="line-clamp-2 w-full [text-wrap:balance] break-words text-center text-sm font-semibold leading-tight sm:text-right sm:text-base">{match.home}</span>
             </div>
-            <div className="flex flex-col items-center px-2">
+            <div className="flex max-w-[88px] flex-col items-center px-1 sm:max-w-none sm:px-2">
               {liveOn || finished ? (
                 <span className={`text-3xl font-extrabold tnum ${liveOn ? "text-[color:var(--danger)]" : "text-[color:var(--text-primary)]"}`}>
                   {hasScore ? `${homeScore} : ${awayScore}` : "—"}
                 </span>
               ) : (
-                <span className="whitespace-nowrap text-sm font-medium text-[color:var(--text-secondary)]">
+                <span className="text-center text-xs font-medium text-[color:var(--text-secondary)] sm:whitespace-nowrap sm:text-sm">
                   {formatKickoff(match.kickoff_utc)}
                 </span>
               )}
               {liveOn && <span className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--danger)]">{minuteTxt}</span>}
             </div>
-            <div className="flex flex-col items-center gap-2 sm:items-start">
+            <div className="flex w-full min-w-0 flex-col items-center gap-2 sm:items-start">
               <TeamBadge teamName={match.away} logoUrl={match.awayLogo} size="md" />
-              <span className="text-center text-base font-semibold leading-tight sm:text-left">{match.away}</span>
+              <span className="line-clamp-2 w-full [text-wrap:balance] break-words text-center text-sm font-semibold leading-tight sm:text-left sm:text-base">{match.away}</span>
             </div>
           </div>
 
@@ -194,8 +204,45 @@ export function MatchDetail({
         </Card>
       </div>
 
+      {/* [A2] ELO + FORMA / MACIERZ / H2H — wyłącznie tryb demo. Bramka jednym
+          sygnałem: λ Poissona (lambda_home/away) nie ma odpowiednika w
+          kontrakcie Oracle, więc jego obecność jednoznacznie znaczy "to demo".
+          H2H per se ISTNIEJE też w produkcji (zakładka H2H niżej) — bez tej
+          wspólnej bramki nowy, kompaktowy H2HPanel wyciekłby też na prawdziwe
+          mecze, czego to zadanie nie obejmuje. Kolejność wg układu strony:
+          kontekst siły drużyn od razu → macierz (najbardziej wizualna) →
+          H2H (dowód historyczny) na dole. */}
+      {match.lambda_home != null && match.lambda_away != null && (
+        <>
+          {match.home_elo != null && match.away_elo != null && match.home_form5 && match.away_form5 && match.home_metrics && match.away_metrics && (
+            <div className="mt-5">
+              <TeamStrength
+                homeTeam={match.home}
+                awayTeam={match.away}
+                homeElo={match.home_elo}
+                awayElo={match.away_elo}
+                homeForm5={match.home_form5}
+                awayForm5={match.away_form5}
+                homeGfAvg={match.home_metrics.gf_avg}
+                awayGfAvg={match.away_metrics.gf_avg}
+              />
+            </div>
+          )}
+
+          <div className="mt-5">
+            <ScoreMatrix lambdaHome={match.lambda_home} lambdaAway={match.lambda_away} />
+          </div>
+
+          {match.h2h_matches.length > 0 && (
+            <div className="mt-5">
+              <H2HPanel matches={match.h2h_matches} homeTeam={match.home} />
+            </div>
+          )}
+        </>
+      )}
+
       {/* PASEK ZAKŁADEK (sticky pod headerem) */}
-      <MeczTabs active={tab} onChange={changeTab} h2hCount={match.h2h_matches.length} />
+      <MeczTabs active={tab} onChange={changeTab} h2hCount={match.h2h_matches.length} commentsCount={commentsCount} />
 
       {/* ── PROGNOZA: [B] [H] [C] ── */}
       {tab === "prognoza" && (
@@ -281,7 +328,7 @@ export function MatchDetail({
           {best?.q_score_breakdown && <QScoreBreakdownCard breakdown={best.q_score_breakdown} />}
 
           {/* [C] KURSY RYNKÓW */}
-          <Card hover={false}>
+          <Card hover={false} dense>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Kursy rynków</h2>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {MARKET_CELLS.map((c) => {
@@ -335,14 +382,25 @@ export function MatchDetail({
           )}
 
           {/* [D] HEATMAPA */}
-          <Card hover={false}>
+          <Card hover={false} dense>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Macierz wyników (model Poissona/Dixon-Coles)</h2>
             {match.score_matrix ? (
-              <LazyMount height={360}>
-                <ScoreHeatmap matrix={match.score_matrix} home={match.home} away={match.away} highlightThriller={hasThriller} />
-              </LazyMount>
+              <>
+                <p className="mb-3 text-xs leading-5 text-[color:var(--text-muted)]">
+                  Siatka prawdopodobieństw każdego dokładnego wyniku, wyliczona z modelu
+                  Poissona/Dixon-Coles: wiersze = gole {match.home}, kolumny = gole {match.away}.
+                  Im jaśniejsza komórka, tym wyższa szansa na taki wynik.
+                </p>
+                <LazyMount height={360}>
+                  <ScoreHeatmap matrix={match.score_matrix} home={match.home} away={match.away} highlightThriller={hasThriller} />
+                </LazyMount>
+              </>
             ) : (
-              <EmptyState icon={BarChart3} title="Brak macierzy" description="Dostępna tylko dla meczów z pełnym modelem (np. MŚ)." />
+              <EmptyState
+                icon={BarChart3}
+                title="Brak macierzy"
+                description="Macierz pojawia się, gdy model ma wystarczające dane historyczne obu drużyn, by wyliczyć rozkład prawdopodobieństwa wyników (Poisson/Dixon-Coles) — niedostępna dla części lig i meczów."
+              />
             )}
           </Card>
         </motion.div>
@@ -370,7 +428,7 @@ export function MatchDetail({
       {/* ── H2H: [F] ── */}
       {tab === "h2h" && (
         <motion.div key="h2h" {...fade} className="space-y-5">
-          <Card hover={false}>
+          <Card hover={false} dense>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--text-secondary)]">Ostatnie spotkania (H2H)</h2>
             {match.h2h_matches.length === 0 ? (
               <EmptyState icon={BarChart3} title="Brak historycznych spotkań" description="Te drużyny nie grały ze sobą w dostępnym zakresie danych." />
@@ -415,6 +473,18 @@ export function MatchDetail({
               </div>
             )}
           </Card>
+        </motion.div>
+      )}
+
+      {/* ── KOMENTARZE ── */}
+      {tab === "komentarze" && (
+        <motion.div key="komentarze" {...fade}>
+          <CommentsPanel
+            eventId={String(match.event_id)}
+            loggedIn={loggedIn}
+            isAdmin={isAdmin}
+            onCountChange={setCommentsCount}
+          />
         </motion.div>
       )}
     </div>

@@ -2,6 +2,8 @@ import "server-only"
 import type { TeamSeason, UpcomingMatch } from "./extra-types"
 import { ensureLeagueNames, isOracleConfigured, oracleFetch } from "./oracle"
 import { adaptTeam, adaptUpcoming } from "./oracle-map"
+import { isDemoDataOn } from "./demo-source"
+import { demoTeamSeason } from "./demo-tips"
 
 function mockTeam(id: string): TeamSeason {
   return {
@@ -66,6 +68,9 @@ function mockUpcoming(): UpcomingMatch[] {
 }
 
 export async function getTeam(id: string): Promise<TeamSeason | null> {
+  // Tryb demo — zasila "Forma — ostatnie mecze" (FormPanel) na stronie meczu;
+  // ten sam adapter co produkcja (adaptTeam), inne źródło bajtów.
+  if (await isDemoDataOn()) return adaptTeam(demoTeamSeason(id))
   if (!isOracleConfigured()) return mockTeam(id)
   try {
     const data = await oracleFetch<unknown>(`/team/${encodeURIComponent(id)}`)

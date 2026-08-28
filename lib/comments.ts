@@ -1,0 +1,147 @@
+import "server-only"
+import { mintCommentToken } from "./comment-token"
+import type { Session } from "./auth"
+
+// Warstwa dostępu do komentarzy pod meczami — public_api na Hetznerze
+// (ten sam serwis co reszta danych bota, ORACLE_API_URL/ORACLE_API_KEY).
+// GET (lista) bierze X-API-Key zawsze i X-Comment-Token OPCJONALNIE (gdy
+// jest sesja) — z tokenem backend dokłada WŁASNE hidden_auto wołającego,
+// oznaczone `pending_moderation: true`; bez tokenu / z tokenem
+// uszkodzonym/wygasłym backend cicho spada do listy anonimowej (bez 401).
+// Akcje (POST/DELETE) zawsze wymagają X-Comment-Token mintowanego z sesji.
+
+export function isCommentsConfigured(): boolean {
+  return Boolean(process.env.ORACLE_API_URL && process.env.ORACLE_API_KEY && process.env.COMMENT_TOKEN_SECRET)
+}
+
+export interface CommentApiResult<T> {
+  ok: boolean
+  status: number
+  data: T | null
+  error: string | null
+}
+
+// Płaski, stabilny kształt odpowiedzi POST — `status` to status REQUESTU
+// ("ok" przy 200), NIE status moderacji. Status moderacji to `comment_status`
+// / `pending_moderation`.
+export interface CreateCommentResult {
+  status: "ok"
+  id: number
+  comment_id: number
+  event_id: string
+  comment_status: "visible" | "hidden_auto"
+  visible: boolean
+  pending_moderation: boolean
+  message: string | null
+}
+
+function oracleBase(): string {
+  return (process.env.ORACLE_API_URL ?? "").replace(/\/$/, "")
+}
+
+async function rawFetch(path: string, method: string, body: unknown, token: string | null): Promise<Response> {
+  const headers: Record<string, string> = { "X-API-Key": process.env.ORACLE_API_KEY ?? "" }
+  if (token) headers["X-Comment-Token"] = token
+  if (body !== undefined) headers["content-type"] = "application/json"
+  return fetch(`${oracleBase()}/public-api${path}`, {
+    method,
+    headers,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    cache: "no-store",
+  })
+}
+
+async function parseBody<T>(res: Response): Promise<T | null> {
+  const text = await res.text()
+  if (!text) return null
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    return null
+  }
+}
+
+function errorMessage(data: unknown): string | null {
+  if (data && typeof data === "object") {
+    const d = data as Record<string, unknown>
+    if (typeof d.error === "string") return d.error
+    if (typeof d.message === "string") return d.message
+  }
+  return null
+}
+
+// GET — token opcjonalny (dołączony tylko gdy jest sesja). Backend sam
+// obsługuje brak/zły token łagodnie (fallback do anonimowej listy, bez
+// 401) — więc bez retry, w przeciwieństwie do authedAction poniżej.
+async function optionalAuthedGet<T>(path: string, session?: Session): Promise<CommentApiResult<T>> {
+  const token = session ? mintCommentToken(session) : null
+  const res = await rawFetch(path, "GET", undefined, token)
+  const data = await parseBody<T>(res)
+  return { ok: res.ok, status: res.status, data, error: res.ok ? null : (errorMessage(data) ?? "Błąd serwera.") }
+}
+
+// Akcja (POST/DELETE) — wymaga X-Comment-Token, mintowanego z sesji tuż
+// przed wywołaniem (zawsze świeży, nigdy nie cache'owany między requestami
+// — cena mintowania to jeden HMAC, więc prościej mintować za każdym razem
+// niż zarządzać cache'em tokenu).
+//
+// Backend zwraca trzy różne 401 (pole `error` w JSON):
+//  - missing_comment_token / comment_token_expired → domintuj świeży token,
+//    powtórz DOKŁADNIE RAZ (nie w pętli).
+//  - invalid_comment_token → błąd integracji albo manipulacja po stronie
+//    klienta; NIE ponawiaj, propaguj błąd wprost.
+async function authedAction<T>(
+  path: string,
+  method: "POST" | "DELETE",
+  session: Session,
+  body?: unknown,
+): Promise<CommentApiResult<T>> {
+  let token = mintCommentToken(session)
+  let res = await rawFetch(path, method, body, token)
+
+  if (res.status === 401) {
+    const peek = await res
+      .clone()
+      .json()
+      .catch(() => null as { error?: string } | null)
+    const code = peek?.error
+    if (code === "missing_comment_token" || code === "comment_token_expired") {
+      token = mintCommentToken(session)
+      res = await rawFetch(path, method, body, token)
+    }
+  }
+
+  const data = await parseBody<T>(res)
+  return { ok: res.ok, status: res.status, data, error: res.ok ? null : (errorMessage(data) ?? "Błąd serwera.") }
+}
+
+// `session` opcjonalna — gdy podana, dokładamy X-Comment-Token, żeby
+// backend dorzucił własne hidden_auto wołającego do wyniku.
+export function listComments(
+  eventId: string,
+  params: { sort?: "newest" | "top"; limit?: number; offset?: number },
+  session?: Session,
+) {
+  const qs = new URLSearchParams()
+  if (params.sort) qs.set("sort", params.sort)
+  if (params.limit != null) qs.set("limit", String(params.limit))
+  if (params.offset != null) qs.set("offset", String(params.offset))
+  const q = qs.toString()
+  return optionalAuthedGet<unknown>(`/match/${encodeURIComponent(eventId)}/comments${q ? `?${q}` : ""}`, session)
+}
+
+export function createComment(eventId: string, session: Session, body: string) {
+  return authedAction<CreateCommentResult>(`/match/${encodeURIComponent(eventId)}/comments`, "POST", session, { body })
+}
+
+export function likeComment(commentId: string, session: Session) {
+  return authedAction<unknown>(`/comments/${encodeURIComponent(commentId)}/like`, "POST", session)
+}
+
+export function reportComment(commentId: string, session: Session, reason?: string) {
+  return authedAction<unknown>(`/comments/${encodeURIComponent(commentId)}/report`, "POST", session, reason ? { reason } : {})
+}
+
+export function deleteComment(commentId: string, session: Session) {
+  return authedAction<unknown>(`/comments/${encodeURIComponent(commentId)}`, "DELETE", session)
+}

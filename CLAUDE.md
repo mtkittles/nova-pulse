@@ -40,6 +40,10 @@ Oracle VPS. Ta strona to drugi interfejs nad tym samym silnikiem i bazą:
   plik `.md` i dostarcz je użytkownikowi (SendUserFile). W czacie zostaw tylko
   zwięzłą notkę + odwołanie do pliku.
 - Plik podsumowania: lista zadań + commity, kluczowe decyzje, ewentualne env vary.
+- **Dotyczy również diagnostyki / analiz kodu** — gdy user prosi „pokaż logikę
+  X", „znajdź gdzie…", „wyjaśnij mechanizm…" — obok odpowiedzi w czacie
+  ZAWSZE generuj `.md` z tabelą zbiorczą, cytatami kodu z file:line i wnioskami,
+  i dostarcz przez SendUserFile.
 
 ## CZEGO NIE ROBIĆ
 

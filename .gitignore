@@ -29,6 +29,10 @@ dist-ssr
 # Vercel
 .vercel
 
+# Lokalne backupy plików sprzed edycji (scratch — historia git już jest
+# pełnym backupem, te kopie nie muszą trafiać do repo).
+raporty/backup*/
+
 # TypeScript
 *.tsbuildinfo
 

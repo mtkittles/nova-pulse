@@ -1,6 +1,7 @@
 "use client"
 
 import useSWR from "swr"
+import { Goal, Target } from "lucide-react"
 import type { MarketRankings as Rankings } from "@/lib/extra-types"
 import { HorizontalCarousel } from "./horizontal-carousel"
 import { RankingTeamCard } from "./ranking-team-card"
@@ -43,7 +44,10 @@ export function MarketRankings() {
     <div className="space-y-8">
       {btts.length > 0 && (
         <div>
-          <h2 className="mb-4 text-2xl font-semibold">🎯 Najwyższa szansa BTTS</h2>
+          <h2 className="mb-4 flex items-center gap-2 text-2xl font-semibold">
+            <Target className="h-5 w-5 text-[color:var(--cyan)]" aria-hidden />
+            Najwyższa szansa BTTS
+          </h2>
           <HorizontalCarousel
             items={btts}
             ariaLabel="Ranking drużyn — BTTS"
@@ -54,7 +58,10 @@ export function MarketRankings() {
       )}
       {over15.length > 0 && (
         <div>
-          <h2 className="mb-4 text-2xl font-semibold">⚽ Najwyższa szansa Over 1.5</h2>
+          <h2 className="mb-4 flex items-center gap-2 text-2xl font-semibold">
+            <Goal className="h-5 w-5 text-[color:var(--cyan)]" aria-hidden />
+            Najwyższa szansa Over 1.5
+          </h2>
           <HorizontalCarousel
             items={over15}
             ariaLabel="Ranking drużyn — Over 1.5"

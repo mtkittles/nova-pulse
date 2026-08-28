@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import type { Tip } from "@/lib/types"
 import type { CalendarDay } from "@/lib/extra-types"
 import { getMarketLabel, MARKET_FILTERS, marketGroupOf, type MarketCategory } from "@/lib/market-label"
@@ -11,8 +12,8 @@ import MatchTipCard, { type MatchGroup } from "./match-tip-card"
 import { DateStrip } from "./date-strip"
 import { CalendarModal } from "./calendar-modal"
 import { TypyTable } from "./typy-table"
-import { ScrollReveal } from "./scroll-reveal"
 import { AnimatedTabs } from "./ui/tabs"
+import { AnimatedNumber } from "./ui/animated-number"
 import { TipGridSkeleton } from "./ui/skeletons"
 import { EmptyState } from "./ui/empty-state"
 import { plMatches } from "@/lib/i18n"
@@ -101,6 +102,28 @@ function nearest(target: string, dates: string[]): string | null {
     }
   }
   return best
+}
+
+// Karta na liście /typy: fade+scale przy pojawieniu/zniknięciu po zmianie
+// filtra (AnimatePresence w rodzicu) + płynne przesunięcie reszty siatki
+// (layout). Stagger 30ms/kartę (limit 10 — dłuższe listy nie czekają
+// sekundami). transform+opacity, ~200ms — zgodnie z audytem wydajności
+// (dziesiątki kart, żadnych właściwości wymuszających repaint).
+function TypyCardMotion({ index, children }: { index: number; children: React.ReactNode }) {
+  const reduced = useReducedMotion()
+  const delay = reduced ? 0 : Math.min(index, 10) * 0.03
+  return (
+    <motion.div
+      layout={!reduced}
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.97 }}
+      transition={{ duration: reduced ? 0.001 : 0.2, ease: "easeOut", delay }}
+      className="h-full"
+    >
+      {children}
+    </motion.div>
+  )
 }
 
 export default function TypyPage({
@@ -347,10 +370,12 @@ export default function TypyPage({
       ) : (
         <>
           <p className="mb-5 text-sm text-[color:var(--text-secondary)]">
-            Pokazano <span className="font-semibold text-[color:var(--text-primary)] tnum">{visible.length}</span> z {tips.length} typów
+            Pokazano <AnimatedNumber value={visible.length} className="font-semibold text-[color:var(--text-primary)] tnum" /> z{" "}
+            {tips.length} typów
             {view === "cards" && (
               <>
-                {" "}w <span className="font-semibold text-[color:var(--text-primary)] tnum">{groups.length}</span> {plMatches(groups.length)}
+                {" "}w <AnimatedNumber value={groups.length} className="font-semibold text-[color:var(--text-primary)] tnum" />{" "}
+                {plMatches(groups.length)}
               </>
             )}
             .
@@ -358,18 +383,22 @@ export default function TypyPage({
 
           {view === "cards" ? (
             // Mobile: lista pionowa (1 kolumna). Desktop: grid 2/3 kolumny (bez karuzeli dla długich list).
+            // AnimatePresence: karty znikające po zmianie filtra fade-outują zamiast
+            // twardo znikać, nowe fade-inują (layout: płynne przesunięcie reszty siatki).
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {groups.map((g, i) => (
-                <ScrollReveal key={g.key} delay={Math.min(i, 8) * 40} className="h-full">
-                  <MatchTipCard
-                    group={g}
-                    href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined}
-                    locked={!loggedIn}
-                    loggedIn={loggedIn}
-                    trackedKeys={trackedKeys}
-                  />
-                </ScrollReveal>
-              ))}
+              <AnimatePresence mode="popLayout" initial={false}>
+                {groups.map((g, i) => (
+                  <TypyCardMotion key={g.key} index={i}>
+                    <MatchTipCard
+                      group={g}
+                      href={loggedIn && g.event_id ? `/mecz/${g.event_id}` : undefined}
+                      locked={!loggedIn}
+                      loggedIn={loggedIn}
+                      trackedKeys={trackedKeys}
+                    />
+                  </TypyCardMotion>
+                ))}
+              </AnimatePresence>
             </div>
           ) : (
             <TypyTable tips={visible} loggedIn={loggedIn} />
